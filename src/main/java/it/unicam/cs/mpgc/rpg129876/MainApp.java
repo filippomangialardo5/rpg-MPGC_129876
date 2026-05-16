@@ -10,7 +10,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        Label label = new Label(" RPG Funzionante - Matricola 129876");
+        Label label = new Label(" RPG Funzionante -  Matricola 129876");
         label.setStyle("-fx-font-size: 24px; -fx-text-fill: green; -fx-font-weight: bold;");
 
         StackPane root = new StackPane(label);
