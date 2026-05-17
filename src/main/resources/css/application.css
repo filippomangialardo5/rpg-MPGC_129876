@@ -169,3 +169,35 @@
 .menu-item:hover {
     -fx-background-color: #e94560;
 }
+
+/* Stili per il dialogo di combattimento */
+.combat-dialog {
+    -fx-background-color: #1a1a2e;
+    -fx-border-color: #e94560;
+    -fx-border-width: 3;
+    -fx-border-radius: 15;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(gaussian, rgba(233,69,96,0.5), 20, 0, 0, 0);
+}
+
+.combat-button {
+    -fx-font-size: 16px;
+    -fx-min-width: 100px;
+    -fx-min-height: 40px;
+    -fx-background-radius: 20;
+}
+
+.combat-button:pressed {
+    -fx-translate-y: 2px;
+}
+
+/* Animazioni */
+@keyframes pulse {
+    0% { -fx-scale-x: 1; -fx-scale-y: 1; }
+    50% { -fx-scale-x: 1.05; -fx-scale-y: 1.05; }
+    100% { -fx-scale-x: 1; -fx-scale-y: 1; }
+}
+
+.combat-attack {
+    -fx-animation: pulse 0.3s ease-in-out;
+}

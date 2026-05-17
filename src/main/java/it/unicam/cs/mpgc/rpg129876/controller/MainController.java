@@ -4,19 +4,26 @@ import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import it.unicam.cs.mpgc.rpg129876.model.world.Direction;
 import it.unicam.cs.mpgc.rpg129876.model.world.Room;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class MainController {
 
     private GameController gameController;
+    private Timeline combatAnimation;
 
-    // UI Components
+    // UI Components - Schermate
+    @FXML private VBox startScreen;
+    @FXML private VBox gameScreen;
+    @FXML private Button startGameBtn;
+
+    // UI Components - Statistiche
     @FXML private Label playerNameLabel;
     @FXML private Label playerClassLabel;
     @FXML private ProgressBar healthBar;
@@ -26,13 +33,25 @@ public class MainController {
     @FXML private Label goldLabel;
     @FXML private Label attackLabel;
     @FXML private Label defenseLabel;
-    @FXML private TextArea roomDescriptionArea;
+
+    // UI Components - Mappa
     @FXML private GridPane mapGrid;
+    @FXML private TextArea roomDescriptionArea;
+
+    // UI Components - Combattimento
+    @FXML private VBox combatDialog;
+    @FXML private Label combatTitle;
+    @FXML private Label combatEnemyLabel;
+    @FXML private ProgressBar enemyHealthBar;
+    @FXML private Label enemyHealthLabel;
+    @FXML private Label combatMessage;
+    @FXML private Button attackBtn;
+    @FXML private Button itemBtn;
+    @FXML private Button fleeBtn;
+
+    // UI Components - Altro
     @FXML private VBox inventoryList;
     @FXML private ListView<String> messageListView;
-    @FXML private Button attackBtn;
-    @FXML private Button useItemBtn;
-    @FXML private Button fleeBtn;
 
     @FXML
     public void initialize() {
@@ -42,10 +61,20 @@ public class MainController {
         bindPlayerStats();
         setupMessageListener();
 
-        // Non chiamare showCharacterCreation() qui!
-        // Invece, mostra un messaggio che chiede di iniziare
-        roomDescriptionArea.setText("✨ Benvenuto in Dungeon Explorer RPG!\n\n" +
-                "Clicca su 'Gioco' → 'Nuova Partita' per iniziare la tua avventura!");
+        // Nascondi pannelli di gioco all'inizio
+        gameScreen.setVisible(false);
+        gameScreen.setManaged(false);
+        combatDialog.setVisible(false);
+        combatDialog.setManaged(false);
+
+        // Messaggio iniziale
+        addGameMessage("✨ Benvenuto in Dungeon Explorer RPG!");
+        addGameMessage("🖱️ Clicca 'Inizia Avventura' per iniziare");
+    }
+
+    @FXML
+    private void onStartGameFromButton() {
+        showCharacterCreation();
     }
 
     private void bindPlayerStats() {
@@ -56,7 +85,11 @@ public class MainController {
         });
 
         gameController.inCombatProperty().addListener((obs, old, inCombat) -> {
-            updateCombatUI(inCombat);
+            if (inCombat) {
+                showCombatDialog();
+            } else {
+                hideCombatDialog();
+            }
         });
 
         gameController.roomDescriptionProperty().addListener((obs, old, desc) -> {
@@ -89,19 +122,14 @@ public class MainController {
         if (gameController.getPlayer() != null) {
             for (Item item : gameController.getPlayer().getInventory()) {
                 Button itemBtn = new Button(item.getIcon() + " " + item.getName());
-                itemBtn.setOnAction(e -> gameController.useItem(item));
+                itemBtn.setOnAction(e -> {
+                    gameController.useItem(item);
+                    addGameMessage("🧪 Usato: " + item.getName());
+                    updateInventory();
+                });
                 itemBtn.getStyleClass().add("inventory-button");
                 inventoryList.getChildren().add(itemBtn);
             }
-        }
-    }
-
-    private void updateCombatUI(boolean inCombat) {
-        attackBtn.setVisible(inCombat);
-        fleeBtn.setVisible(inCombat);
-
-        if (!inCombat && gameController.isPlayerAlive()) {
-            updateMap();
         }
     }
 
@@ -135,14 +163,6 @@ public class MainController {
                     cell.setText("❓");
                     cell.getStyleClass().add("map-cell-hidden");
                 }
-
-                final int finalX = x;
-                final int finalY = y;
-                cell.setOnAction(e -> {
-                    // Optional: teleport per debugging (puoi rimuovere)
-                    // moveToRoom(finalX, finalY);
-                });
-
                 mapGrid.add(cell, x, y);
             }
         }
@@ -152,7 +172,19 @@ public class MainController {
         messageListView.setItems(gameController.getGameMessages());
     }
 
+    private void addGameMessage(String message) {
+        // Il GameController già aggiunge timestamp, quindi aggiungiamo solo se necessario
+        Platform.runLater(() -> {
+            // Forza refresh della lista
+            messageListView.scrollTo(0);
+        });
+    }
+
     private void showCharacterCreation() {
+        // Nascondi schermata iniziale
+        startScreen.setVisible(false);
+        startScreen.setManaged(false);
+
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Nuova Avventura");
         dialog.setHeaderText("Crea il tuo eroe");
@@ -185,7 +217,7 @@ public class MainController {
             if (!nameField.getText().isEmpty() && classBox.getValue() != null) {
                 gameController.startNewGame(nameField.getText(), classBox.getValue());
                 dialog.close();
-                updateUIAfterStart();
+                showGameUI();
             }
         });
 
@@ -201,19 +233,112 @@ public class MainController {
         dialog.showAndWait();
     }
 
-    private void updateUIAfterStart() {
-        if (gameController.getPlayer() != null) {
-            updatePlayerUI(gameController.getPlayer());
-            updateInventory();
-            updateMap();
-            roomDescriptionArea.setText(
-                    gameController.getCurrentRoom().getName() + "\n" +
-                            gameController.getCurrentRoom().getDescription()
-            );
+    private void showGameUI() {
+        gameScreen.setVisible(true);
+        gameScreen.setManaged(true);
+
+        updatePlayerUI(gameController.getPlayer());
+        updateInventory();
+        updateMap();
+        roomDescriptionArea.setText(
+                gameController.getCurrentRoom().getName() + "\n" +
+                        gameController.getCurrentRoom().getDescription()
+        );
+
+        addGameMessage("🏰 La tua avventura ha inizio!");
+        addGameMessage("📍 Ti trovi in: " + gameController.getCurrentRoom().getName());
+    }
+
+    private void showCombatDialog() {
+        combatDialog.setVisible(true);
+        combatDialog.setManaged(true);
+
+        // Animazione di entrata
+        combatDialog.setScaleX(0);
+        combatDialog.setScaleY(0);
+        ScaleTransition st = new ScaleTransition(Duration.millis(300), combatDialog);
+        st.setToX(1);
+        st.setToY(1);
+        st.play();
+
+        updateCombatUI();
+    }
+
+    private void updateCombatUI() {
+        if (gameController.getPlayer() != null && gameController.isInCombat()) {
+            var combat = gameController.getCurrentCombat();
+            if (combat != null) {
+                var enemy = combat.getEnemy();
+                combatEnemyLabel.setText("👹 " + enemy.getName());
+                enemyHealthBar.setProgress((double) enemy.getHp() / enemy.getMaxHp());
+                enemyHealthLabel.setText(enemy.getHp() + "/" + enemy.getMaxHp());
+            }
         }
     }
 
-    // Azioni dei bottoni
+    private void hideCombatDialog() {
+        if (combatAnimation != null) {
+            combatAnimation.stop();
+        }
+
+        // Animazione di uscita
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), combatDialog);
+        st.setToX(0);
+        st.setToY(0);
+        st.setOnFinished(e -> {
+            combatDialog.setVisible(false);
+            combatDialog.setManaged(false);
+            combatMessage.setText("");
+        });
+        st.play();
+
+        updateMap();
+        updateInventory();
+        updatePlayerUI(gameController.getPlayer());
+    }
+
+    private void showCombatMessage(String message, boolean isPlayerAction) {
+        combatMessage.setText(message);
+        combatMessage.setStyle("-fx-text-fill: " + (isPlayerAction ? "#a0f0a0" : "#ffaa66") + "; -fx-font-size: 14px;");
+
+        // Animazione del messaggio
+        FadeTransition ft = new FadeTransition(Duration.millis(500), combatMessage);
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.play();
+
+        // Flash sulla barra della vita del nemico
+        if (!isPlayerAction) {
+            FlashTransition flash = new FlashTransition(enemyHealthBar);
+            flash.play();
+        }
+
+        updateCombatUI();
+        addGameMessage(message);
+    }
+
+    // Animazione personalizzata per il flash
+    private class FlashTransition extends Transition {
+        private final ProgressBar bar;
+        private final String originalStyle;
+
+        public FlashTransition(ProgressBar bar) {
+            this.bar = bar;
+            this.originalStyle = bar.getStyle();
+            setCycleDuration(Duration.millis(300));
+        }
+
+        @Override
+        protected void interpolate(double frac) {
+            if (frac < 0.5) {
+                bar.setStyle("-fx-accent: #ff4444;");
+            } else {
+                bar.setStyle(originalStyle);
+            }
+        }
+    }
+
+    // Azioni movimento
     @FXML
     private void onMoveNorth() {
         if (gameController.getPlayer() != null && gameController.isPlayerAlive()) {
@@ -221,8 +346,6 @@ public class MainController {
             updateMap();
             updateInventory();
             updatePlayerUI(gameController.getPlayer());
-        } else {
-            showNewGamePrompt();
         }
     }
 
@@ -233,8 +356,6 @@ public class MainController {
             updateMap();
             updateInventory();
             updatePlayerUI(gameController.getPlayer());
-        } else {
-            showNewGamePrompt();
         }
     }
 
@@ -245,8 +366,6 @@ public class MainController {
             updateMap();
             updateInventory();
             updatePlayerUI(gameController.getPlayer());
-        } else {
-            showNewGamePrompt();
         }
     }
 
@@ -257,27 +376,66 @@ public class MainController {
             updateMap();
             updateInventory();
             updatePlayerUI(gameController.getPlayer());
-        } else {
-            showNewGamePrompt();
         }
     }
 
-    private void showNewGamePrompt() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Nuova Partita");
-        alert.setHeaderText("Nessuna partita in corso");
-        alert.setContentText("Clicca su 'Gioco' → 'Nuova Partita' per iniziare l'avventura!");
-        alert.showAndWait();
+    // Azioni combattimento
+    @FXML
+    private void onAttack() {
+        if (gameController.getPlayer() != null && gameController.isInCombat()) {
+            gameController.playerAttack();
+            updateCombatUI();
+            updatePlayerUI(gameController.getPlayer());
+        }
     }
 
-    @FXML private void onAttack() { gameController.playerAttack(); updateInventory(); }
-    @FXML private void onUseItem() { /* Gestito dai bottoni inventario */ }
-    @FXML private void onFlee() { gameController.flee(); updateMap(); }
+    @FXML
+    private void onUseItem() {
+        if (gameController.getPlayer() != null) {
+            // Mostra dialog per scegliere item
+            ChoiceDialog<Item> dialog = new ChoiceDialog<>(null, gameController.getPlayer().getInventory());
+            dialog.setTitle("Usa Oggetto");
+            dialog.setHeaderText("Scegli un oggetto da usare");
 
-    @FXML private void onNewGame() { showCharacterCreation(); }
-    @FXML private void onExit() { Platform.exit(); }
-    @FXML private void onHelp() { showHelpDialog(); }
-    @FXML private void onAbout() { showAboutDialog(); }
+            dialog.showAndWait().ifPresent(item -> {
+                gameController.useItem(item);
+                updateInventory();
+                updatePlayerUI(gameController.getPlayer());
+                if (gameController.isInCombat()) {
+                    updateCombatUI();
+                }
+            });
+        }
+    }
+
+    @FXML
+    private void onFlee() {
+        if (gameController.getPlayer() != null && gameController.isInCombat()) {
+            gameController.flee();
+            updateCombatUI();
+        }
+    }
+
+    // Azioni menu
+    @FXML
+    private void onNewGame() {
+        showCharacterCreation();
+    }
+
+    @FXML
+    private void onExit() {
+        Platform.exit();
+    }
+
+    @FXML
+    private void onHelp() {
+        showHelpDialog();
+    }
+
+    @FXML
+    private void onAbout() {
+        showAboutDialog();
+    }
 
     private void showHelpDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
