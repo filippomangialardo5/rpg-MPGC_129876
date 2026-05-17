@@ -1,0 +1,171 @@
+/* application.css - Stili per Dungeon Explorer RPG */
+
+.root {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-base: #1a1a2e;
+    -fx-background: #0f0f1a;
+}
+
+/* Pannello statistiche */
+.stats-panel {
+    -fx-background-color: linear-gradient(to bottom, #16213e, #0f0f1a);
+    -fx-border-color: #0f3460;
+    -fx-border-width: 0 1 0 0;
+}
+
+.stats-panel .label {
+    -fx-text-fill: #e0e0e0;
+}
+
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e94560;
+}
+
+.player-name {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.player-class {
+    -fx-font-size: 12px;
+    -fx-text-fill: #a0a0a0;
+}
+
+/* Barra della vita */
+.progress-bar {
+    -fx-accent: linear-gradient(to right, #00ff87, #60efff);
+    -fx-background-color: #2d2d3d;
+}
+
+.progress-bar .bar {
+    -fx-background-color: linear-gradient(to right, #00ff87, #60efff);
+    -fx-background-radius: 3px;
+}
+
+/* Descrizione stanza */
+.room-description {
+    -fx-background-color: #0f0f1a;
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 13px;
+    -fx-font-family: "Monospaced";
+}
+
+.room-description .content {
+    -fx-background-color: #0f0f1a;
+}
+
+/* Mappa a griglia */
+.map-cell {
+    -fx-min-width: 45px;
+    -fx-min-height: 45px;
+    -fx-background-color: #16213e;
+    -fx-border-color: #0f3460;
+    -fx-border-width: 1;
+    -fx-alignment: center;
+    -fx-font-size: 18px;
+}
+
+.map-cell-current {
+    -fx-background-color: #e94560;
+    -fx-border-color: #ff6b6b;
+    -fx-border-width: 2;
+}
+
+.map-cell-visited {
+    -fx-background-color: #1a1a3e;
+}
+
+.map-cell-hidden {
+    -fx-background-color: #0a0a15;
+}
+
+/* Bottoni di movimento */
+.move-button {
+    -fx-font-size: 14px;
+    -fx-min-width: 80px;
+    -fx-min-height: 40px;
+    -fx-background-color: linear-gradient(to bottom, #0f3460, #16213e);
+    -fx-text-fill: white;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.move-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #1a4a80, #0f3460);
+    -fx-effect: dropshadow(gaussian, rgba(233,69,96,0.5), 10, 0, 0, 0);
+}
+
+/* Bottoni combattimento */
+.combat-button {
+    -fx-font-size: 16px;
+    -fx-min-width: 120px;
+    -fx-min-height: 45px;
+    -fx-background-color: linear-gradient(to bottom, #e94560, #c72a48);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+}
+
+.combat-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #ff5a75, #e94560);
+    -fx-effect: dropshadow(gaussian, rgba(233,69,96,0.7), 15, 0, 0, 2);
+}
+
+/* Pannello inventario */
+.inventory-panel {
+    -fx-background-color: linear-gradient(to bottom, #16213e, #0f0f1a);
+    -fx-border-color: #0f3460;
+    -fx-border-width: 0 0 0 1;
+}
+
+.inventory-button {
+    -fx-background-color: #0f3460;
+    -fx-text-fill: #e0e0e0;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.inventory-button:hover {
+    -fx-background-color: #1a4a80;
+}
+
+/* Lista messaggi */
+.message-list {
+    -fx-background-color: #0a0a15;
+    -fx-control-inner-background: #0a0a15;
+}
+
+.message-list .list-cell {
+    -fx-text-fill: #a0f0a0;
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 11px;
+    -fx-background-color: #0a0a15;
+}
+
+.message-list .list-cell:odd {
+    -fx-background-color: #0f0f1a;
+}
+
+/* Menu bar */
+.menu-bar {
+    -fx-background-color: #0f0f1a;
+    -fx-border-color: #0f3460;
+    -fx-border-width: 0 0 1 0;
+}
+
+.menu {
+    -fx-text-fill: white;
+}
+
+.menu-item {
+    -fx-text-fill: #e0e0e0;
+}
+
+.menu-item:hover {
+    -fx-background-color: #e94560;
+}

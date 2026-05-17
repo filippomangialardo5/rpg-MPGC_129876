@@ -2,13 +2,103 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<VBox alignment="CENTER" spacing="20"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="it.unicam.cs.mpgc.rpg129876.controller.MainController">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/21"
+            fx:controller="it.unicam.cs.mpgc.rpg129876.controller.MainController"
+            styleClass="root">
 
-    <Label text="Dungeon Explorer RPG" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-    <Button text="Start Game" onAction="#onStartGame"/>
-    <Button text="Exit" onAction="#onExit"/>
+    <!-- MENU -->
+    <top>
+        <MenuBar>
+            <Menu text="⚔ Gioco">
+                <MenuItem text="Nuova Partita" onAction="#onNewGame"/>
+                <MenuItem text="Esci" onAction="#onExit"/>
+            </Menu>
+            <Menu text="❓ Aiuto">
+                <MenuItem text="Comandi" onAction="#onHelp"/>
+                <MenuItem text="Informazioni" onAction="#onAbout"/>
+            </Menu>
+        </MenuBar>
+    </top>
 
-</VBox>
+    <!-- PANNELLO STATISTICHE (SINISTRA) -->
+    <left>
+        <VBox spacing="10" styleClass="stats-panel" prefWidth="220">
+            <padding><Insets top="15" right="10" bottom="15" left="10"/></padding>
+
+            <Label text="📊 STATISTICHE" styleClass="section-title"/>
+            <Separator/>
+
+            <Label fx:id="playerNameLabel" styleClass="player-name"/>
+            <Label fx:id="playerClassLabel" styleClass="player-class"/>
+
+            <Label text="❤️ Salute"/>
+            <ProgressBar fx:id="healthBar" prefWidth="180"/>
+            <Label fx:id="healthLabel"/>
+
+            <Label fx:id="levelLabel"/>
+            <Label fx:id="expLabel"/>
+            <Label fx:id="goldLabel"/>
+            <Label fx:id="attackLabel"/>
+            <Label fx:id="defenseLabel"/>
+        </VBox>
+    </left>
+
+    <!-- AREA CENTRALE: MAPPA + STANZA -->
+    <center>
+        <VBox spacing="15" alignment="CENTER">
+            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+
+            <!-- Mappa a griglia -->
+            <Label text="🗺️ MAPPA DEL DUNGEON" styleClass="section-title"/>
+            <GridPane fx:id="mapGrid" alignment="CENTER" hgap="5" vgap="5"/>
+
+            <Separator/>
+
+            <!-- Descrizione stanza corrente -->
+            <TextArea fx:id="roomDescriptionArea" editable="false" wrapText="true"
+                      prefHeight="100" styleClass="room-description"/>
+
+            <!-- Bottoni di movimento -->
+            <HBox spacing="15" alignment="CENTER">
+                <Button text="⬆ Nord" onAction="#onMoveNorth" styleClass="move-button"/>
+                <Button text="⬅ Ovest" onAction="#onMoveWest" styleClass="move-button"/>
+                <Button text="➡ Est" onAction="#onMoveEast" styleClass="move-button"/>
+                <Button text="⬇ Sud" onAction="#onMoveSouth" styleClass="move-button"/>
+            </HBox>
+        </VBox>
+    </center>
+
+    <!-- PANNELLO INVENTARIO (DESTRA) -->
+    <right>
+        <VBox spacing="10" styleClass="inventory-panel" prefWidth="200">
+            <padding><Insets top="15" right="10" bottom="15" left="10"/></padding>
+
+            <Label text="🎒 INVENTARIO" styleClass="section-title"/>
+            <Separator/>
+
+            <VBox fx:id="inventoryList" spacing="5"/>
+        </VBox>
+    </right>
+
+    <!-- PANNELLO MESSAGGI E AZIONI (BASSO) -->
+    <bottom>
+        <VBox spacing="10">
+            <padding><Insets top="5" right="15" bottom="15" left="15"/></padding>
+
+            <!-- Log dei messaggi -->
+            <Label text="📜 AVVENTURA" styleClass="section-title"/>
+            <ListView fx:id="messageListView" prefHeight="150" styleClass="message-list"/>
+
+            <!-- Pulsanti azione -->
+            <HBox spacing="15" alignment="CENTER">
+                <Button fx:id="attackBtn" text="⚔ ATTACCA" onAction="#onAttack" visible="false" styleClass="combat-button"/>
+                <Button fx:id="useItemBtn" text="🧪 USA OGGETTO" onAction="#onUseItem" styleClass="combat-button"/>
+                <Button fx:id="fleeBtn" text="🏃 FUGGI" onAction="#onFlee" visible="false" styleClass="combat-button"/>
+            </HBox>
+        </VBox>
+    </bottom>
+
+</BorderPane>

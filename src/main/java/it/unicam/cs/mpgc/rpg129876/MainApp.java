@@ -1,24 +1,27 @@
 package it.unicam.cs.mpgc.rpg129876;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import java.net.URL;
 
 public class MainApp extends Application {
 
     @Override
-    public void start(Stage stage) {
-        Label label = new Label(" RPG Funzionante -  Matricola 129876");
-        label.setStyle("-fx-font-size: 24px; -fx-text-fill: green; -fx-font-weight: bold;");
+    public void start(Stage primaryStage) throws Exception {
+        URL fxmlUrl = getClass().getResource("/fxml/main-view.fxml");
+        Parent root = FXMLLoader.load(fxmlUrl);
 
-        StackPane root = new StackPane(label);
-        Scene scene = new Scene(root, 500, 300);
+        Scene scene = new Scene(root, 1200, 800);
 
-        stage.setTitle("Dungeon Explorer RPG - 129876");
-        stage.setScene(scene);
-        stage.show();
+        URL cssUrl = getClass().getResource("/css/application.css");
+        scene.getStylesheets().add(cssUrl.toExternalForm());
+
+        primaryStage.setTitle("Dungeon Explorer RPG - Matricola 129876");
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
