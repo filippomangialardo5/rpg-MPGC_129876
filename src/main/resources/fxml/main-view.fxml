@@ -28,10 +28,8 @@
         <VBox fx:id="startScreen" alignment="CENTER" spacing="25" visible="true" managed="true">
             <Label text="🏰 DUNGEON EXPLORER RPG 🏰"
                    style="-fx-font-size: 42px; -fx-font-weight: bold; -fx-text-fill: #e94560;"/>
-
             <Label text="⚔️ Un'avventura epica ti aspetta! ⚔️"
                    style="-fx-font-size: 22px; -fx-text-fill: #c0c0c0;"/>
-
             <Button fx:id="startGameBtn" text="✨ INIZIA AVVENTURA ✨" onAction="#onStartGameFromButton"
                     style="-fx-font-size: 24px; -fx-min-width: 320px; -fx-min-height: 75px;
                            -fx-background-color: linear-gradient(to bottom, #e94560, #c72a48);
@@ -43,40 +41,92 @@
     <!-- SCHERMATA DI GIOCO -->
     <BorderPane fx:id="gameScreen" visible="false" managed="false">
 
-        <!-- PANNELLO STATISTICHE -->
+        <!-- PANNELLO SINISTRO (STATISTICHE + COMBATTIMENTO) -->
+        <!-- PANNELLO SINISTRO (STATISTICHE + COMBATTIMENTO) - INGRANDITO -->
+        <!-- PANNELLO SINISTRO (STATISTICHE + COMBATTIMENTO) -->
         <left>
-            <VBox spacing="8" styleClass="stats-panel" prefWidth="260">
-                <padding><Insets top="12" right="8" bottom="12" left="12"/></padding>
+            <VBox spacing="10" styleClass="stats-panel" prefWidth="320">
+                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
 
+                <!-- SEZIONE STATISTICHE -->
                 <Label text="📊 STATISTICHE" styleClass="section-title"/>
                 <Separator/>
 
-                <!-- Per l'immagine del personaggio nelle statistiche -->
-                <ImageView fx:id="playerImageView" fitWidth="80" fitHeight="80"
+                <ImageView fx:id="playerImageView" fitWidth="70" fitHeight="70"
                            style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 2);"/>
-
-                <!-- Per l'immagine del personaggio in combattimento -->
-                <ImageView fx:id="playerCombatImageView" fitWidth="60" fitHeight="60"/>
-
-                <!-- Per l'immagine del nemico in combattimento -->
-                <ImageView fx:id="enemyImageView" fitWidth="60" fitHeight="60"/>
 
                 <Label fx:id="playerNameLabel" styleClass="player-name" text="-"/>
                 <Label fx:id="playerClassLabel" styleClass="player-class" text="-"/>
 
                 <Label text="❤️ SALUTE" style="-fx-font-size: 11px;"/>
-                <ProgressBar fx:id="healthBar" prefWidth="210" progress="0"/>
+                <ProgressBar fx:id="healthBar" prefWidth="270" progress="0"/>
                 <Label fx:id="healthLabel" text="0/0" style="-fx-font-size: 11px;"/>
 
+                <!-- QUI NON RIPETERE IL TESTO! Solo i valori -->
                 <Label fx:id="levelLabel" text="⭐ Livello: -" style="-fx-font-size: 11px;"/>
                 <Label fx:id="expLabel" text="📈 Esperienza: -" style="-fx-font-size: 11px;"/>
                 <Label fx:id="goldLabel" text="💰 Oro: -" style="-fx-font-size: 11px;"/>
                 <Label fx:id="attackLabel" text="⚔ Attacco: -" style="-fx-font-size: 11px;"/>
                 <Label fx:id="defenseLabel" text="🛡 Difesa: -" style="-fx-font-size: 11px;"/>
+
+                <Separator/>
+
+                <!-- SEZIONE COMBATTIMENTO -->
+                <Label text="⚔️ COMBATTIMENTO ⚔️" styleClass="section-title"/>
+                <Separator/>
+
+                <VBox fx:id="combatPanel" spacing="8" alignment="CENTER"
+                      visible="false" managed="false"
+                      style="-fx-background-color: #1a1a2e; -fx-border-color: #e94560; -fx-border-width: 2; -fx-border-radius: 10; -fx-padding: 10;">
+
+                    <!-- VS tra giocatore e nemico -->
+                    <HBox spacing="15" alignment="CENTER">
+
+                        <!-- GIOCATORE -->
+                        <VBox alignment="CENTER" spacing="3">
+                            <ImageView fx:id="playerCombatImageView" fitWidth="50" fitHeight="50"/>
+                            <Label text="GIOCATORE" style="-fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                            <ProgressBar fx:id="playerCombatHealthBar" prefWidth="100" progress="1.0"/>
+                            <Label fx:id="playerCombatHealthLabel" text="100/100" style="-fx-font-size: 9px; -fx-text-fill: #ff6666;"/>
+                        </VBox>
+
+                        <Label text="VS" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #e94560;"/>
+
+                        <!-- NEMICO -->
+                        <VBox alignment="CENTER" spacing="3">
+                            <ImageView fx:id="enemyImageView" fitWidth="50" fitHeight="50"/>
+                            <Label fx:id="enemyNameLabel" text="NEMICO" style="-fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                            <ProgressBar fx:id="enemyHealthBar" prefWidth="100" progress="1.0"/>
+                            <Label fx:id="enemyHealthLabel" text="100/100" style="-fx-font-size: 9px; -fx-text-fill: #ff6666;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Statistiche nemico in riga separata -->
+                    <HBox spacing="15" alignment="CENTER">
+                        <Label fx:id="enemyAttackLabel" text="⚔ Attacco: -" style="-fx-font-size: 9px; -fx-text-fill: #ffaa66;"/>
+                        <Label fx:id="enemyDefenseLabel" text="🛡 Difesa: -" style="-fx-font-size: 9px; -fx-text-fill: #66aaff;"/>
+                    </HBox>
+
+                    <!-- MESSAGGIO COMBATTIMENTO -->
+                    <Label fx:id="combatMessage" text="Scegli azione!"
+                           style="-fx-text-fill: yellow; -fx-font-size: 10px;" wrapText="true" alignment="CENTER"/>
+
+                    <Label fx:id="potionSuggestion" text="" style="-fx-font-size: 9px; -fx-text-fill: #00ff00;" wrapText="true" alignment="CENTER"/>
+
+                    <!-- BOTTONI -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button fx:id="attackBtn" text="⚔️ ATTACCA" onAction="#onAttack"
+                                style="-fx-font-size: 11px; -fx-min-width: 75px; -fx-min-height: 30px; -fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                        <Button fx:id="useItemBtn" text="🧪 POZIONE" onAction="#onUseItem"
+                                style="-fx-font-size: 11px; -fx-min-width: 75px; -fx-min-height: 30px; -fx-background-color: #2196f3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                        <Button fx:id="fleeBtn" text="🏃 FUGGI" onAction="#onFlee"
+                                style="-fx-font-size: 11px; -fx-min-width: 75px; -fx-min-height: 30px; -fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                    </HBox>
+                </VBox>
             </VBox>
         </left>
 
-        <!-- AREA CENTRALE -->
+        <!-- AREA CENTRALE (MAPPA) -->
         <center>
             <VBox spacing="12" alignment="CENTER">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
@@ -86,39 +136,17 @@
 
                 <Separator/>
 
-                <!-- Stanza corrente -->
                 <HBox spacing="15" alignment="CENTER">
                     <Label text="📍 STANZA" style="-fx-font-weight: bold; -fx-text-fill: #e94560;"/>
                     <TextArea fx:id="roomDescriptionArea" editable="false" wrapText="true"
                               prefHeight="70" prefWidth="350" styleClass="room-description"/>
                 </HBox>
-
-                <!-- PANNELLO COMBATTIMENTO -->
-                <!-- PANNELLO COMBATTIMENTO -->
-                <!-- PANNELLO COMBATTIMENTO MINIMALE -->
-                <VBox fx:id="combatPanel" spacing="10" alignment="CENTER"
-                      visible="false" managed="false"
-                      style="-fx-background-color: #1a1a2e; -fx-border-color: #e94560; -fx-border-width: 3; -fx-border-radius: 15; -fx-padding: 15;">
-
-                    <Label text="⚔️ COMBATTIMENTO ⚔️" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e94560;"/>
-
-                    <Label fx:id="combatMessage" text="Scegli la tua azione!" style="-fx-text-fill: yellow;"/>
-
-                    <HBox spacing="20" alignment="CENTER">
-                        <Button fx:id="attackBtn" text="ATTACCA" onAction="#onAttack"
-                                style="-fx-font-size: 16px; -fx-min-width: 100px; -fx-min-height: 40px; -fx-background-color: red; -fx-text-fill: white;"/>
-                        <Button fx:id="useItemBtn" text="POZIONE" onAction="#onUseItem"
-                                style="-fx-font-size: 16px; -fx-min-width: 100px; -fx-min-height: 40px; -fx-background-color: blue; -fx-text-fill: white;"/>
-                        <Button fx:id="fleeBtn" text="FUGGI" onAction="#onFlee"
-                                style="-fx-font-size: 16px; -fx-min-width: 100px; -fx-min-height: 40px; -fx-background-color: green; -fx-text-fill: white;"/>
-                    </HBox>
-                </VBox>
             </VBox>
         </center>
 
-        <!-- PANNELLO INVENTARIO -->
+        <!-- PANNELLO INVENTARIO (DESTRA) -->
         <right>
-            <VBox spacing="8" styleClass="inventory-panel" prefWidth="200">
+            <VBox spacing="8" styleClass="inventory-panel" prefWidth="180">
                 <padding><Insets top="12" right="12" bottom="12" left="8"/></padding>
 
                 <Label text="🎒 INVENTARIO" styleClass="section-title"/>
@@ -128,11 +156,11 @@
             </VBox>
         </right>
 
+        <!-- PANNELLO MESSAGGI (BASSO) -->
         <bottom>
             <VBox spacing="5">
                 <padding><Insets top="5" right="12" bottom="10" left="12"/></padding>
-
-                <Label text="📜 LOG" styleClass="section-title" style="-fx-font-size: 11px;"/>
+                <Label text="📜 LOG" styleClass="section-title" style="-fx-font-size: 10px;"/>
                 <ListView fx:id="messageListView" prefHeight="100" styleClass="message-list"/>
             </VBox>
         </bottom>

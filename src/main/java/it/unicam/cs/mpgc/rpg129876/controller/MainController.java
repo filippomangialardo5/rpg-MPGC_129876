@@ -72,6 +72,9 @@ public class MainController {
     @FXML private ImageView enemyImageView;
     @FXML private ImageView mapBackground;
 
+    @FXML private Label enemyAttackLabel;
+    @FXML private Label enemyDefenseLabel;
+    @FXML private Label potionSuggestion;
 
     @FXML
     public void testButtons() {
@@ -189,89 +192,76 @@ public class MainController {
             Player p = gameController.getPlayer();
             playerCombatHealthBar.setProgress((double) p.getHp() / p.getMaxHp());
             playerCombatHealthLabel.setText(p.getHp() + "/" + p.getMaxHp());
+
+            // SUGGERIMENTO POZIONE - se HP bassi
+            if (p.getHp() < p.getMaxHp() / 3 && p.getHp() > 0) {
+                potionSuggestion.setText("⚠️ HP BASSO! USA UNA POZIONE! ⚠️");
+                potionSuggestion.setStyle("-fx-text-fill: #ff4444; -fx-font-weight: bold;");
+            } else {
+                potionSuggestion.setText("");
+            }
         }
 
         if (gameController.isInCombat() && gameController.getCurrentCombat() != null) {
             var enemy = gameController.getCurrentCombat().getEnemy();
-            enemyNameLabel.setText("👹 " + enemy.getName());
+            String enemyIcon = getEnemyIcon(enemy.getName());
+            enemyNameLabel.setText(enemyIcon + " " + enemy.getName());
             enemyHealthBar.setProgress((double) enemy.getHp() / enemy.getMaxHp());
             enemyHealthLabel.setText(enemy.getHp() + "/" + enemy.getMaxHp());
 
-            // Aggiorna anche l'icona del nemico nel pannello combattimento
-            String enemyIcon = getEnemyIcon(enemy.getName());
-            enemyNameLabel.setText(enemyIcon + " " + enemy.getName());
+            // MOSTRA ATTACCO E DIFESA DEL NEMICO
+            enemyAttackLabel.setText("⚔ Attacco: " + enemy.getAttack());
+            enemyDefenseLabel.setText("🛡 Difesa: " + enemy.getDefense());
 
-            // Animazione se il nemico ha pochi HP
+            // Cambia colore barra in base agli HP del nemico
             if (enemy.getHp() < enemy.getMaxHp() / 3) {
-                enemyHealthBar.setStyle("-fx-accent: #ff4444;");
+                enemyHealthBar.setStyle("-fx-accent: #ffaa00;");
             } else {
-                enemyHealthBar.setStyle("");
+                enemyHealthBar.setStyle("-fx-accent: #ff4444;");
+            }
+
+            // SUGGERIMENTO STRATEGICO
+            if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
+                potionSuggestion.setText("⚠️ ATTACCO NEMICO ALTO! USA POZIONI! ⚠️");
+            } else if (enemy.getHp() < 20) {
+                potionSuggestion.setText("⚔️ NEMICO DEBOLE! ATTACCA! ⚔️");
             }
         }
     }
 
     private void enableCombatMode() {
-        combatPanel.setVisible(true);
-        combatPanel.setManaged(true);
 
-        attackBtn.setVisible(true);
-        attackBtn.setManaged(true);
-        attackBtn.setDisable(false);
-        attackBtn.setOpacity(1.0);
+        System.out.println("=== enableCombatMode chiamato ===");
+        System.out.println("combatPanel è null? " + (combatPanel == null));
 
-        useItemBtn.setVisible(true);
-        useItemBtn.setManaged(true);
-        useItemBtn.setDisable(false);
-        useItemBtn.setOpacity(1.0);
-
-        fleeBtn.setVisible(true);
-        fleeBtn.setManaged(true);
-        fleeBtn.setDisable(false);
-        fleeBtn.setOpacity(1.0);
-
-        // Stampa di debug per conferma
-        System.out.println("=== BOTTONI COMBATTIMENTO ATTIVATI ===");
-        System.out.println("attackBtn visible: " + attackBtn.isVisible());
-        System.out.println("useItemBtn visible: " + useItemBtn.isVisible());
-        System.out.println("fleeBtn visible: " + fleeBtn.isVisible());
-
-        // DEBUG: verifica che i bottoni esistano
-        System.out.println("=== ENABLE COMBAT MODE ===");
-        System.out.println("attackBtn is null? " + (attackBtn == null));
-        System.out.println("useItemBtn is null? " + (useItemBtn == null));
-        System.out.println("fleeBtn is null? " + (fleeBtn == null));
-        System.out.println("combatPanel visible: " + combatPanel.isVisible());
-
-        // Forza i bottoni a essere visibili
-        if (attackBtn != null) {
-            attackBtn.setVisible(true);
-            attackBtn.setManaged(true);
-            attackBtn.setDisable(false);
-        }
-        if (useItemBtn != null) {
-            useItemBtn.setVisible(true);
-            useItemBtn.setManaged(true);
-            useItemBtn.setDisable(false);
-        }
-        if (fleeBtn != null) {
-            fleeBtn.setVisible(true);
-            fleeBtn.setManaged(true);
-            fleeBtn.setDisable(false);
+        if (combatPanel != null) {
+            combatPanel.setVisible(true);
+            combatPanel.setManaged(true);
+            combatPanel.setDisable(false);
+            System.out.println("combatPanel visible: " + combatPanel.isVisible());
         }
 
         // Carica l'immagine del nemico
         if (gameController.getCurrentCombat() != null) {
-            String enemyName = gameController.getCurrentCombat().getEnemy().getName();
+            var enemy = gameController.getCurrentCombat().getEnemy();
+            String enemyName = enemy.getName();
             loadEnemyImage(enemyName);
+
+            // Messaggio personalizzato in base al nemico
+            String enemyMessage;
+            switch(enemyName.toLowerCase()) {
+                case "goblin": enemyMessage = "👺 Un Goblin debole appare! Facile da sconfiggere!"; break;
+                case "orc": enemyMessage = "👹 Un Orco potente! Attento al suo attacco!"; break;
+                case "skeleton": enemyMessage = "💀 Uno Scheletro! Ha difesa media!"; break;
+                case "dragon": enemyMessage = "🐉 UN DRAGO!!! Molto potente, usa pozioni!"; break;
+                case "wolf": enemyMessage = "🐺 Un Lupo veloce! Attacco rapido!"; break;
+                default: enemyMessage = "⚔️ Un nemico selvaggio appare! Scegli la tua azione!";
+            }
+            combatMessage.setText("⚔️ " + enemyMessage + " ⚔️");
+            addGameMessage("⚔️ INIZIA COMBATTIMENTO contro " + enemyName + "!");
         }
 
         updateCombatUI();
-
-        if (gameController.getCurrentCombat() != null) {
-            String enemyName = gameController.getCurrentCombat().getEnemy().getName();
-            combatMessage.setText("⚔️ UN " + enemyName.toUpperCase() + " SELVAGGIO APPARE! ⚔️\nScegli la tua azione!");
-            addGameMessage("⚔️ INIZIA COMBATTIMENTO contro " + enemyName + "!");
-        }
     }
 
     private void disableCombatMode() {
@@ -352,55 +342,66 @@ public class MainController {
             for (int x = 0; x < width; x++) {
                 Room room = gameController.getRoomAt(x, y);
                 Button cell = new Button();
-                cell.setMinSize(45, 45);
+                cell.setMinSize(55, 55);
+                cell.setMaxSize(55, 55);
                 cell.getStyleClass().add("map-cell");
-                cell.setStyle("-fx-cursor: hand; -fx-font-size: 16px;");
+                cell.setStyle("-fx-cursor: hand; -fx-padding: 0;");
 
-                // Stanza corrente (giocatore)
+                // Stanza corrente (GIOCATORE)
                 if (room == gameController.getCurrentRoom()) {
-                    // Mostra l'icona del giocatore in base alla classe
+                    // Carica immagine del personaggio
                     String playerClass = gameController.getPlayer().getCharacterClass();
-                    String playerIcon = getPlayerIcon(playerClass);
-                    cell.setText(playerIcon);
-                    cell.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-size: 18px; -fx-cursor: hand;");
-                    cell.getStyleClass().add("map-cell-current");
+                    Image playerImg = ImageLoader.getPlayerImage(playerClass);
+                    if (playerImg != null) {
+                        ImageView playerView = new ImageView(playerImg);
+                        playerView.setFitWidth(45);
+                        playerView.setFitHeight(45);
+                        cell.setGraphic(playerView);
+                        cell.setText("");
+                    } else {
+                        cell.setText(getPlayerIcon(playerClass));
+                    }
+                    cell.setStyle("-fx-background-color: #e94560; -fx-cursor: hand;");
                 }
                 // Stanza con nemico vivo
                 else if (room.hasEnemy() && room.getEnemy().isAlive()) {
-                    String enemyIcon = getEnemyIcon(room.getEnemy().getName());
-                    cell.setText(enemyIcon);
-                    cell.setStyle("-fx-background-color: #3a1a1a; -fx-font-size: 18px; -fx-cursor: hand;");
+                    String enemyName = room.getEnemy().getName();
+                    Image enemyImg = ImageLoader.getEnemyImage(enemyName);
+                    if (enemyImg != null) {
+                        ImageView enemyView = new ImageView(enemyImg);
+                        enemyView.setFitWidth(40);
+                        enemyView.setFitHeight(40);
+                        cell.setGraphic(enemyView);
+                        cell.setText("");
+                    } else {
+                        cell.setText(getEnemyIcon(enemyName));
+                    }
+                    cell.setStyle("-fx-background-color: #3a1a1a; -fx-cursor: hand;");
                 }
                 // Stanza esplorata con tesoro
                 else if (room.isExplored() && room.hasTreasures()) {
-                    cell.setText("💰");
-                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-font-size: 18px; -fx-cursor: hand;");
+                    Image chestImg = ImageLoader.getGoldImage();
+                    if (chestImg != null) {
+                        ImageView chestView = new ImageView(chestImg);
+                        chestView.setFitWidth(35);
+                        chestView.setFitHeight(35);
+                        cell.setGraphic(chestView);
+                        cell.setText("");
+                    } else {
+                        cell.setText("💰");
+                    }
+                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-cursor: hand;");
                 }
                 // Stanza esplorata vuota
                 else if (room.isExplored()) {
                     cell.setText("⬜");
-                    cell.setStyle("-fx-background-color: #2a2a3a; -fx-font-size: 14px; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #2a2a3a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
                 // Stanza non esplorata
                 else {
                     cell.setText("❓");
-                    cell.setStyle("-fx-background-color: #1a1a2a; -fx-font-size: 16px; -fx-cursor: hand;");
-                    cell.getStyleClass().add("map-cell-hidden");
+                    cell.setStyle("-fx-background-color: #1a1a2a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-
-                final int finalX = x;
-                final int finalY = y;
-                cell.setOnAction(e -> {
-                    // Opzionale: cliccare su una cella per muoversi (utile per debug)
-                    if (Math.abs(finalX - gameController.getCurrentRoom().getX()) <= 1 &&
-                            Math.abs(finalY - gameController.getCurrentRoom().getY()) <= 1) {
-                        // Movimento adiacente
-                        if (finalX > gameController.getCurrentRoom().getX()) onMoveEast();
-                        else if (finalX < gameController.getCurrentRoom().getX()) onMoveWest();
-                        else if (finalY > gameController.getCurrentRoom().getY()) onMoveSouth();
-                        else if (finalY < gameController.getCurrentRoom().getY()) onMoveNorth();
-                    }
-                });
 
                 mapGrid.add(cell, x, y);
             }
@@ -716,10 +717,8 @@ public class MainController {
         if (img != null) {
             enemyImageView.setImage(img);
         } else {
-            // Fallback a emoji
-            String emoji = getEnemyIcon(enemyName);
-            enemyNameLabel.setText(emoji + " " + enemyName);
-            enemyImageView.setImage(null);
+            // Usa emoji come fallback
+            enemyNameLabel.setText(getEnemyIcon(enemyName) + " " + enemyName);
         }
     }
 
