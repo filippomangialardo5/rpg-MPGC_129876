@@ -44,6 +44,9 @@ public class Enemy extends GameCharacter {
         return new Enemy("Dragon", 200, 35, 20, 500, 300);
     }
 
+    public boolean isDragon() {return this.getName().equalsIgnoreCase("Dragon");
+    }
+
     // Metodo per generare nemico casuale (utile per esplorazione)
     public static Enemy randomEnemy() {
         double random = Math.random();

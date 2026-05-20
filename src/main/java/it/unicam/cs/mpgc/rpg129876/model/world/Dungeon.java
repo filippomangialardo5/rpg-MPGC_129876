@@ -21,6 +21,7 @@ public class Dungeon {
         this.random = new Random();
         this.currentLevel = 1;
         generateDungeon();
+        setupBossArea();
     }
 
     private void generateDungeon() {
@@ -49,22 +50,17 @@ public class Dungeon {
         // Popola con nemici e tesori
         populateDungeon();
 
-        // Stanza iniziale (centro o angolo in alto a sinistra)
-        int startX = width / 2;
-        int startY = height / 2;
-        currentRoom = map[startY][startX];
+        currentRoom = map[0][0];
         currentRoom.enter();
         currentRoom.setName("🏛 Punto di partenza");
-        currentRoom.setDescription("Qui inizia la tua avventura...");
+        currentRoom.setDescription("Qui inizia la tua avventura!");
         currentRoom.setEnemy(null);  // Nessun nemico all'inizio
 
-        // Stanza del boss nell'angolo opposto
-        int bossX = width - 1;
-        int bossY = height - 1;
-        Room bossRoom = map[bossY][bossX];
-        bossRoom.setName("👑 Trono del Drago");
-        bossRoom.setDescription("Un'enorme creatura ti fissa con occhi di fuoco!");
+        Room bossRoom = map[height-1][width-1];
+        bossRoom.setName("🐉 Trono dei Draghi 🐉");
+        bossRoom.setDescription("Tre draghi custodiscono il tesoro! Sconfiggili tutti per vincere!");
         bossRoom.setEnemy(Enemy.createDragon());
+        bossRoom.setDragonCount(3); // Aggiungi questo campo
     }
 
     private void setupRooms() {
@@ -141,6 +137,93 @@ public class Dungeon {
         return new HealthPotion(1 + random.nextInt(3));
     }
 
+    private void setupBossArea() {
+        /// La stanza finale (basso a destra) è una PORTA
+        int bossX = width - 1;  // se width=8, bossX=7
+        int bossY = height - 1; // se height=8, bossY=7
+        Room doorRoom = map[bossY][bossX];
+        doorRoom.setName("🚪 PORTA DEL TESORO 🚪");
+        doorRoom.setDescription("Una porta antica brilla di luce dorata.");
+        doorRoom.setEnemy(null);
+        doorRoom.setDoorRoom(true);  // IMPORTANTE!
+        doorRoom.setExplored(true);   // Per vederla subito
+
+        // Aggiungi i 3 draghi nelle caselle adiacenti alla porta
+
+        // Drago a SINISTRA della porta (x-1, y)
+        if (bossX - 1 >= 0) {
+            Room leftRoom = map[bossY][bossX - 1];
+            leftRoom.setName("🐉 Tana del Drago Orientale 🐉");
+            leftRoom.setDescription("Un drago rosso fiammeggiante ti blocca la strada!");
+            leftRoom.setEnemy(Enemy.createDragon());
+            leftRoom.setHasDragon(true);
+        }
+
+        // Drago SOPRA la porta (x, y-1)
+        if (bossY - 1 >= 0) {
+            Room upRoom = map[bossY - 1][bossX];
+            upRoom.setName("🐉 Tana del Drago Settentrionale 🐉");
+            upRoom.setDescription("Un drago blu elettrico ti fissa con occhi di ghiaccio!");
+            upRoom.setEnemy(Enemy.createDragon());
+            upRoom.setHasDragon(true);
+        }
+
+        // Drago in DIAGONALE (x-1, y-1) - sopra a sinistra
+        if (bossX - 1 >= 0 && bossY - 1 >= 0) {
+            Room diagonalRoom = map[bossY - 1][bossX - 1];
+            diagonalRoom.setName("🐉 Tana del Drago Occidentale 🐉");
+            diagonalRoom.setDescription("Un drago nero emerge dalle ombre, pronto a combattere!");
+            diagonalRoom.setEnemy(Enemy.createDragon());
+            diagonalRoom.setHasDragon(true);
+        }
+    }
+
+    // Controlla se tutti i draghi intorno alla porta sono stati sconfitti
+    public boolean areAllDragonsDefeated() {
+        int bossX = width - 1;
+        int bossY = height - 1;
+
+        // Controlla drago a sinistra
+        if (bossX - 1 >= 0) {
+            Room leftRoom = map[bossY][bossX - 1];
+            if (leftRoom.hasDragon() && leftRoom.hasEnemy()) {
+                return false;  // Drago ancora vivo
+            }
+        }
+
+        // Controlla drago sopra
+        if (bossY - 1 >= 0) {
+            Room upRoom = map[bossY - 1][bossX];
+            if (upRoom.hasDragon() && upRoom.hasEnemy()) {
+                return false;
+            }
+        }
+
+        // Controlla drago in diagonale
+        if (bossX - 1 >= 0 && bossY - 1 >= 0) {
+            Room diagRoom = map[bossY - 1][bossX - 1];
+            if (diagRoom.hasDragon() && diagRoom.hasEnemy()) {
+                return false;
+            }
+        }
+
+        return true;  // Tutti i draghi sono stati sconfitti
+    }
+
+    public boolean isBossRoom() {
+        Room current = getCurrentRoom();
+        if (current.isDoorRoom()) {
+            // Se è la porta, controlla se i draghi sono stati sconfitti
+            if (areAllDragonsDefeated()) {
+                current.setDragonsDefeated(true);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
     // Movimento
     public boolean move(Direction direction) {
         Room nextRoom = currentRoom.getExit(direction);
@@ -164,9 +247,6 @@ public class Dungeon {
         // Rigenera i nemici per il nuovo livello (opzionale)
     }
 
-    public boolean isBossRoom() {
-        return currentRoom == map[height-1][width-1];
-    }
 
     public String getMapAsString(boolean showAll) {
         StringBuilder sb = new StringBuilder();

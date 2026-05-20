@@ -214,22 +214,40 @@ public class GameController {
 
     private void endCombat(boolean playerWon) {
         if (playerWon && currentCombat != null) {
-            enemiesDefeated++;
+            int oldLevel = player.getLevel();
+
             currentCombat.awardRewards();
             addGameMessage("✨ VITTORIA! ✨");
-            addGameMessage("🏆 Guadagnati: " + currentCombat.getEnemy().getExperienceReward() + " XP e " +
-                    currentCombat.getEnemy().getGoldReward() + " monete d'oro!");
+
+            Enemy enemy = currentCombat.getEnemy();
+            addGameMessage("🏆 Guadagnati: " + enemy.getExperienceReward() + " XP e " +
+                    enemy.getGoldReward() + " monete d'oro!");
+
+            enemiesDefeated++;
+
+            // Se il nemico era un drago, segnala
+            if (enemy.isDragon()) {
+                addGameMessage("🐉 HAI SCONFITTO UN DRAGO! 🐉");
+
+                // Controlla quanti draghi sono rimasti
+                int dragonsLeft = countRemainingDragons();
+                if (dragonsLeft > 0) {
+                    addGameMessage("⚠️ Mancano ancora " + dragonsLeft + " draghi da sconfiggere!");
+                } else {
+                    addGameMessage("✨ TUTTI I DRAGHI SONO STATI SCONFITTI! ✨");
+                    addGameMessage("🚪 Ora puoi aprire la PORTA DEL TESORO!");
+                }
+            }
 
             // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // CONTROLLA SE IL GIOCATORE HA VINTO IL GIOCO
-            if (dungeon.isBossRoom() && currentCombat.getEnemy() instanceof Dragon) {
-                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI SCONFITTO IL DRAGO E VINTO IL GIOCO! 🎉🎉🎉");
+            // Controlla se il giocatore ha vinto (arrivato alla porta con draghi sconfitti)
+            if (dungeon.getCurrentRoom().isDoorRoom() && dungeon.areAllDragonsDefeated()) {
+                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
                 gameWon = true;
                 inCombat.set(false);
                 currentCombat = null;
-                // Notifica la UI della vittoria
                 return;
             }
 
@@ -241,11 +259,33 @@ public class GameController {
             gameOver = true;
             inCombat.set(false);
             currentCombat = null;
+            return;
         }
 
         inCombat.set(false);
         currentCombat = null;
         updatePlayerStats();
+    }
+
+    // Conta quanti draghi sono ancora vivi intorno alla porta
+    private int countRemainingDragons() {
+        int bossX = dungeon.getWidth() - 1;
+        int bossY = dungeon.getHeight() - 1;
+        int count = 0;
+
+        if (bossX - 1 >= 0) {
+            Room leftRoom = dungeon.getRoomAt(bossX - 1, bossY);
+            if (leftRoom.hasDragon() && leftRoom.hasEnemy()) count++;
+        }
+        if (bossY - 1 >= 0) {
+            Room upRoom = dungeon.getRoomAt(bossX, bossY - 1);
+            if (upRoom.hasDragon() && upRoom.hasEnemy()) count++;
+        }
+        if (bossX - 1 >= 0 && bossY - 1 >= 0) {
+            Room diagRoom = dungeon.getRoomAt(bossX - 1, bossY - 1);
+            if (diagRoom.hasDragon() && diagRoom.hasEnemy()) count++;
+        }
+        return count;
     }
 
     private void updateCombatLog() {

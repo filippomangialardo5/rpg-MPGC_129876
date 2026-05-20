@@ -15,6 +15,10 @@ public class Room {
     private Enemy enemy;
     private final List<Item> treasures;
     private final Map<Direction, Room> exits;
+    private int dragonCount = 0;
+    private boolean isDoorRoom;
+    private boolean hasDragon;
+    private boolean dragonsDefeated;
 
     public Room(int x, int y) {
         this.x = x;
@@ -49,6 +53,32 @@ public class Room {
     public void setEnemy(Enemy enemy) { this.enemy = enemy; }
     public List<Item> getTreasures() { return treasures; }
     public boolean hasTreasures() { return !treasures.isEmpty(); }
+
+    public void setDragonCount(int count) { this.dragonCount = count; }
+    public int getDragonCount() { return dragonCount; }
+    public void defeatDragon() {
+        dragonCount--;
+        if (dragonCount <= 0) {
+            enemy = null;
+        }
+    }
+
+    public void setDoorRoom(boolean isDoor) { this.isDoorRoom = isDoor; }
+    public boolean isDoorRoom() { return isDoorRoom; }
+
+    public void setHasDragon(boolean has) { this.hasDragon = has; }
+    public boolean hasDragon() { return hasDragon; }
+
+    public void setDragonsDefeated(boolean defeated) { this.dragonsDefeated = defeated; }
+    public boolean areDragonsDefeated() { return dragonsDefeated; }
+
+    // Controlla se la stanza è accessibile (se è porta, verifica draghi sconfitti)
+    public boolean isAccessible() {
+        if (isDoorRoom) {
+            return areDragonsDefeated();
+        }
+        return true;
+    }
 
     public void addTreasure(Item item) {
         treasures.add(item);

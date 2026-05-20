@@ -350,20 +350,19 @@ public class MainController {
             for (int x = 0; x < width; x++) {
                 Room room = gameController.getRoomAt(x, y);
                 Button cell = new Button();
-                cell.setMinSize(55, 55);
-                cell.setMaxSize(55, 55);
+                cell.setMinSize(50, 50);
+                cell.setMaxSize(50, 50);
                 cell.getStyleClass().add("map-cell");
                 cell.setStyle("-fx-cursor: hand; -fx-padding: 0;");
 
-                // Stanza corrente (GIOCATORE)
+                // STANZA CORRENTE (GIOCATORE)
                 if (room == gameController.getCurrentRoom()) {
-                    // Carica immagine del personaggio
                     String playerClass = gameController.getPlayer().getCharacterClass();
                     Image playerImg = ImageLoader.getPlayerImage(playerClass);
                     if (playerImg != null) {
                         ImageView playerView = new ImageView(playerImg);
-                        playerView.setFitWidth(45);
-                        playerView.setFitHeight(45);
+                        playerView.setFitWidth(40);
+                        playerView.setFitHeight(40);
                         cell.setGraphic(playerView);
                         cell.setText("");
                     } else {
@@ -371,45 +370,77 @@ public class MainController {
                     }
                     cell.setStyle("-fx-background-color: #e94560; -fx-cursor: hand;");
                 }
-                // Stanza con nemico vivo
+                // STANZA PORTA DEL TESORO
+                else if (room.isDoorRoom()) {
+                    if (gameController.getDungeon().areAllDragonsDefeated()) {
+                        cell.setText("🚪✨");
+                        cell.setStyle("-fx-background-color: #ffd700; -fx-font-size: 18px; -fx-cursor: hand;");
+                    } else {
+                        cell.setText("🚪🔒");
+                        cell.setStyle("-fx-background-color: #8B4513; -fx-font-size: 18px; -fx-cursor: hand;");
+                    }
+                }
+                // STANZA CON DRAGO (vivo)
+                else if (room.hasDragon() && room.hasEnemy() && room.getEnemy().isAlive()) {
+                    cell.setText("🐉");
+                    cell.setStyle("-fx-background-color: #8B0000; -fx-font-size: 20px; -fx-cursor: hand;");
+                }
+                // STANZA CON NEMICO VIVO (non drago)
                 else if (room.hasEnemy() && room.getEnemy().isAlive()) {
                     String enemyName = room.getEnemy().getName();
                     Image enemyImg = ImageLoader.getEnemyImage(enemyName);
                     if (enemyImg != null) {
                         ImageView enemyView = new ImageView(enemyImg);
-                        enemyView.setFitWidth(40);
-                        enemyView.setFitHeight(40);
+                        enemyView.setFitWidth(35);
+                        enemyView.setFitHeight(35);
                         cell.setGraphic(enemyView);
                         cell.setText("");
                     } else {
                         cell.setText(getEnemyIcon(enemyName));
                     }
-                    cell.setStyle("-fx-background-color: #3a1a1a; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #3a1a1a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-                // Stanza esplorata con tesoro
+                // STANZA ESPLORATA CON TESORO
                 else if (room.isExplored() && room.hasTreasures()) {
                     Image chestImg = ImageLoader.getGoldImage();
                     if (chestImg != null) {
                         ImageView chestView = new ImageView(chestImg);
-                        chestView.setFitWidth(35);
-                        chestView.setFitHeight(35);
+                        chestView.setFitWidth(30);
+                        chestView.setFitHeight(30);
                         cell.setGraphic(chestView);
                         cell.setText("");
                     } else {
                         cell.setText("💰");
                     }
-                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-                // Stanza esplorata vuota
+                // STANZA ESPLORATA VUOTA
                 else if (room.isExplored()) {
                     cell.setText("⬜");
                     cell.setStyle("-fx-background-color: #2a2a3a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-                // Stanza non esplorata
+                // STANZA NON ESPLORATA
                 else {
                     cell.setText("❓");
                     cell.setStyle("-fx-background-color: #1a1a2a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
+
+                // Movimento cliccando sulla cella (solo celle adiacenti)
+                final int finalX = x;
+                final int finalY = y;
+                cell.setOnAction(e -> {
+                    Room current = gameController.getCurrentRoom();
+                    int dx = Math.abs(finalX - current.getX());
+                    int dy = Math.abs(finalY - current.getY());
+
+                    // Se la cella è adiacente (distanza 1 in una direzione)
+                    if ((dx == 1 && dy == 0) || (dx == 0 && dy == 1)) {
+                        if (finalX > current.getX()) onMoveEast();
+                        else if (finalX < current.getX()) onMoveWest();
+                        else if (finalY > current.getY()) onMoveSouth();
+                        else if (finalY < current.getY()) onMoveNorth();
+                    }
+                });
 
                 mapGrid.add(cell, x, y);
             }
@@ -560,7 +591,7 @@ public class MainController {
         updatePlayerUI(gameController.getPlayer());
         updateInventory();
         updateMap();
-        roomDescriptionArea.setText(
+        /*roomDescriptionArea.setText(
                 gameController.getCurrentRoom().getName() + "\n" +
                         gameController.getCurrentRoom().getDescription()
         );
@@ -569,11 +600,15 @@ public class MainController {
         if (currentScene == null) {
             currentScene = gameScreen.getScene();
             setupKeyBindings();
-        }
+        }*/
+
+        // Avvia il checker per vittoria/game over
+        startGameStatusChecker();
 
         addGameMessage("🏰 La tua avventura ha inizio!");
         addGameMessage("📍 Ti trovi in: " + gameController.getCurrentRoom().getName());
         addGameMessage("🎮 Usa WASD o le FRECCE per muoverti!");
+        addGameMessage("🐉 L'obiettivo è raggiungere l'angolo in basso a destra e sconfiggere i draghi!");
     }
 
     // Azioni movimento
@@ -689,6 +724,8 @@ public class MainController {
         gameScreen.setManaged(false);
         startScreen.setVisible(true);
         startScreen.setManaged(true);
+        gameController = new GameController();  // Ricrea il controller
+        initialize();  // Re-inizializza
         showCharacterCreation();
     }
 
@@ -748,49 +785,13 @@ public class MainController {
         }
     }
 
-    private void showGameOverScreen() {
-        // Ferma il combattimento se attivo
-        if (gameController.isInCombat()) {
-            combatPanel.setVisible(false);
-            combatPanel.setManaged(false);
-        }
-
-        // Crea dialog personalizzato
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("💀 GAME OVER 💀");
-        dialog.setHeaderText("Sei stato sconfitto!");
-
-        VBox content = new VBox(15);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new javafx.geometry.Insets(20));
-
-        Label message = new Label("Il tuo eroe è caduto in battaglia...\nLa tua avventura finisce qui.");
-        message.setStyle("-fx-font-size: 14px; -fx-text-fill: #ff4444; -fx-text-alignment: center;");
-
-        Label stats = new Label(
-                "📊 Statistiche finali:\n" +
-                        "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
-                        "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
-                        "💰 Oro accumulato: " + gameController.getPlayer().getGold()
+    // Aggiungi un timer che controlla periodicamente lo stato del gioco
+    private void startGameStatusChecker() {
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(0.5), e -> checkGameStatus())
         );
-        stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
-
-        Button newGameBtn = new Button("✨ NUOVA PARTITA ✨");
-        newGameBtn.setOnAction(e -> {
-            dialog.close();
-            onNewGame();
-        });
-
-        Button exitBtn = new Button("❌ ESCI");
-        exitBtn.setOnAction(e -> {
-            dialog.close();
-            Platform.exit();
-        });
-
-        content.getChildren().addAll(message, stats, newGameBtn, exitBtn);
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        dialog.showAndWait();
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
     }
 
     // Aggiungi un timer che controlla lo stato del gioco
@@ -805,43 +806,59 @@ public class MainController {
     }
 
     private void showVictoryScreen() {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("🏆 VITTORIA! 🏆");
-        dialog.setHeaderText("Hai completato l'avventura!");
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("🏆 VITTORIA! 🏆");
+            alert.setHeaderText("Hai completato l'avventura!");
+            alert.setContentText(
+                    "🎉 CONGRATULAZIONI! 🎉\n\n" +
+                            "Hai sconfitto il Drago e salvato il regno!\n\n" +
+                            "📊 Statistiche finali:\n" +
+                            "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
+                            "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
+                            "💰 Oro accumulato: " + gameController.getPlayer().getGold()
+            );
 
-        VBox content = new VBox(15);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new javafx.geometry.Insets(20));
+            ButtonType newGameBtn = new ButtonType("✨ Nuova Partita", ButtonBar.ButtonData.OK_DONE);
+            ButtonType exitBtn = new ButtonType("❌ Esci", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
 
-        Label message = new Label("🎉 CONGRATULAZIONI! 🎉\n\nHai sconfitto il Drago e salvato il regno!");
-        message.setStyle("-fx-font-size: 16px; -fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-text-alignment: center;");
-
-        Label stats = new Label(
-                "📊 Statistiche finali:\n" +
-                        "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
-                        "💰 Oro accumulato: " + gameController.getPlayer().getGold() + "\n" +
-                        "🏆 Sei una leggenda!"
-        );
-        stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #ffd700;");
-
-        Button newGameBtn = new Button("✨ NUOVA PARTITA ✨");
-        newGameBtn.setOnAction(e -> {
-            dialog.close();
-            onNewGame();
+            alert.showAndWait().ifPresent(response -> {
+                if (response == newGameBtn) {
+                    onNewGame();
+                } else {
+                    Platform.exit();
+                }
+            });
         });
-
-        Button exitBtn = new Button("❌ ESCI");
-        exitBtn.setOnAction(e -> {
-            dialog.close();
-            Platform.exit();
-        });
-
-        content.getChildren().addAll(message, stats, newGameBtn, exitBtn);
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        dialog.showAndWait();
     }
 
+    private void showGameOverScreen() {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("💀 GAME OVER 💀");
+            alert.setHeaderText("Sei stato sconfitto!");
+            alert.setContentText(
+                    "Il tuo eroe è caduto in battaglia...\n\n" +
+                            "📊 Statistiche finali:\n" +
+                            "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
+                            "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
+                            "💰 Oro accumulato: " + gameController.getPlayer().getGold()
+            );
+
+            ButtonType newGameBtn = new ButtonType("✨ Nuova Partita", ButtonBar.ButtonData.OK_DONE);
+            ButtonType exitBtn = new ButtonType("❌ Esci", ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == newGameBtn) {
+                    onNewGame();
+                } else {
+                    Platform.exit();
+                }
+            });
+        });
+    }
 
     private void loadScores() {
         try {
