@@ -126,17 +126,27 @@ public class GameController {
     public void playerAttack() {
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.playerAttack();
+
+            // Mostra il messaggio dell'attacco
             addGameMessage(result.getMessage());
+            combatLog.set(result.getMessage());
+
+            // NON chiamare updateCombatUI qui - è responsabilità del MainController
 
             if (result.isCombatEnded() && result.isPlayerWon()) {
                 endCombat(true);
             } else if (currentCombat.isInCombat()) {
-                enemyTurn();
+                // Turno del nemico
+                CombatSystem.CombatResult enemyResult = currentCombat.enemyTurn();
+                addGameMessage(enemyResult.getMessage());
+                combatLog.set(enemyResult.getMessage());
+
+                if (enemyResult.isCombatEnded() && !enemyResult.isPlayerWon()) {
+                    endCombat(false);
+                }
             }
-            updateCombatLog();
         }
     }
-
     private void enemyTurn() {
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.enemyTurn();
@@ -198,23 +208,19 @@ public class GameController {
             // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // Controlla se si sale di livello
+            // AGGIORNA LA MAPPA (importante!)
+            // Questo viene fatto dal MainController attraverso l'osservatore
+
             if (player.getLevel() > 1) {
                 addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
             }
         } else if (!playerWon) {
             addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
-            addGameMessage("🔄 Ricomincia una nuova partita per continuare l'avventura!");
         }
 
         inCombat.set(false);
         currentCombat = null;
         updatePlayerStats();
-
-        // Se il giocatore è morto, resetta il gioco
-        if (!player.isAlive()) {
-            addGameMessage("\n📜 Premi 'New Game' per iniziare una nuova avventura!");
-        }
     }
 
     private void updateCombatLog() {
@@ -258,5 +264,28 @@ public class GameController {
 
     public CombatSystem getCurrentCombat() {
         return currentCombat;
+    }
+
+    // Metodo per ottenere l'icona del giocatore in base alla classe
+    private String getPlayerIcon(String playerClass) {
+        switch(playerClass.toLowerCase()) {
+            case "warrior": return "⚔️";
+            case "mage": return "🔮";
+            case "rogue": return "🗡️";
+            default: return "⭐";
+        }
+    }
+
+    // Metodo per ottenere l'icona del nemico
+    private String getEnemyIcon(String enemyName) {
+        switch(enemyName.toLowerCase()) {
+            case "goblin": return "👺";
+            case "orc": return "👹";
+            case "skeleton": return "💀";
+            case "dragon": return "🐉";
+            case "wolf": return "🐺";
+            case "dark knight": return "⚔️";
+            default: return "👾";
+        }
     }
 }
