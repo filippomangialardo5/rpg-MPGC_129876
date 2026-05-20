@@ -107,15 +107,18 @@ public class CombatSystem {
         if (!inCombat) return new CombatResult(false, "Not in combat!", false);
 
         int chance = random.nextInt(100);
-        if (chance < 50) {
+        if (chance < 40) {  // 40% di successo (più realistico)
             inCombat = false;
-            CombatResult result = new CombatResult(true, "🏃 You successfully fled from combat! 🏃", false);
+            CombatResult result = new CombatResult(true, "🏃 Sei riuscito a fuggire! 🏃", false);
             result.setFled(true);
-            System.out.println(result.getMessage());
             return result;
         } else {
-            System.out.println("Failed to flee!");
-            return enemyAttack();
+            // Se fallisci, subisci un attacco gratuito dal nemico
+            int damage = calculateDamage(enemy.getAttack(), player.getDefense());
+            player.takeDamage(damage);
+            CombatResult result = new CombatResult(false, "🏃 Fuga fallita! " + enemy.getName() + " ti colpisce con " + damage + " danni!", false);
+            result.setFled(false);
+            return result;
         }
     }
 

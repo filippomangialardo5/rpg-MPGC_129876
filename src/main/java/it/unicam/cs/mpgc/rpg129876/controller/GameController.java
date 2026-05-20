@@ -187,14 +187,17 @@ public class GameController {
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.flee();
             addGameMessage(result.getMessage());
+            combatLog.set(result.getMessage());
 
             if (!currentCombat.isInCombat()) {
                 inCombat.set(false);
                 currentCombat = null;
-                addGameMessage("🏃 Sei riuscito a fuggire!");
-                updateRoomInfo();
+                addGameMessage("🏃 Sei uscito dal combattimento!");
+            } else {
+                // Aggiorna la UI per mostrare i danni subiti
+                updatePlayerStats();
+                addGameMessage("❤️ HP rimanenti: " + player.getHp() + "/" + player.getMaxHp());
             }
-            updateCombatLog();
         }
     }
 

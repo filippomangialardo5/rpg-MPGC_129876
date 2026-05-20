@@ -5,6 +5,8 @@ import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import it.unicam.cs.mpgc.rpg129876.model.world.Direction;
 import it.unicam.cs.mpgc.rpg129876.model.world.Room;
+import it.unicam.cs.mpgc.rpg129876.utils.ImageLoader;
+import it.unicam.cs.mpgc.rpg129876.utils.ImageManager;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -21,6 +23,7 @@ import javafx.scene.image.ImageView;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.ScaleTransition;
+import javafx.scene.layout.HBox;
 
 public class MainController {
 
@@ -68,6 +71,7 @@ public class MainController {
     @FXML private ImageView playerCombatImageView;
     @FXML private ImageView enemyImageView;
     @FXML private ImageView mapBackground;
+
 
     @FXML
     public void testButtons() {
@@ -289,6 +293,22 @@ public class MainController {
             }
 
             if (potionCount > 0) {
+                HBox potionBox = new HBox(10);
+                potionBox.setAlignment(Pos.CENTER_LEFT);
+
+                // Immagine pozione (opzionale - se non c'è usa solo testo)
+                ImageView potionImg = null;
+                try {
+                    potionImg = new ImageView(ImageLoader.getPotionImage());
+                    if (potionImg.getImage() != null) {
+                        potionImg.setFitWidth(30);
+                        potionImg.setFitHeight(30);
+                        potionBox.getChildren().add(potionImg);
+                    }
+                } catch (Exception e) {
+                    // Immagine non disponibile, usa solo testo
+                }
+
                 Button potionBtn = new Button("🧪 Pozione x" + potionCount);
                 potionBtn.setOnAction(e -> {
                     for (Item item : gameController.getPlayer().getInventory()) {
@@ -306,10 +326,15 @@ public class MainController {
                     }
                 });
                 potionBtn.getStyleClass().add("inventory-button");
-                potionBtn.setStyle("-fx-cursor: hand;");
-                inventoryList.getChildren().add(potionBtn);
+
+                if (potionImg != null && potionImg.getImage() != null) {
+                    potionBox.getChildren().add(potionBtn);
+                } else {
+                    potionBox.getChildren().add(potionBtn);
+                }
+                inventoryList.getChildren().add(potionBox);
             } else {
-                Label emptyLabel = new Label("❌ Vuoto");
+                Label emptyLabel = new Label("❌ Nessuna pozione");
                 emptyLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 11px;");
                 inventoryList.getChildren().add(emptyLabel);
             }
@@ -632,10 +657,18 @@ public class MainController {
         if (gameController.getPlayer() != null && gameController.isInCombat()) {
             gameController.flee();
             updateCombatUI();
+            updatePlayerUI(gameController.getPlayer());
             updateMap();
+
             if (!gameController.isInCombat()) {
                 combatMessage.setText("🏃 SEI RIUSCITO A FUGGIRE! 🏃");
-                addGameMessage("🏃 Sei fuggito dal combattimento!");
+                // Disabilita il pannello combattimento
+                combatPanel.setVisible(false);
+                combatPanel.setManaged(false);
+            } else {
+                combatMessage.setText("⚠️ FUGA FALLITA! Subisci un attacco! ⚠️");
+                // Forza aggiornamento delle barre
+                updateCombatUI();
             }
         }
     }
@@ -666,37 +699,34 @@ public class MainController {
     }
 
     private void loadPlayerImage(String characterClass) {
-        try {
-            String imagePath = "/images/" + characterClass.toLowerCase() + ".png";
-            var inputStream = getClass().getResourceAsStream(imagePath);
-            if (inputStream != null) {
-                Image img = new Image(inputStream);
-                playerImageView.setImage(img);
-                playerCombatImageView.setImage(img);
-            } else {
-                System.err.println("Immagine non trovata: " + imagePath);
-                // Usa emoji come fallback
-                playerImageView.setImage(null);
-            }
-        } catch (Exception e) {
-            System.err.println("Errore caricamento immagine: " + e.getMessage());
+        Image img = ImageLoader.getPlayerImage(characterClass);
+        if (img != null) {
+            playerImageView.setImage(img);
+            playerCombatImageView.setImage(img);
+        } else {
+            // Fallback a emoji
+            String emoji = getPlayerIcon(characterClass);
+            playerImageView.setImage(null);
+            // Puoi anche impostare un testo alternativo se vuoi
         }
     }
 
     private void loadEnemyImage(String enemyName) {
-        try {
-            String imagePath = "/images/" + enemyName.toLowerCase().replace(" ", "") + ".png";
-            var inputStream = getClass().getResourceAsStream(imagePath);
-            if (inputStream != null) {
-                Image img = new Image(inputStream);
-                enemyImageView.setImage(img);
-            } else {
-                System.err.println("Immagine nemico non trovata: " + imagePath);
-                enemyImageView.setImage(null);
-            }
-        } catch (Exception e) {
-            System.err.println("Errore caricamento immagine nemico: " + e.getMessage());
+        Image img = ImageLoader.getEnemyImage(enemyName);
+        if (img != null) {
+            enemyImageView.setImage(img);
+        } else {
+            // Fallback a emoji
+            String emoji = getEnemyIcon(enemyName);
+            enemyNameLabel.setText(emoji + " " + enemyName);
+            enemyImageView.setImage(null);
         }
+    }
+
+    private void loadItemImages() {
+        // Per l'inventario - opzionale
+        Image potionImg = ImageLoader.getPotionImage();
+        // Non usiamo immagini per i bottoni, solo testo
     }
 
     private void loadMapBackground() {

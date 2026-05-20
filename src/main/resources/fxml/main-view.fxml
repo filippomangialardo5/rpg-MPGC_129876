@@ -51,8 +51,15 @@
                 <Label text="📊 STATISTICHE" styleClass="section-title"/>
                 <Separator/>
 
+                <!-- Per l'immagine del personaggio nelle statistiche -->
                 <ImageView fx:id="playerImageView" fitWidth="80" fitHeight="80"
                            style="-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 2);"/>
+
+                <!-- Per l'immagine del personaggio in combattimento -->
+                <ImageView fx:id="playerCombatImageView" fitWidth="60" fitHeight="60"/>
+
+                <!-- Per l'immagine del nemico in combattimento -->
+                <ImageView fx:id="enemyImageView" fitWidth="60" fitHeight="60"/>
 
                 <Label fx:id="playerNameLabel" styleClass="player-name" text="-"/>
                 <Label fx:id="playerClassLabel" styleClass="player-class" text="-"/>
