@@ -18,6 +18,13 @@ public class GameController {
     private Dungeon dungeon;
     private CombatSystem currentCombat;
 
+    private boolean gameWon = false;
+    private boolean gameOver = false;
+
+    public boolean isGameWon() { return gameWon; }
+    public boolean isGameOver() { return gameOver; }
+    public void resetGameFlags() { gameWon = false; gameOver = false; }
+
     // Observable properties per il binding con la UI
     private final ObjectProperty<Player> currentPlayer = new SimpleObjectProperty<>();
     private final BooleanProperty inCombat = new SimpleBooleanProperty(false);
@@ -211,14 +218,24 @@ public class GameController {
             // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // AGGIORNA LA MAPPA (importante!)
-            // Questo viene fatto dal MainController attraverso l'osservatore
+            // CONTROLLA SE IL GIOCATORE HA VINTO IL GIOCO
+            if (dungeon.isBossRoom() && currentCombat.getEnemy() instanceof Dragon) {
+                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI SCONFITTO IL DRAGO E VINTO IL GIOCO! 🎉🎉🎉");
+                gameWon = true;
+                inCombat.set(false);
+                currentCombat = null;
+                // Notifica la UI della vittoria
+                return;
+            }
 
-            if (player.getLevel() > 1) {
+            if (player.getLevel() > oldLevel) {
                 addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
             }
         } else if (!playerWon) {
             addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
+            gameOver = true;
+            inCombat.set(false);
+            currentCombat = null;
         }
 
         inCombat.set(false);

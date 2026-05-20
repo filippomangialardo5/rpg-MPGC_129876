@@ -740,6 +740,100 @@ public class MainController {
         }
     }
 
+    private void showGameOverScreen() {
+        // Ferma il combattimento se attivo
+        if (gameController.isInCombat()) {
+            combatPanel.setVisible(false);
+            combatPanel.setManaged(false);
+        }
+
+        // Crea dialog personalizzato
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("💀 GAME OVER 💀");
+        dialog.setHeaderText("Sei stato sconfitto!");
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new javafx.geometry.Insets(20));
+
+        Label message = new Label("Il tuo eroe è caduto in battaglia...\nLa tua avventura finisce qui.");
+        message.setStyle("-fx-font-size: 14px; -fx-text-fill: #ff4444; -fx-text-alignment: center;");
+
+        Label stats = new Label(
+                "📊 Statistiche finali:\n" +
+                        "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
+                        "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
+                        "💰 Oro accumulato: " + gameController.getPlayer().getGold()
+        );
+        stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
+
+        Button newGameBtn = new Button("✨ NUOVA PARTITA ✨");
+        newGameBtn.setOnAction(e -> {
+            dialog.close();
+            onNewGame();
+        });
+
+        Button exitBtn = new Button("❌ ESCI");
+        exitBtn.setOnAction(e -> {
+            dialog.close();
+            Platform.exit();
+        });
+
+        content.getChildren().addAll(message, stats, newGameBtn, exitBtn);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        dialog.showAndWait();
+    }
+
+    // Aggiungi un timer che controlla lo stato del gioco
+    private void checkGameStatus() {
+        if (gameController.isGameWon()) {
+            showVictoryScreen();
+            gameController.resetGameFlags();
+        } else if (gameController.isGameOver()) {
+            showGameOverScreen();
+            gameController.resetGameFlags();
+        }
+    }
+
+    private void showVictoryScreen() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("🏆 VITTORIA! 🏆");
+        dialog.setHeaderText("Hai completato l'avventura!");
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new javafx.geometry.Insets(20));
+
+        Label message = new Label("🎉 CONGRATULAZIONI! 🎉\n\nHai sconfitto il Drago e salvato il regno!");
+        message.setStyle("-fx-font-size: 16px; -fx-text-fill: #00ff00; -fx-font-weight: bold; -fx-text-alignment: center;");
+
+        Label stats = new Label(
+                "📊 Statistiche finali:\n" +
+                        "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
+                        "💰 Oro accumulato: " + gameController.getPlayer().getGold() + "\n" +
+                        "🏆 Sei una leggenda!"
+        );
+        stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #ffd700;");
+
+        Button newGameBtn = new Button("✨ NUOVA PARTITA ✨");
+        newGameBtn.setOnAction(e -> {
+            dialog.close();
+            onNewGame();
+        });
+
+        Button exitBtn = new Button("❌ ESCI");
+        exitBtn.setOnAction(e -> {
+            dialog.close();
+            Platform.exit();
+        });
+
+        content.getChildren().addAll(message, stats, newGameBtn, exitBtn);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        dialog.showAndWait();
+    }
+
     private void showHelpDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("📖 Guida");
