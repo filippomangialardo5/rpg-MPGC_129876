@@ -22,6 +22,14 @@ public class Dungeon {
         this.currentLevel = 1;
         generateDungeon();
         setupBossArea();
+
+        // FORZA l'esplorazione della stanza iniziale e delle aree circostanti per test
+        map[0][0].setExplored(true);
+
+        // Per debug: stampa la posizione della porta
+        Room door = map[height-1][width-1];
+        System.out.println("Porta creata in posizione: [" + (width-1) + "," + (height-1) + "]");
+        System.out.println("isDoorRoom: " + door.isDoorRoom());
     }
 
     private void generateDungeon() {
@@ -138,43 +146,52 @@ public class Dungeon {
     }
 
     private void setupBossArea() {
-        /// La stanza finale (basso a destra) è una PORTA
-        int bossX = width - 1;  // se width=8, bossX=7
-        int bossY = height - 1; // se height=8, bossY=7
+        int bossX = width - 1;
+        int bossY = height - 1;
+
+        System.out.println("=== SETUP BOSS AREA ===");
+        System.out.println("Porta posizione: [" + bossX + "," + bossY + "]");
+
+        // PORTA
         Room doorRoom = map[bossY][bossX];
         doorRoom.setName("🚪 PORTA DEL TESORO 🚪");
-        doorRoom.setDescription("Una porta antica brilla di luce dorata.");
+        doorRoom.setDescription("Una porta antica brilla di luce dorata. Oltre si intravede un tesoro leggendario!");
         doorRoom.setEnemy(null);
-        doorRoom.setDoorRoom(true);  // IMPORTANTE!
-        doorRoom.setExplored(true);   // Per vederla subito
+        doorRoom.setDoorRoom(true);
+        doorRoom.setExplored(true);  // Rende visibile la porta
+        doorRoom.setVisited(false);
 
-        // Aggiungi i 3 draghi nelle caselle adiacenti alla porta
-
-        // Drago a SINISTRA della porta (x-1, y)
+        // Drago a SINISTRA (x-1, y)
         if (bossX - 1 >= 0) {
             Room leftRoom = map[bossY][bossX - 1];
             leftRoom.setName("🐉 Tana del Drago Orientale 🐉");
             leftRoom.setDescription("Un drago rosso fiammeggiante ti blocca la strada!");
             leftRoom.setEnemy(Enemy.createDragon());
             leftRoom.setHasDragon(true);
+            leftRoom.setExplored(true);
+            System.out.println("Drago sinistra in: [" + (bossX-1) + "," + bossY + "]");
         }
 
-        // Drago SOPRA la porta (x, y-1)
+        // Drago SOPRA (x, y-1)
         if (bossY - 1 >= 0) {
             Room upRoom = map[bossY - 1][bossX];
             upRoom.setName("🐉 Tana del Drago Settentrionale 🐉");
             upRoom.setDescription("Un drago blu elettrico ti fissa con occhi di ghiaccio!");
             upRoom.setEnemy(Enemy.createDragon());
             upRoom.setHasDragon(true);
+            upRoom.setExplored(true);
+            System.out.println("Drago sopra in: [" + bossX + "," + (bossY-1) + "]");
         }
 
-        // Drago in DIAGONALE (x-1, y-1) - sopra a sinistra
+        // Drago in DIAGONALE (x-1, y-1)
         if (bossX - 1 >= 0 && bossY - 1 >= 0) {
-            Room diagonalRoom = map[bossY - 1][bossX - 1];
-            diagonalRoom.setName("🐉 Tana del Drago Occidentale 🐉");
-            diagonalRoom.setDescription("Un drago nero emerge dalle ombre, pronto a combattere!");
-            diagonalRoom.setEnemy(Enemy.createDragon());
-            diagonalRoom.setHasDragon(true);
+            Room diagRoom = map[bossY - 1][bossX - 1];
+            diagRoom.setName("🐉 Tana del Drago Occidentale 🐉");
+            diagRoom.setDescription("Un drago nero emerge dalle ombre, pronto a combattere!");
+            diagRoom.setEnemy(Enemy.createDragon());
+            diagRoom.setHasDragon(true);
+            diagRoom.setExplored(true);
+            System.out.println("Drago diagonale in: [" + (bossX-1) + "," + (bossY-1) + "]");
         }
     }
 

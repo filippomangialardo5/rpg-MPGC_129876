@@ -350,95 +350,103 @@ public class MainController {
             for (int x = 0; x < width; x++) {
                 Room room = gameController.getRoomAt(x, y);
                 Button cell = new Button();
-                cell.setMinSize(50, 50);
-                cell.setMaxSize(50, 50);
-                cell.getStyleClass().add("map-cell");
-                cell.setStyle("-fx-cursor: hand; -fx-padding: 0;");
+                cell.setMinSize(55, 55);
+                cell.setPrefSize(55, 55);
+                cell.setMaxSize(55, 55);
+                cell.setStyle("-fx-cursor: hand; -fx-padding: 0; -fx-background-radius: 8;");
 
-                // STANZA CORRENTE (GIOCATORE)
+                // STANZA CORRENTE (GIOCATORE) - usa immagine personaggio
                 if (room == gameController.getCurrentRoom()) {
                     String playerClass = gameController.getPlayer().getCharacterClass();
                     Image playerImg = ImageLoader.getPlayerImage(playerClass);
                     if (playerImg != null) {
                         ImageView playerView = new ImageView(playerImg);
-                        playerView.setFitWidth(40);
-                        playerView.setFitHeight(40);
+                        playerView.setFitWidth(45);
+                        playerView.setFitHeight(45);
                         cell.setGraphic(playerView);
                         cell.setText("");
                     } else {
-                        cell.setText(getPlayerIcon(playerClass));
+                        cell.setText("⭐");
                     }
-                    cell.setStyle("-fx-background-color: #e94560; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #e94560; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
-                // STANZA PORTA DEL TESORO
+                // PORTA DEL TESORO
                 else if (room.isDoorRoom()) {
                     if (gameController.getDungeon().areAllDragonsDefeated()) {
                         cell.setText("🚪✨");
-                        cell.setStyle("-fx-background-color: #ffd700; -fx-font-size: 18px; -fx-cursor: hand;");
+                        cell.setStyle("-fx-background-color: #ffd700; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                     } else {
                         cell.setText("🚪🔒");
-                        cell.setStyle("-fx-background-color: #8B4513; -fx-font-size: 18px; -fx-cursor: hand;");
+                        cell.setStyle("-fx-background-color: #8B4513; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                     }
                 }
-                // STANZA CON DRAGO (vivo)
+                // DRAGO - usa immagine drago
                 else if (room.hasDragon() && room.hasEnemy() && room.getEnemy().isAlive()) {
-                    cell.setText("🐉");
-                    cell.setStyle("-fx-background-color: #8B0000; -fx-font-size: 20px; -fx-cursor: hand;");
+                    Image dragonImg = ImageLoader.getEnemyImage("Dragon");
+                    if (dragonImg != null) {
+                        ImageView dragonView = new ImageView(dragonImg);
+                        dragonView.setFitWidth(45);
+                        dragonView.setFitHeight(45);
+                        cell.setGraphic(dragonView);
+                        cell.setText("");
+                    } else {
+                        cell.setText("🐉");
+                    }
+                    cell.setStyle("-fx-background-color: #8B0000; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
-                // STANZA CON NEMICO VIVO (non drago)
+                // ALTRI NEMICI - usa immagine del nemico
                 else if (room.hasEnemy() && room.getEnemy().isAlive()) {
                     String enemyName = room.getEnemy().getName();
                     Image enemyImg = ImageLoader.getEnemyImage(enemyName);
                     if (enemyImg != null) {
                         ImageView enemyView = new ImageView(enemyImg);
-                        enemyView.setFitWidth(35);
-                        enemyView.setFitHeight(35);
+                        enemyView.setFitWidth(40);
+                        enemyView.setFitHeight(40);
                         cell.setGraphic(enemyView);
                         cell.setText("");
                     } else {
                         cell.setText(getEnemyIcon(enemyName));
                     }
-                    cell.setStyle("-fx-background-color: #3a1a1a; -fx-font-size: 18px; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #3a1a1a; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
-                // STANZA ESPLORATA CON TESORO
+                // TESORO - usa immagine tesoro/pozione
                 else if (room.isExplored() && room.hasTreasures()) {
-                    Image chestImg = ImageLoader.getGoldImage();
-                    if (chestImg != null) {
-                        ImageView chestView = new ImageView(chestImg);
-                        chestView.setFitWidth(30);
-                        chestView.setFitHeight(30);
-                        cell.setGraphic(chestView);
+                    Image goldImg = ImageLoader.getGoldImage();
+                    if (goldImg != null) {
+                        ImageView goldView = new ImageView(goldImg);
+                        goldView.setFitWidth(35);
+                        goldView.setFitHeight(35);
+                        cell.setGraphic(goldView);
                         cell.setText("");
                     } else {
                         cell.setText("💰");
                     }
-                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-font-size: 18px; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
-                // STANZA ESPLORATA VUOTA
+                // ESPLORATA VUOTA
                 else if (room.isExplored()) {
                     cell.setText("⬜");
-                    cell.setStyle("-fx-background-color: #2a2a3a; -fx-font-size: 18px; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #2a2a3a; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
-                // STANZA NON ESPLORATA
+                // NON ESPLORATA
                 else {
                     cell.setText("❓");
-                    cell.setStyle("-fx-background-color: #1a1a2a; -fx-font-size: 18px; -fx-cursor: hand;");
+                    cell.setStyle("-fx-background-color: #1a1a2a; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
 
-                // Movimento cliccando sulla cella (solo celle adiacenti)
-                final int finalX = x;
-                final int finalY = y;
+                // Movimento cliccando sulla cella
+                final int fx = x;
+                final int fy = y;
                 cell.setOnAction(e -> {
                     Room current = gameController.getCurrentRoom();
-                    int dx = Math.abs(finalX - current.getX());
-                    int dy = Math.abs(finalY - current.getY());
+                    int dx = Math.abs(fx - current.getX());
+                    int dy = Math.abs(fy - current.getY());
 
-                    // Se la cella è adiacente (distanza 1 in una direzione)
                     if ((dx == 1 && dy == 0) || (dx == 0 && dy == 1)) {
-                        if (finalX > current.getX()) onMoveEast();
-                        else if (finalX < current.getX()) onMoveWest();
-                        else if (finalY > current.getY()) onMoveSouth();
-                        else if (finalY < current.getY()) onMoveNorth();
+                        if (fx > current.getX()) onMoveEast();
+                        else if (fx < current.getX()) onMoveWest();
+                        else if (fy > current.getY()) onMoveSouth();
+                        else if (fy < current.getY()) onMoveNorth();
                     }
                 });
 
@@ -446,7 +454,7 @@ public class MainController {
             }
         }
     }
-
+    
     // Metodo per ottenere l'icona del giocatore in base alla classe
     private String getPlayerIcon(String playerClass) {
         switch(playerClass.toLowerCase()) {
@@ -584,26 +592,15 @@ public class MainController {
         gameScreen.setVisible(true);
         gameScreen.setManaged(true);
 
-        // Carica le immagini
         loadPlayerImage(gameController.getPlayer().getCharacterClass());
-        loadMapBackground();
-
         updatePlayerUI(gameController.getPlayer());
         updateInventory();
-        updateMap();
-        /*roomDescriptionArea.setText(
-                gameController.getCurrentRoom().getName() + "\n" +
-                        gameController.getCurrentRoom().getDescription()
-        );
 
-        // Setup key bindings dopo che la scena è visibile
-        if (currentScene == null) {
-            currentScene = gameScreen.getScene();
-            setupKeyBindings();
-        }*/
-
-        // Avvia il checker per vittoria/game over
-        startGameStatusChecker();
+        // IMPORTANTE: chiama updateMap DOPO che gameScreen è visibile
+        Platform.runLater(() -> {
+            updateMap();
+            System.out.println("updateMap chiamato da showGameUI");
+        });
 
         addGameMessage("🏰 La tua avventura ha inizio!");
         addGameMessage("📍 Ti trovi in: " + gameController.getCurrentRoom().getName());
