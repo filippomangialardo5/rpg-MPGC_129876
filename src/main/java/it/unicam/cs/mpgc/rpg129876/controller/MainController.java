@@ -1,12 +1,12 @@
 package it.unicam.cs.mpgc.rpg129876.controller;
 
+import it.unicam.cs.mpgc.rpg129876.model.Score;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import it.unicam.cs.mpgc.rpg129876.model.world.Direction;
 import it.unicam.cs.mpgc.rpg129876.model.world.Room;
 import it.unicam.cs.mpgc.rpg129876.utils.ImageLoader;
-import it.unicam.cs.mpgc.rpg129876.utils.ImageManager;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -17,6 +17,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -24,6 +25,10 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.ScaleTransition;
 import javafx.scene.layout.HBox;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainController {
 
@@ -91,6 +96,9 @@ public class MainController {
     }
 
     private Scene currentScene;
+
+    private List<Score> scores = new ArrayList<>();
+    private static final String SCORES_FILE = "scores.json";
 
     @FXML
     public void initialize() {
@@ -832,6 +840,77 @@ public class MainController {
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
         dialog.showAndWait();
+    }
+
+
+    private void loadScores() {
+        try {
+            File file = new File(SCORES_FILE);
+            if (file.exists()) {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+                scores = (List<Score>) ois.readObject();
+                ois.close();
+            }
+        } catch (Exception e) {
+            scores = new ArrayList<>();
+        }
+    }
+
+    private void saveScore(Score score) {
+        scores.add(score);
+        // Ordina per punteggio decrescente
+        scores.sort((a, b) -> Integer.compare(b.getTotalScore(), a.getTotalScore()));
+        // Mantieni solo top 10
+        if (scores.size() > 10) {
+            scores = scores.subList(0, 10);
+        }
+
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SCORES_FILE));
+            oos.writeObject(scores);
+            oos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showLeaderboard() {
+        loadScores();
+
+        VBox content = new VBox(10);
+        content.setPadding(new javafx.geometry.Insets(15));
+
+        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+        ListView<String> listView = new ListView<>();
+
+        if (scores.isEmpty()) {
+            listView.getItems().add("📋 Nessun punteggio registrato ancora!");
+        } else {
+            for (int i = 0; i < scores.size(); i++) {
+                Score s = scores.get(i);
+                String medal = i == 0 ? "🥇 " : (i == 1 ? "🥈 " : (i == 2 ? "🥉 " : "   "));
+                listView.getItems().add(String.format("%s%d. %s - %s (Lv.%d) - %d punti",
+                        medal, i + 1, s.getPlayerName(), s.getCharacterClass(),
+                        s.getLevel(), s.getTotalScore()));
+            }
+        }
+
+        Button closeBtn = new Button("CHIUDI");
+        closeBtn.setOnAction(e -> closeBtn.getScene().getWindow().hide());
+
+        content.getChildren().addAll(title, listView, closeBtn);
+
+        Scene scene = new Scene(content, 400, 400);
+        Stage stage = new Stage();
+        stage.setTitle("Classifica");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    @FXML private void onShowLeaderboard() {
+        showLeaderboard();
     }
 
     private void showHelpDialog() {

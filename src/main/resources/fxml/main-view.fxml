@@ -20,6 +20,9 @@
                 <MenuItem text="📖 Comandi" onAction="#onHelp"/>
                 <MenuItem text="ℹ️ Info" onAction="#onAbout"/>
             </Menu>
+            <Menu text="🏆 Classifica">
+                <MenuItem text="📊 Vedi Classifica" onAction="#onShowLeaderboard"/>
+            </Menu>
         </MenuBar>
     </top>
 

@@ -32,6 +32,8 @@ public class GameController {
     private final StringProperty roomDescription = new SimpleStringProperty("");
     private final ObservableList<String> gameMessages = FXCollections.observableArrayList();
 
+    private int enemiesDefeated = 0;
+
     public GameController() {
         // Inizializzazione vuota, il gioco parte con newGame()
     }
@@ -46,6 +48,8 @@ public class GameController {
     public Player getPlayer() { return player; }
     public Dungeon getDungeon() { return dungeon; }
     public boolean isInCombat() { return inCombat.get(); }
+
+    public int getEnemiesDefeated() { return enemiesDefeated; }
 
     // Nuova partita
     public void startNewGame(String playerName, String characterClass) {
@@ -210,6 +214,7 @@ public class GameController {
 
     private void endCombat(boolean playerWon) {
         if (playerWon && currentCombat != null) {
+            enemiesDefeated++;
             currentCombat.awardRewards();
             addGameMessage("✨ VITTORIA! ✨");
             addGameMessage("🏆 Guadagnati: " + currentCombat.getEnemy().getExperienceReward() + " XP e " +
