@@ -25,10 +25,15 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.ScaleTransition;
 import javafx.scene.layout.HBox;
-
+import javafx.scene.input.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.animation.*;
+import javafx.event.EventHandler;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+
 
 public class MainController {
 
@@ -123,23 +128,53 @@ public class MainController {
     private void setupKeyBindings() {
         if (currentScene == null) return;
 
-        currentScene.setOnKeyPressed(event -> {
-            if (!gameScreen.isVisible() || gameController.getPlayer() == null) return;
+        // Rimuovi eventuali listener esistenti per evitare duplicati
+        currentScene.removeEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
+
+        // Usa EventFilter invece di setOnKeyPressed
+        currentScene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
+    }
+
+    // Crea un handler separato per i tasti
+    private final EventHandler<KeyEvent> keyEventHandler = event -> {
+        if (!gameScreen.isVisible() || gameController.getPlayer() == null) return;
+        if (gameController.isInCombat()) return;
+
+        KeyCode code = event.getCode();
+
+        // Consuma l'evento per evitare che venga processato due volte
+        event.consume();
+
+        switch(code) {
+            case W: case UP:
+                onMoveNorth();
+                break;
+            case S: case DOWN:
+                onMoveSouth();
+                break;
+            case A: case LEFT:
+                onMoveWest();
+                break;
+            case D: case RIGHT:
+                onMoveEast();
+                break;
+            default: break;
+        }
+    };
+
+    private void enableMapKeyBindings() {
+        mapGrid.setOnKeyPressed(event -> {
             if (gameController.isInCombat()) return;
 
-            KeyCode code = event.getCode();
-
-            // WASD
-            if (code == KeyCode.W || code == KeyCode.UP) {
-                onMoveNorth();
-            } else if (code == KeyCode.S || code == KeyCode.DOWN) {
-                onMoveSouth();
-            } else if (code == KeyCode.A || code == KeyCode.LEFT) {
-                onMoveWest();
-            } else if (code == KeyCode.D || code == KeyCode.RIGHT) {
-                onMoveEast();
+            switch(event.getCode()) {
+                case W: case UP: onMoveNorth(); break;
+                case S: case DOWN: onMoveSouth(); break;
+                case A: case LEFT: onMoveWest(); break;
+                case D: case RIGHT: onMoveEast(); break;
+                default: break;
             }
         });
+        mapGrid.setFocusTraversable(true);
     }
 
     @FXML
@@ -595,17 +630,19 @@ public class MainController {
         loadPlayerImage(gameController.getPlayer().getCharacterClass());
         updatePlayerUI(gameController.getPlayer());
         updateInventory();
+        updateMap();
+        enableMapKeyBindings();
 
-        // IMPORTANTE: chiama updateMap DOPO che gameScreen è visibile
+        // FORZA IL FOCUS SULLA MAPPA per i tasti WASD
         Platform.runLater(() -> {
-            updateMap();
-            System.out.println("updateMap chiamato da showGameUI");
+            mapGrid.requestFocus();
+            mapGrid.setFocusTraversable(true);
+            System.out.println("Mappa focalizzata per i tasti WASD");
         });
 
         addGameMessage("🏰 La tua avventura ha inizio!");
         addGameMessage("📍 Ti trovi in: " + gameController.getCurrentRoom().getName());
-        addGameMessage("🎮 Usa WASD o le FRECCE per muoverti!");
-        addGameMessage("🐉 L'obiettivo è raggiungere l'angolo in basso a destra e sconfiggere i draghi!");
+        addGameMessage("🎮 Usa WASD per muoverti!");
     }
 
     // Azioni movimento
