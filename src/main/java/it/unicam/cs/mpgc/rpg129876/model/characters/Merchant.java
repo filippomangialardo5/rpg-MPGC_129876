@@ -8,39 +8,29 @@ import javafx.collections.ObservableList;
 public class Merchant {
 
     private String name;
-    private ObservableList<Item> itemsForSale;
+    private int potionsAvailable;  // Massimo 8 pozioni
+    private final int POTION_PRICE = 60;
+    private final int POTION_HEAL = 20;
 
     public Merchant(String name) {
         this.name = name;
-        this.itemsForSale = FXCollections.observableArrayList();
-        setupShop();
-    }
-
-    private void setupShop() {
-        // Pozione normale: 30 gold
-        itemsForSale.add(new HealthPotion(1, 30));
-        // Pozione potente: 60 gold
-        itemsForSale.add(new HealthPotion(1, 50));
+        this.potionsAvailable = 8;  // 8 pozioni disponibili
     }
 
     public String getName() { return name; }
-    public ObservableList<Item> getItemsForSale() { return itemsForSale; }
+    public int getPotionsAvailable() { return potionsAvailable; }
+    public int getPotionPrice() { return POTION_PRICE; }
+    public int getPotionHeal() { return POTION_HEAL; }
 
-    public boolean buyItem(Item item, Player player) {
-        int price = getItemPrice(item);
-        if (player.getGold() >= price) {
-            player.addGold(-price);
-            player.addItem(item);
-            return true;
-        }
-        return false;
+    public boolean canSell(int quantity) {
+        return potionsAvailable >= quantity;
     }
 
-    private int getItemPrice(Item item) {
-        if (item instanceof HealthPotion) {
-            int healAmount = ((HealthPotion) item).getHealAmount();
-            return healAmount == 30 ? 30 : 60;
-        }
-        return 0;
+    public void sellPotion(int quantity) {
+        potionsAvailable -= quantity;
+    }
+
+    public HealthPotion createPotion(int quantity) {
+        return new HealthPotion(quantity, POTION_HEAL);
     }
 }

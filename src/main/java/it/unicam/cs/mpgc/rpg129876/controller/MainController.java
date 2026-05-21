@@ -188,59 +188,6 @@ public class MainController {
         showCharacterCreation();
     }
 
-    @FXML
-    private void onMerchant() {
-        if (gameController.getPlayer() == null) return;
-
-        Room currentRoom = gameController.getCurrentRoom();
-        if (!currentRoom.hasMerchant()) {
-            addGameMessage("❌ Non c'è nessun mercante qui!");
-            return;
-        }
-
-        Merchant merchant = currentRoom.getMerchant();
-        Player player = gameController.getPlayer();
-
-        // Dialogo del mercante
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("🏪 Mercante");
-        dialog.setHeaderText(merchant.getName() + " - Benvenuto viaggiatore!");
-
-        VBox content = new VBox(10);
-        content.setPadding(new javafx.geometry.Insets(15));
-
-        Label goldLabel = new Label("💰 Oro disponibile: " + player.getGold());
-        goldLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-
-        Label itemsLabel = new Label("📦 Oggetti in vendita:");
-        itemsLabel.setStyle("-fx-font-weight: bold;");
-
-        VBox itemsBox = new VBox(5);
-        for (Item item : merchant.getItemsForSale()) {
-            int price = (item instanceof HealthPotion && ((HealthPotion) item).getHealAmount() == 30) ? 30 : 60;
-            Button buyBtn = new Button("🧪 " + item.getName() + " - " + price + "💰");
-            buyBtn.setOnAction(e -> {
-                if (merchant.buyItem(item, player)) {
-                    addGameMessage("🏪 Hai comprato " + item.getName() + " per " + price + " oro!");
-                    updatePlayerUI(player);
-                    updateInventory();
-                    dialog.close();
-                } else {
-                    addGameMessage("❌ Oro insufficiente! Ti mancano " + (price - player.getGold()) + " oro.");
-                }
-            });
-            itemsBox.getChildren().add(buyBtn);
-        }
-
-        Button closeBtn = new Button("🚪 Uscita");
-        closeBtn.setOnAction(e -> dialog.close());
-
-        content.getChildren().addAll(goldLabel, itemsLabel, itemsBox, closeBtn);
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        dialog.showAndWait();
-    }
-
     private void bindPlayerStats() {
         gameController.currentPlayerProperty().addListener((obs, old, newPlayer) -> {
             if (newPlayer != null) {
@@ -377,58 +324,71 @@ public class MainController {
     private void updateInventory() {
         inventoryList.getChildren().clear();
         if (gameController.getPlayer() != null) {
-            int potionCount = 0;
-            for (Item item : gameController.getPlayer().getInventory()) {
-                if (item instanceof HealthPotion) {
-                    potionCount += ((HealthPotion) item).getQuantity();
-                }
+            int potionCount = gameController.getPlayer().getPotionCount();
+            int maxPotions = gameController.getPlayer().getMaxPotions();
+
+            // Contenitore per la pozione con immagine
+            HBox potionContainer = new HBox(10);
+            potionContainer.setAlignment(Pos.CENTER_LEFT);
+            potionContainer.setStyle("-fx-padding: 5;");
+
+            // Immagine pozione
+            Image potionImg = ImageLoader.getPotionImage();
+            if (potionImg != null) {
+                ImageView potionView = new ImageView(potionImg);
+                potionView.setFitWidth(32);
+                potionView.setFitHeight(32);
+                potionContainer.getChildren().add(potionView);
+            } else {
+                // Fallback a emoji
+                Label potionEmoji = new Label("🧪");
+                potionEmoji.setStyle("-fx-font-size: 24px;");
+                potionContainer.getChildren().add(potionEmoji);
             }
 
+            // Testo informativo
+            Label potionInfo = new Label("Pozioni: " + potionCount + "/" + maxPotions);
+            potionInfo.setStyle("-fx-text-fill: #ffaa66; -fx-font-size: 12px; -fx-font-weight: bold;");
+            potionContainer.getChildren().add(potionInfo);
+
+            inventoryList.getChildren().add(potionContainer);
+
             if (potionCount > 0) {
-                HBox potionBox = new HBox(10);
-                potionBox.setAlignment(Pos.CENTER_LEFT);
-
-                // Immagine pozione (opzionale - se non c'è usa solo testo)
-                ImageView potionImg = null;
-                try {
-                    potionImg = new ImageView(ImageLoader.getPotionImage());
-                    if (potionImg.getImage() != null) {
-                        potionImg.setFitWidth(30);
-                        potionImg.setFitHeight(30);
-                        potionBox.getChildren().add(potionImg);
-                    }
-                } catch (Exception e) {
-                    // Immagine non disponibile, usa solo testo
-                }
-
-                Button potionBtn = new Button("🧪 Pozione x" + potionCount);
+                Button potionBtn = new Button("💊 Usa pozione (+20 HP)");
+                // Nella parte del bottone pozione in updateInventory()
                 potionBtn.setOnAction(e -> {
                     for (Item item : gameController.getPlayer().getInventory()) {
                         if (item instanceof HealthPotion) {
+                            int oldHp = gameController.getPlayer().getHp();
+                            int maxHp = gameController.getPlayer().getMaxHp();
+                            int missingHp = maxHp - oldHp;
+
                             gameController.useItem(item);
-                            addGameMessage("🧪 Usata una pozione curativa!");
+
+                            int newHp = gameController.getPlayer().getHp();
+                            int healed = newHp - oldHp;
+
+                            if (healed > 0) {
+                                if (healed < 20 && missingHp < 20) {
+                                    addGameMessage("🧪 Usata una pozione! Curati " + healed + " HP (vita al massimo!)");
+                                } else {
+                                    addGameMessage("🧪 Usata una pozione! +" + healed + " HP");
+                                }
+                            } else if (missingHp <= 0) {
+                                addGameMessage("❌ Sei già a piena vita! Pozione non usata.");
+                            }
+
                             updateInventory();
                             updatePlayerUI(gameController.getPlayer());
                             if (gameController.isInCombat()) {
                                 updateCombatUI();
-                                combatMessage.setText("🧪 POZIONE USATA! Hai recuperato 30 HP!");
                             }
                             break;
                         }
                     }
                 });
-                potionBtn.getStyleClass().add("inventory-button");
-
-                if (potionImg != null && potionImg.getImage() != null) {
-                    potionBox.getChildren().add(potionBtn);
-                } else {
-                    potionBox.getChildren().add(potionBtn);
-                }
-                inventoryList.getChildren().add(potionBox);
-            } else {
-                Label emptyLabel = new Label("❌ Nessuna pozione");
-                emptyLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 11px;");
-                inventoryList.getChildren().add(emptyLabel);
+                potionBtn.setStyle("-fx-background-color: #0f3460; -fx-text-fill: white; -fx-padding: 8; -fx-cursor: hand; -fx-background-radius: 8;");
+                inventoryList.getChildren().add(potionBtn);
             }
         }
     }
@@ -631,6 +591,9 @@ public class MainController {
         nameField.setPromptText("Inserisci il nome");
         nameField.setPrefWidth(250);
 
+        // ⭐ IMPOSTA IL FOCUS SUL CAMPO NOME ⭐
+        Platform.runLater(() -> nameField.requestFocus());
+
         Label classLabel = new Label("⚔️ Classe:");
         classLabel.setStyle("-fx-font-weight: bold;");
         ComboBox<String> classBox = new ComboBox<>();
@@ -642,14 +605,14 @@ public class MainController {
         classDesc.setStyle("-fx-text-fill: #c0c0c0; -fx-padding: 5 0 0 0;");
         classBox.setOnAction(e -> {
             switch(classBox.getValue()) {
-                case "Warrior": classDesc.setText("💪 +HP, +Difesa, Attacco potente"); break;
-                case "Mage": classDesc.setText("🔮 +Attacco magico, -Difesa"); break;
-                case "Rogue": classDesc.setText("🗡️ Equilibrato, alta critica"); break;
+                case "Warrior": classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente"); break;
+                case "Mage": classDesc.setText("🔮 Mago: Alto attacco magico, bassa difesa"); break;
+                case "Rogue": classDesc.setText("🗡️ Ladro: Equilibrato, alta probabilità di critico"); break;
             }
         });
-        classDesc.setText("💪 Guerriero: Alto HP, buona difesa");
+        classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente");
 
-        Button startBtn = new Button("⚔️ INIZIA ⚔️");
+        Button startBtn = new Button("⚔️ INIZIA L'AVVENTURA ⚔️");
         startBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;");
         startBtn.setOnAction(e -> {
             String name = nameField.getText().trim();
@@ -660,6 +623,8 @@ public class MainController {
             } else if (name.isEmpty()) {
                 nameField.setPromptText("Inserisci un nome!");
                 nameField.setStyle("-fx-border-color: red;");
+                // Ripristina focus
+                Platform.runLater(() -> nameField.requestFocus());
             }
         });
 
@@ -770,8 +735,14 @@ public class MainController {
         if (gameController.getPlayer() == null) return;
 
         Player player = gameController.getPlayer();
+        int currentPotionCount = player.getPotionCount();
+        int maxPotions = player.getMaxPotions();
+        int availableSlots = maxPotions - currentPotionCount;
+        int merchantPotions = merchant.getPotionsAvailable();
 
-        // Dialogo del mercante
+        int maxBuyable = Math.min(availableSlots, merchantPotions);
+        maxBuyable = Math.min(maxBuyable, player.getGold() / merchant.getPotionPrice());
+
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("🏪 Mercante");
         dialog.setHeaderText(merchant.getName() + " - Benvenuto viaggiatore!");
@@ -782,48 +753,76 @@ public class MainController {
         Label goldLabel = new Label("💰 Oro disponibile: " + player.getGold());
         goldLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
-        Label itemsLabel = new Label("📦 Oggetti in vendita:");
-        itemsLabel.setStyle("-fx-font-weight: bold;");
+        Label potionCountLabel = new Label("🧪 Pozioni in inventario: " + currentPotionCount + "/" + maxPotions);
+        Label merchantStockLabel = new Label("🏪 Pozioni del mercante: " + merchantPotions + "/8");
+        Label priceLabel = new Label("💵 Prezzo per pozione: " + merchant.getPotionPrice() + " oro (cura " + merchant.getPotionHeal() + " HP)");
 
-        VBox itemsBox = new VBox(5);
+        Label quantityLabel = new Label("📦 Quantità da acquistare:");
 
-        // Pozione piccola (30 gold) - cura 30 HP
-        Button smallPotionBtn = new Button("🧪 Pozione curativa (piccola) - 30💰");
-        smallPotionBtn.setOnAction(e -> {
-            if (player.getGold() >= 30) {
-                player.addGold(-30);
-                player.addItem(new HealthPotion(1, 30));
-                addGameMessage("🏪 Hai comprato una pozione piccola per 30 oro!");
-                updatePlayerUI(player);
-                updateInventory();
-                goldLabel.setText("💰 Oro disponibile: " + player.getGold());
-                dialog.close();
-            } else {
-                addGameMessage("❌ Oro insufficiente! Ti mancano " + (30 - player.getGold()) + " oro.");
+        ComboBox<Integer> quantityBox = new ComboBox<>();
+        if (maxBuyable > 0) {
+            for (int i = 1; i <= Math.min(5, maxBuyable); i++) {
+                quantityBox.getItems().add(i);
             }
-        });
+            if (maxBuyable > 5) {
+                quantityBox.getItems().add(maxBuyable);
+            }
+            quantityBox.setValue(1);
+        }
+        quantityBox.setDisable(maxBuyable == 0);
 
-        // Pozione grande (60 gold) - cura 50 HP
-        Button largePotionBtn = new Button("🧪 Pozione curativa (grande) - 60💰");
-        largePotionBtn.setOnAction(e -> {
-            if (player.getGold() >= 60) {
-                player.addGold(-60);
-                player.addItem(new HealthPotion(1, 50));
-                addGameMessage("🏪 Hai comprato una pozione grande per 60 oro!");
+        Label errorLabel = new Label();
+        errorLabel.setStyle("-fx-text-fill: #ff6666;");
+
+        if (maxBuyable == 0) {
+            if (currentPotionCount >= maxPotions) {
+                errorLabel.setText("⚠️ Inventario pieno! Massimo " + maxPotions + " pozioni.");
+            } else if (merchantPotions == 0) {
+                errorLabel.setText("⚠️ Il mercante non ha più pozioni!");
+            } else if (player.getGold() < merchant.getPotionPrice()) {
+                errorLabel.setText("⚠️ Oro insufficiente! Servono " + merchant.getPotionPrice() + " oro per pozione.");
+            }
+        }
+
+        Button buyBtn = new Button("🛒 Acquista");
+        buyBtn.setOnAction(e -> {
+            int quantity = quantityBox.getValue();
+            int totalCost = quantity * merchant.getPotionPrice();
+
+            if (player.canAddPotions(quantity) && merchant.canSell(quantity) && player.getGold() >= totalCost) {
+                // Togli oro
+                player.addGold(-totalCost);
+
+                // Togli pozioni dal mercante
+                merchant.sellPotion(quantity);
+
+                // Aggiungi pozioni al giocatore
+                boolean found = false;
+                for (Item item : player.getInventory()) {
+                    if (item instanceof HealthPotion) {
+                        ((HealthPotion) item).addQuantity(quantity);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    player.addItem(merchant.createPotion(quantity));
+                }
+
+                addGameMessage("🏪 Hai acquistato " + quantity + " pozione/i per " + totalCost + " oro!");
                 updatePlayerUI(player);
                 updateInventory();
-                goldLabel.setText("💰 Oro disponibile: " + player.getGold());
                 dialog.close();
             } else {
-                addGameMessage("❌ Oro insufficiente! Ti mancano " + (60 - player.getGold()) + " oro.");
+                addGameMessage("❌ Non puoi acquistare! Controlla oro, spazio inventario e disponibilità mercante.");
             }
         });
 
         Button closeBtn = new Button("🚪 Uscita");
         closeBtn.setOnAction(e -> dialog.close());
 
-        itemsBox.getChildren().addAll(smallPotionBtn, largePotionBtn);
-        content.getChildren().addAll(goldLabel, itemsLabel, itemsBox, closeBtn);
+        content.getChildren().addAll(goldLabel, potionCountLabel, merchantStockLabel, priceLabel,
+                quantityLabel, quantityBox, buyBtn, errorLabel, closeBtn);
 
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
@@ -1121,20 +1120,19 @@ public class MainController {
             
             🗺️ MOVIMENTO:
             • Tasti WASD o FRECCE per muoverti
-            • Clicca sui bottoni direzionali
-            
+                        
             ⚔️ COMBATTIMENTO:
             • ATTACCA - Colpisci il nemico
-            • POZIONE - Cura 30 HP
-            • FUGGI - Scappa (50% successo)
+            • POZIONE - Cura 20 HP
+            • FUGGI - Scappa (50% di successo)
             
             💰 RICOMPENSE:
             • Sconfiggi nemici per XP e oro
             • Salendo di livello aumentano le statistiche
-            • Trova tesori nelle stanze
+            • Trova oro e tesori nelle stanze
             
             👑 OBIETTIVO:
-            Sconfiggi il Drago (angolo in basso a destra del dungeon)!
+            Sconfiggi i 3 Draghi he circondano l'uscita nell'angolo in basso a destra del dungeon
             
             ═══════════════════════════════════════
             """);
@@ -1150,7 +1148,7 @@ public class MainController {
             Matricola: 129876
             Corso: Metodologie di Programmazione AA 2025/26
             
-            Un gioco di ruolo a turni con esplorazione.
+            Un gioco di ruolo con esplorazione e nemici da sconfiggere.
             
             🎮 Buon divertimento!
             """);

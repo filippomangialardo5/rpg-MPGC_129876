@@ -4,16 +4,15 @@ import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 
 public class HealthPotion implements Item {
 
-    private static final int DEFAULT_HEAL_AMOUNT = 30;
     private int healAmount;
     private int quantity;
 
     public HealthPotion() {
-        this(1, DEFAULT_HEAL_AMOUNT);
+        this(1, 20);  // Ora cura 20 HP invece di 30
     }
 
     public HealthPotion(int quantity) {
-        this(quantity, DEFAULT_HEAL_AMOUNT);
+        this(quantity, 20);
     }
 
     public HealthPotion(int quantity, int healAmount) {
@@ -23,7 +22,7 @@ public class HealthPotion implements Item {
 
     @Override
     public String getName() {
-        return "Health Potion";
+        return "Health Potion (+" + healAmount + " HP)";
     }
 
     @Override
@@ -34,13 +33,28 @@ public class HealthPotion implements Item {
     @Override
     public void use(Player player) {
         if (quantity > 0 && player.isAlive()) {
-            int oldHp = player.getHp();
-            player.heal(healAmount);
-            int healed = player.getHp() - oldHp;
+            int currentHp = player.getHp();
+            int maxHp = player.getMaxHp();
+            int missingHp = maxHp - currentHp;
+
+            // Se è già a vita piena
+            if (missingHp <= 0) {
+                System.out.println("❌ Sei già a piena vita! Pozione non usata.");
+                return;
+            }
+
+            // Calcola cura effettiva (senza sprechi)
+            int actualHeal = Math.min(healAmount, missingHp);
+            player.heal(actualHeal);
             quantity--;
-            System.out.println(player.getName() + " used a Health Potion and recovered " + healed + " HP!");
+
+            System.out.println(player.getName() + " usa una pozione e recupera " + actualHeal + " HP!");
+
+            if (actualHeal < healAmount) {
+                System.out.println("❤️ Sei stato curato completamente! (" + (healAmount - actualHeal) + " HP non necessari)");
+            }
         } else if (quantity <= 0) {
-            System.out.println("No Health Potions left!");
+            System.out.println("❌ Nessuna pozione rimasta!");
         }
     }
 
@@ -55,4 +69,3 @@ public class HealthPotion implements Item {
     public void addQuantity(int amount) { this.quantity += amount; }
     public boolean isEmpty() { return quantity <= 0; }
 }
-

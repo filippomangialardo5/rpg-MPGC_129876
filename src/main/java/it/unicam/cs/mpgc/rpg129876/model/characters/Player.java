@@ -1,5 +1,6 @@
 package it.unicam.cs.mpgc.rpg129876.model.characters;
 
+import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
@@ -14,6 +15,7 @@ public class Player extends GameCharacter {
     private final IntegerProperty gold = new SimpleIntegerProperty(100);
     private final ObservableList<Item> inventory = FXCollections.observableArrayList();
     private String characterClass;
+    private static final int MAX_POTIONS = 10;
 
     public Player(String name, String characterClass) {
         super(name, 100, 15, 10);  // Valori base, verranno sovrascritti
@@ -86,13 +88,24 @@ public class Player extends GameCharacter {
         setLevel(newLevel);
         setExperience(remainingExp);
 
-        // Aumenta le statistiche
-        setMaxHp(getMaxHp() + 20);
-        setHp(getMaxHp());  // Cura completa
+        // Calcola nuovo max HP
+        int oldMaxHp = getMaxHp();
+        int newMaxHp = oldMaxHp + 20;
+        setMaxHp(newMaxHp);
+
+        // Invece di curare completamente, aggiungi 1/4 del nuovo max HP
+        int healAmount = newMaxHp / 4;
+        int newHp = getHp() + healAmount;
+        setHp(Math.min(newHp, newMaxHp));  // Non superare il massimo
+
+        // Aumenta attacco e difesa
         setAttack(getAttack() + 5);
         setDefense(getDefense() + 3);
 
-        System.out.println(getName() + " reached level " + newLevel + "!");
+        System.out.println("🎉 " + getName() + " raggiunge il livello " + newLevel + "! 🎉");
+        System.out.println("❤️ HP: " + getHp() + "/" + newMaxHp + " (+" + healAmount + " HP curati)");
+        System.out.println("⚔ Attacco: " + getAttack() + " (+5)");
+        System.out.println("🛡 Difesa: " + getDefense() + " (+3)");
     }
 
     public void addGold(int amount) {
@@ -109,6 +122,24 @@ public class Player extends GameCharacter {
 
     public boolean hasItem(Item item) {
         return inventory.contains(item);
+    }
+
+    public int getPotionCount() {
+        int count = 0;
+        for (Item item : inventory) {
+            if (item instanceof HealthPotion) {
+                count += ((HealthPotion) item).getQuantity();
+            }
+        }
+        return count;
+    }
+
+    public boolean canAddPotions(int quantity) {
+        return getPotionCount() + quantity <= MAX_POTIONS;
+    }
+
+    public int getMaxPotions() {
+        return MAX_POTIONS;
     }
 
     @Override

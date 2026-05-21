@@ -109,20 +109,26 @@ public class GameController {
     private void checkRoomEvents() {
         Room currentRoom = dungeon.getCurrentRoom();
 
+        // Controlla se c'è un mercante
         if (currentRoom.hasMerchant()) {
             setCurrentMerchant(currentRoom.getMerchant());
             addGameMessage("🏪 Entri in un negozio! " + currentRoom.getMerchant().getName() + " ti aspetta.");
             return;
         }
 
-        // Controlla se ci sono tesori (incluso l'oro)
+        // Controlla se ci sono tesori
         if (currentRoom.hasTreasures()) {
             collectTreasures();
-            return;  // Dopo aver raccolto i tesori, esci per non fare altre azioni
+            // Dopo aver raccolto tesori, controlla se c'è anche un nemico
+            if (currentRoom.hasEnemy()) {
+                startCombat(currentRoom.getEnemy());
+            }
+            return;
         }
 
         // Controlla se c'è un nemico
         if (currentRoom.hasEnemy()) {
+            System.out.println("Nemico trovato in stanza: " + currentRoom.getName());  // Debug
             startCombat(currentRoom.getEnemy());
             return;
         }
@@ -167,11 +173,11 @@ public class GameController {
         updatePlayerStats();
     }
 
-    // Sistema di combattimento
     private void startCombat(Enemy enemy) {
+        System.out.println("startCombat chiamato per: " + enemy.getName());  // Debug
         this.currentCombat = new CombatSystem(player, enemy);
         this.inCombat.set(true);
-        addGameMessage("⚔ COMBATTIMENTO INIZIATO! ⚔");
+        addGameMessage("⚔️ COMBATTIMENTO INIZIATO! ⚔️");
         addGameMessage("🛡 Nemico: " + enemy.getName() + " (HP: " + enemy.getHp() + "/" + enemy.getMaxHp() + ")");
         updateCombatLog();
     }
@@ -293,8 +299,12 @@ public class GameController {
                 return;
             }
 
+            // Quando si sale di livello
             if (player.getLevel() > oldLevel) {
-                addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
+                int levelGain = player.getLevel() - oldLevel;
+                addGameMessage("🎉 CONGRATULAZIONI! Sei salito di " + levelGain + " livello/i! 🎉");
+                addGameMessage("❤️ HP: " + player.getHp() + "/" + player.getMaxHp());
+                addGameMessage("⚔ Attacco: " + player.getAttack() + " | 🛡 Difesa: " + player.getDefense());
             }
         } else if (!playerWon) {
             addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");

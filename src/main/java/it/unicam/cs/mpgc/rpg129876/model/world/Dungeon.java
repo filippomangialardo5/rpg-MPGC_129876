@@ -112,7 +112,7 @@ public class Dungeon {
                 }
 
                 // Aggiungi 2 mercanti
-                if (merchantsAdded < 2 && random.nextDouble() < 0.05) {
+                if (merchantsAdded < 2 && random.nextDouble() < 0.10) {
                     room.setMerchant(new Merchant("🏪 Mercante"));
                     room.setName("🏪 Negozio");
                     room.setDescription("Un mercante amichevole vende pozioni curative! Parla con lui per acquistare.");
