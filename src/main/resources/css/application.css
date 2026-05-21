@@ -135,3 +135,53 @@
     -fx-scale-y: 1.05;
 }
 
+/* Stili per ComboBox (menu a tendina classe) */
+.combo-box {
+    -fx-background-color: #2a2a3a;
+    -fx-background-radius: 8;
+    -fx-border-color: #e94560;
+    -fx-border-radius: 8;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: #2a2a3a;
+}
+
+.combo-box .list-view {
+    -fx-background-color: #1a1a2e;
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #e94560;
+    -fx-text-fill: white;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: #e94560;
+    -fx-background-radius: 0 8 8 0;
+}
+
+.combo-box .arrow {
+    -fx-background-color: white;
+}
+
+/* Dialog e Stage */
+.dialog-pane {
+    -fx-background-color: #1a1a2e;
+}
+
+.dialog-pane .label {
+    -fx-text-fill: white;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #0f0f1a;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: #e94560;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+

@@ -35,7 +35,6 @@ import javafx.event.EventHandler;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-
 public class MainController {
 
     private GameController gameController;
@@ -105,9 +104,12 @@ public class MainController {
 
     private List<Score> scores = new ArrayList<>();
     private static final String SCORES_FILE = "scores.json";
-
+    private Timeline gameStatusChecker;
     private Merchant currentMerchant;
-
+    // Variabili di stato per la UI
+    private boolean isGameWon = false;
+    private boolean isGameOver = false;
+    private boolean movementKeysRegistered = false;
 
     @FXML
     public void initialize() {
@@ -242,7 +244,7 @@ public class MainController {
             playerCombatHealthBar.setProgress((double) p.getHp() / p.getMaxHp());
             playerCombatHealthLabel.setText(p.getHp() + "/" + p.getMaxHp());
 
-            // SUGGERIMENTO POZIONE - se HP bassi
+            // SUGGERIMENTO POZIONE
             if (p.getHp() < p.getMaxHp() / 3 && p.getHp() > 0) {
                 potionSuggestion.setText("⚠️ HP BASSO! USA UNA POZIONE! ⚠️");
                 potionSuggestion.setStyle("-fx-text-fill: #ff4444; -fx-font-weight: bold;");
@@ -257,24 +259,8 @@ public class MainController {
             enemyNameLabel.setText(enemyIcon + " " + enemy.getName());
             enemyHealthBar.setProgress((double) enemy.getHp() / enemy.getMaxHp());
             enemyHealthLabel.setText(enemy.getHp() + "/" + enemy.getMaxHp());
-
-            // MOSTRA ATTACCO E DIFESA DEL NEMICO
             enemyAttackLabel.setText("⚔ Attacco: " + enemy.getAttack());
             enemyDefenseLabel.setText("🛡 Difesa: " + enemy.getDefense());
-
-            // Cambia colore barra in base agli HP del nemico
-            if (enemy.getHp() < enemy.getMaxHp() / 3) {
-                enemyHealthBar.setStyle("-fx-accent: #ffaa00;");
-            } else {
-                enemyHealthBar.setStyle("-fx-accent: #ff4444;");
-            }
-
-            // SUGGERIMENTO STRATEGICO
-            if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
-                potionSuggestion.setText("⚠️ ATTACCO NEMICO ALTO! USA POZIONI! ⚠️");
-            } else if (enemy.getHp() < 20) {
-                potionSuggestion.setText("⚔️ NEMICO DEBOLE! ATTACCA! ⚔️");
-            }
         }
     }
 
@@ -355,35 +341,36 @@ public class MainController {
 
             if (potionCount > 0) {
                 Button potionBtn = new Button("💊 Usa pozione (+20 HP)");
-                // Nella parte del bottone pozione in updateInventory()
+
                 potionBtn.setOnAction(e -> {
-                    for (Item item : gameController.getPlayer().getInventory()) {
-                        if (item instanceof HealthPotion) {
-                            int oldHp = gameController.getPlayer().getHp();
-                            int maxHp = gameController.getPlayer().getMaxHp();
-                            int missingHp = maxHp - oldHp;
+                    if (gameController.getPlayer() != null) {
+                        for (Item item : gameController.getPlayer().getInventory()) {
+                            if (item instanceof HealthPotion) {
+                                int oldHp = gameController.getPlayer().getHp();
+                                int maxHp = gameController.getPlayer().getMaxHp();
 
-                            gameController.useItem(item);
+                                if (oldHp >= maxHp) {
+                                    addGameMessage("❌ Sei già a piena vita!");
+                                    return;
+                                }
 
-                            int newHp = gameController.getPlayer().getHp();
-                            int healed = newHp - oldHp;
+                                gameController.useItem(item);
 
-                            if (healed > 0) {
-                                if (healed < 20 && missingHp < 20) {
-                                    addGameMessage("🧪 Usata una pozione! Curati " + healed + " HP (vita al massimo!)");
-                                } else {
+                                int newHp = gameController.getPlayer().getHp();
+                                int healed = newHp - oldHp;
+
+                                if (healed > 0) {
                                     addGameMessage("🧪 Usata una pozione! +" + healed + " HP");
                                 }
-                            } else if (missingHp <= 0) {
-                                addGameMessage("❌ Sei già a piena vita! Pozione non usata.");
-                            }
 
-                            updateInventory();
-                            updatePlayerUI(gameController.getPlayer());
-                            if (gameController.isInCombat()) {
-                                updateCombatUI();
+                                updateInventory();
+                                updatePlayerUI(gameController.getPlayer());
+                                if (gameController.isInCombat()) {
+                                    updateCombatUI();
+                                    combatMessage.setText("🧪 Usata pozione! +" + healed + " HP");
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 });
@@ -577,29 +564,35 @@ public class MainController {
         startScreen.setVisible(false);
         startScreen.setManaged(false);
 
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("✨ Nuova Avventura ✨");
-        dialog.setHeaderText("Crea il tuo eroe");
+        Stage stage = new Stage();
+        stage.setTitle("✨ Nuova Avventura ✨");
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
 
         VBox content = new VBox(12);
         content.setAlignment(Pos.CENTER);
         content.setPadding(new javafx.geometry.Insets(20));
+        content.setStyle("-fx-background-color: #1a1a2e;");
+
+        Label title = new Label("Crea il tuo eroe");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #e94560;");
 
         Label nameLabel = new Label("📝 Nome:");
-        nameLabel.setStyle("-fx-font-weight: bold;");
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
         TextField nameField = new TextField();
         nameField.setPromptText("Inserisci il nome");
         nameField.setPrefWidth(250);
+        nameField.setStyle("-fx-background-color: #2a2a3a; -fx-text-fill: white;");
+        nameField.clear();
 
-        // ⭐ IMPOSTA IL FOCUS SUL CAMPO NOME ⭐
         Platform.runLater(() -> nameField.requestFocus());
 
         Label classLabel = new Label("⚔️ Classe:");
-        classLabel.setStyle("-fx-font-weight: bold;");
+        classLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
         ComboBox<String> classBox = new ComboBox<>();
         classBox.getItems().addAll("Warrior", "Mage", "Rogue");
         classBox.setValue("Warrior");
         classBox.setPrefWidth(250);
+        classBox.setStyle("-fx-background-color: #2a2a3a; -fx-text-fill: white;");
 
         Label classDesc = new Label();
         classDesc.setStyle("-fx-text-fill: #c0c0c0; -fx-padding: 5 0 0 0;");
@@ -613,32 +606,38 @@ public class MainController {
         classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente");
 
         Button startBtn = new Button("⚔️ INIZIA L'AVVENTURA ⚔️");
-        startBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;");
+        startBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 10 20;");
         startBtn.setOnAction(e -> {
             String name = nameField.getText().trim();
             if (!name.isEmpty() && classBox.getValue() != null) {
                 gameController.startNewGame(name, classBox.getValue());
-                dialog.close();
+                stage.close();
                 showGameUI();
             } else if (name.isEmpty()) {
                 nameField.setPromptText("Inserisci un nome!");
-                nameField.setStyle("-fx-border-color: red;");
-                // Ripristina focus
+                nameField.setStyle("-fx-border-color: red; -fx-background-color: #2a2a3a; -fx-text-fill: white;");
                 Platform.runLater(() -> nameField.requestFocus());
             }
         });
 
-        content.getChildren().addAll(
-                nameLabel, nameField,
-                new Separator(),
-                classLabel, classBox, classDesc,
-                new Separator(),
-                startBtn
-        );
+        Button cancelBtn = new Button("Annulla");
+        cancelBtn.setStyle("-fx-background-color: #3a3a4a; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 10 20;");
+        cancelBtn.setOnAction(e -> {
+            stage.close();
+            startScreen.setVisible(true);
+            startScreen.setManaged(true);
+        });
 
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        dialog.showAndWait();
+        HBox buttons = new HBox(15, startBtn, cancelBtn);
+        buttons.setAlignment(Pos.CENTER);
+
+        content.getChildren().addAll(title, new Separator(), nameLabel, nameField,
+                classLabel, classBox, classDesc, buttons);
+
+        Scene scene = new Scene(content, 350, 400);
+        scene.getStylesheets().add(getClass().getResource("/css/application.css").toExternalForm());
+        stage.setScene(scene);
+        stage.showAndWait();
     }
 
     private void animateAttack() {
@@ -670,6 +669,7 @@ public class MainController {
         updateInventory();
         updateMap();
         enableMapKeyBindings();
+        startGameStatusChecker();
 
         // FORZA IL FOCUS SULLA MAPPA per i tasti WASD
         Platform.runLater(() -> {
@@ -901,13 +901,32 @@ public class MainController {
     // Azioni menu
     @FXML
     private void onNewGame() {
+        // Ferma il checker di stato
+        if (gameStatusChecker != null) {
+            gameStatusChecker.stop();
+        }
+
+        // Nascondi schermata di gioco
         gameScreen.setVisible(false);
         gameScreen.setManaged(false);
+
+        // Resetta il controller
+        gameController = new GameController();
+
+        // Mostra schermata iniziale
         startScreen.setVisible(true);
         startScreen.setManaged(true);
-        gameController = new GameController();  // Ricrea il controller
-        initialize();  // Re-inizializza
-        showCharacterCreation();
+
+        // Chiudi eventuali dialog aperti
+        // Ricrea la scena per pulire lo stato
+        Stage stage = (Stage) startScreen.getScene().getWindow();
+        Scene scene = stage.getScene();
+
+        // Forza refresh della UI
+        Platform.runLater(() -> {
+            startScreen.requestFocus();
+            showCharacterCreation();
+        });
     }
 
     @FXML
@@ -966,78 +985,153 @@ public class MainController {
         }
     }
 
-    // Aggiungi un timer che controlla periodicamente lo stato del gioco
     private void startGameStatusChecker() {
-        Timeline timeline = new Timeline(
+        if (gameStatusChecker != null) {
+            gameStatusChecker.stop();
+        }
+
+        gameStatusChecker = new Timeline(
                 new KeyFrame(Duration.seconds(0.5), e -> checkGameStatus())
         );
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
+        gameStatusChecker.setCycleCount(Timeline.INDEFINITE);
+        gameStatusChecker.play();
     }
 
-    // Aggiungi un timer che controlla lo stato del gioco
     private void checkGameStatus() {
         if (gameController.isGameWon()) {
+            gameStatusChecker.stop();
             showVictoryScreen();
-            gameController.resetGameFlags();
+            gameController.setGameWon(false);
         } else if (gameController.isGameOver()) {
+            gameStatusChecker.stop();
             showGameOverScreen();
-            gameController.resetGameFlags();
+            gameController.setGameOver(false);
         }
     }
 
     private void showVictoryScreen() {
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("🏆 VITTORIA! 🏆");
-            alert.setHeaderText("Hai completato l'avventura!");
-            alert.setContentText(
-                    "🎉 CONGRATULAZIONI! 🎉\n\n" +
-                            "Hai sconfitto il Drago e salvato il regno!\n\n" +
-                            "📊 Statistiche finali:\n" +
-                            "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
+            Stage stage = new Stage();
+            stage.setTitle("🏆 VITTORIA! 🏆");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+
+            VBox content = new VBox(15);
+            content.setAlignment(Pos.CENTER);
+            content.setPadding(new javafx.geometry.Insets(20));
+            content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
+
+            Label title = new Label("🏆 VITTORIA! 🏆");
+            title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+            Label message = new Label("Hai completato l'avventura!\nSei diventato una leggenda!");
+            message.setStyle("-fx-font-size: 14px; -fx-text-fill: #ffffff; -fx-text-alignment: center;");
+
+            // Statistiche su sfondo scuro
+            VBox statsBox = new VBox(5);
+            statsBox.setStyle("-fx-background-color: #0f0f1a; -fx-padding: 10; -fx-background-radius: 8;");
+
+            Label statsTitle = new Label("📊 STATISTICHE FINALI");
+            statsTitle.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+            Label stats = new Label(
+                    "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
                             "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
-                            "💰 Oro accumulato: " + gameController.getPlayer().getGold()
+                            "💰 Oro accumulato: " + gameController.getPlayer().getGold() + "\n" +
+                            "🧪 Pozioni rimaste: " + gameController.getPlayer().getPotionCount()
             );
+            stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
 
-            ButtonType newGameBtn = new ButtonType("✨ Nuova Partita", ButtonBar.ButtonData.OK_DONE);
-            ButtonType exitBtn = new ButtonType("❌ Esci", ButtonBar.ButtonData.CANCEL_CLOSE);
-            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
+            statsBox.getChildren().addAll(statsTitle, stats);
 
-            alert.showAndWait().ifPresent(response -> {
-                if (response == newGameBtn) {
-                    onNewGame();
-                } else {
-                    Platform.exit();
-                }
+            Button leaderboardBtn = new Button("🏆 CLASSIFICA");
+            leaderboardBtn.setStyle("-fx-background-color: #ffd700; -fx-text-fill: #1a1a2e; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+            leaderboardBtn.setOnAction(e -> {
+                showLeaderboard();
+                stage.close();
             });
+
+            Button newGameBtn = new Button("✨ NUOVA PARTITA");
+            newGameBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+            newGameBtn.setOnAction(e -> {
+                stage.close();
+                onNewGame();
+            });
+
+            Button exitBtn = new Button("❌ ESCI");
+            exitBtn.setStyle("-fx-background-color: #3a3a4a; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+            exitBtn.setOnAction(e -> {
+                stage.close();
+                Platform.exit();
+            });
+
+            HBox buttons = new HBox(15, leaderboardBtn, newGameBtn, exitBtn);
+            buttons.setAlignment(Pos.CENTER);
+
+            content.getChildren().addAll(title, message, statsBox, buttons);
+
+            Scene scene = new Scene(content, 450, 400);
+            scene.getStylesheets().add(getClass().getResource("/css/application.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
         });
     }
 
     private void showGameOverScreen() {
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("💀 GAME OVER 💀");
-            alert.setHeaderText("Sei stato sconfitto!");
-            alert.setContentText(
-                    "Il tuo eroe è caduto in battaglia...\n\n" +
-                            "📊 Statistiche finali:\n" +
-                            "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
+            Stage stage = new Stage();
+            stage.setTitle("💀 GAME OVER 💀");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+
+            VBox content = new VBox(15);
+            content.setAlignment(Pos.CENTER);
+            content.setPadding(new javafx.geometry.Insets(20));
+            content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
+
+            Label title = new Label("💀 GAME OVER 💀");
+            title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #ff4444;");
+
+            Label message = new Label("Il tuo eroe è caduto in battaglia...\nLa tua avventura finisce qui.");
+            message.setStyle("-fx-font-size: 14px; -fx-text-fill: #ffffff; -fx-text-alignment: center;");
+
+            // Statistiche su sfondo scuro
+            VBox statsBox = new VBox(5);
+            statsBox.setStyle("-fx-background-color: #0f0f1a; -fx-padding: 10; -fx-background-radius: 8;");
+
+            Label statsTitle = new Label("📊 STATISTICHE FINALI");
+            statsTitle.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+            Label stats = new Label(
+                    "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
                             "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
                             "💰 Oro accumulato: " + gameController.getPlayer().getGold()
             );
+            stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
 
-            ButtonType newGameBtn = new ButtonType("✨ Nuova Partita", ButtonBar.ButtonData.OK_DONE);
-            ButtonType exitBtn = new ButtonType("❌ Esci", ButtonBar.ButtonData.CANCEL_CLOSE);
-            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
+            statsBox.getChildren().addAll(statsTitle, stats);
 
-            alert.showAndWait().ifPresent(response -> {
-                if (response == newGameBtn) {
-                    onNewGame();
-                } else {
-                    Platform.exit();
-                }
+            Button newGameBtn = new Button("✨ NUOVA PARTITA");
+            newGameBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+            newGameBtn.setOnAction(e -> {
+                stage.close();
+                onNewGame();
             });
+
+            Button exitBtn = new Button("❌ ESCI");
+            exitBtn.setStyle("-fx-background-color: #3a3a4a; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+            exitBtn.setOnAction(e -> {
+                stage.close();
+                Platform.exit();
+            });
+
+            HBox buttons = new HBox(15, newGameBtn, exitBtn);
+            buttons.setAlignment(Pos.CENTER);
+
+            content.getChildren().addAll(title, message, statsBox, buttons);
+
+            Scene scene = new Scene(content, 400, 350);
+            scene.getStylesheets().add(getClass().getResource("/css/application.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
         });
     }
 

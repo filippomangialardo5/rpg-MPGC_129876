@@ -37,6 +37,8 @@ public class HealthPotion implements Item {
             int maxHp = player.getMaxHp();
             int missingHp = maxHp - currentHp;
 
+            System.out.println("DEBUG: currentHp=" + currentHp + ", maxHp=" + maxHp + ", missingHp=" + missingHp);
+
             // Se è già a vita piena
             if (missingHp <= 0) {
                 System.out.println("❌ Sei già a piena vita! Pozione non usata.");
@@ -48,11 +50,7 @@ public class HealthPotion implements Item {
             player.heal(actualHeal);
             quantity--;
 
-            System.out.println(player.getName() + " usa una pozione e recupera " + actualHeal + " HP!");
-
-            if (actualHeal < healAmount) {
-                System.out.println("❤️ Sei stato curato completamente! (" + (healAmount - actualHeal) + " HP non necessari)");
-            }
+            System.out.println("DEBUG: healed=" + actualHeal + ", newHp=" + player.getHp());
         } else if (quantity <= 0) {
             System.out.println("❌ Nessuna pozione rimasta!");
         }

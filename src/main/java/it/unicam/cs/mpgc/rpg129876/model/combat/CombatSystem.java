@@ -78,26 +78,24 @@ public class CombatSystem {
         return enemyAttack();
     }
 
-    // Usare un oggetto in combattimento
     public CombatResult useItem(Item item) {
         if (!inCombat) return new CombatResult(false, "Not in combat!", false);
 
-        CombatResult result = new CombatResult();
+        int oldHp = player.getHp();
         item.use(player);
-        result.setMessage("Used " + item.getIcon() + " " + item.getName() + "!");
+        int newHp = player.getHp();
+        int healed = newHp - oldHp;
+
+        CombatResult result = new CombatResult();
+        if (healed > 0) {
+            result.setMessage("🧪 Usato " + item.getIcon() + " " + item.getName() + "! +" + healed + " HP");
+        } else {
+            result.setMessage("🧪 Usato " + item.getIcon() + " " + item.getName() + "!");
+        }
         result.setItemUsed(true);
         result.setPlayerAction(true);
 
         System.out.println(result.getMessage());
-
-        // Rimuovi l'oggetto se la quantità è zero
-        if (item instanceof it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion) {
-            it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion potion =
-                    (it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion) item;
-            if (potion.isEmpty()) {
-                player.removeItem(item);
-            }
-        }
 
         return result;
     }
@@ -122,13 +120,18 @@ public class CombatSystem {
         }
     }
 
-    // Calcola danno basato su attacco e difesa
     private int calculateDamage(int attack, int defense) {
-        // Danno base + variazione casuale
-        int baseDamage = Math.max(1, attack - defense / 2);
-        int variation = random.nextInt(11) - 5;  // da -5 a +5
+        // Danno base = attacco - difesa/2 (minimo 3)
+        int baseDamage = Math.max(3, attack - defense / 2);
+        // Variazione casuale tra -2 e +2 (più prevedibile)
+        int variation = random.nextInt(5) - 2;  // -2, -1, 0, 1, 2
         int damage = baseDamage + variation;
-        return Math.max(1, damage);
+        int finalDamage = Math.max(1, damage);
+
+        System.out.println("DEBUG: attack=" + attack + ", defense=" + defense +
+                ", base=" + baseDamage + ", var=" + variation +
+                ", final=" + finalDamage);
+        return finalDamage;
     }
 
     // Assegna ricompense al giocatore (XP e oro) dopo la vittoria

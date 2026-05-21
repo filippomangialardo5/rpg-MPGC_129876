@@ -49,6 +49,10 @@ public class GameController {
         // Inizializzazione vuota, il gioco parte con newGame()
     }
 
+    // Setter
+    public void setGameWon(boolean won) { this.gameWon = won; }
+    public void setGameOver(boolean over) { this.gameOver = over; }
+
 
     // Property getters per binding JavaFX
     public ObjectProperty<Player> currentPlayerProperty() { return currentPlayer; }
@@ -220,24 +224,42 @@ public class GameController {
 
     public void useItem(Item item) {
         if (currentCombat != null && currentCombat.isInCombat()) {
+            int oldHp = player.getHp();
             CombatSystem.CombatResult result = currentCombat.useItem(item);
             addGameMessage(result.getMessage());
+            combatLog.set(result.getMessage());
 
-            // Aggiorna l'inventario se la pozione è finita
+            int newHp = player.getHp();
+            int healed = newHp - oldHp;
+
+            if (healed > 0) {
+                addGameMessage("🧪 La pozione ti ha curato " + healed + " HP!");
+            }
+
+            // Aggiorna l'inventario
             if (item instanceof HealthPotion && ((HealthPotion) item).isEmpty()) {
                 player.removeItem(item);
             }
+
+            updatePlayerStats();
 
             if (currentCombat.getEnemy().isAlive()) {
                 enemyTurn();
             }
             updateCombatLog();
         } else {
+            int oldHp = player.getHp();
             item.use(player);
+            int newHp = player.getHp();
+            int healed = newHp - oldHp;
+
+            if (healed > 0) {
+                addGameMessage("🧪 Usato: " + item.getName() + " +" + healed + " HP");
+            }
+
             if (item instanceof HealthPotion && ((HealthPotion) item).isEmpty()) {
                 player.removeItem(item);
             }
-            addGameMessage("🧪 Usato: " + item.getName());
         }
         updatePlayerStats();
     }
@@ -266,32 +288,16 @@ public class GameController {
 
             currentCombat.awardRewards();
             addGameMessage("✨ VITTORIA! ✨");
-
-            Enemy enemy = currentCombat.getEnemy();
-            addGameMessage("🏆 Guadagnati: " + enemy.getExperienceReward() + " XP e " +
-                    enemy.getGoldReward() + " monete d'oro!");
+            addGameMessage("🏆 Guadagnati: " + currentCombat.getEnemy().getExperienceReward() + " XP e " +
+                    currentCombat.getEnemy().getGoldReward() + " monete d'oro!");
 
             enemiesDefeated++;
-
-            // Se il nemico era un drago, segnala
-            if (enemy.isDragon()) {
-                addGameMessage("🐉 HAI SCONFITTO UN DRAGO! 🐉");
-
-                // Controlla quanti draghi sono rimasti
-                int dragonsLeft = countRemainingDragons();
-                if (dragonsLeft > 0) {
-                    addGameMessage("⚠️ Mancano ancora " + dragonsLeft + " draghi da sconfiggere!");
-                } else {
-                    addGameMessage("✨ TUTTI I DRAGHI SONO STATI SCONFITTI! ✨");
-                    addGameMessage("🚪 Ora puoi aprire la PORTA DEL TESORO!");
-                }
-            }
 
             // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // Controlla se il giocatore ha vinto (arrivato alla porta con draghi sconfitti)
-            if (dungeon.getCurrentRoom().isDoorRoom() && dungeon.areAllDragonsDefeated()) {
+            // CONTROLLA SE IL GIOCATORE HA VINTO IL GIOCO
+            if (dungeon.isBossRoom() && currentCombat.getEnemy().isDragon()) {
                 addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
                 gameWon = true;
                 inCombat.set(false);
@@ -299,12 +305,8 @@ public class GameController {
                 return;
             }
 
-            // Quando si sale di livello
             if (player.getLevel() > oldLevel) {
-                int levelGain = player.getLevel() - oldLevel;
-                addGameMessage("🎉 CONGRATULAZIONI! Sei salito di " + levelGain + " livello/i! 🎉");
-                addGameMessage("❤️ HP: " + player.getHp() + "/" + player.getMaxHp());
-                addGameMessage("⚔ Attacco: " + player.getAttack() + " | 🛡 Difesa: " + player.getDefense());
+                addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
             }
         } else if (!playerWon) {
             addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
