@@ -185,3 +185,25 @@
     -fx-font-weight: bold;
 }
 
+/* Stili specifici per TextField */
+.text-field {
+    -fx-background-color: #0f0f1a !important;
+    -fx-text-fill: #ffffff !important;
+    -fx-prompt-text-fill: #888888 !important;
+    -fx-border-color: #e94560 !important;
+    -fx-border-radius: 5 !important;
+    -fx-background-radius: 5 !important;
+    -fx-padding: 8 !important;
+    -fx-font-size: 14px !important;
+}
+
+.text-field:focused {
+    -fx-border-color: #ff6b6b !important;
+    -fx-border-width: 2 !important;
+}
+
+/* Stile per il dialog della creazione */
+.dialog-pane .text-field {
+    -fx-background-color: #0f0f1a !important;
+    -fx-text-fill: #ffffff !important;
+}

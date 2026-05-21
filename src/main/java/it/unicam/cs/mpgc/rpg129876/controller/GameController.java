@@ -9,6 +9,7 @@ import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import it.unicam.cs.mpgc.rpg129876.model.world.Direction;
 import it.unicam.cs.mpgc.rpg129876.model.world.Dungeon;
 import it.unicam.cs.mpgc.rpg129876.model.world.Room;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -67,6 +68,10 @@ public class GameController {
 
     public int getEnemiesDefeated() { return enemiesDefeated; }
 
+    private void setInCombat(boolean value) {
+        this.inCombat.set(value);
+    }
+
     // Nuova partita
     public void startNewGame(String playerName, String characterClass) {
         this.player = new Player(playerName, characterClass);
@@ -113,6 +118,10 @@ public class GameController {
     private void checkRoomEvents() {
         Room currentRoom = dungeon.getCurrentRoom();
 
+        System.out.println("=== checkRoomEvents ===");
+        System.out.println("Stanza: " + currentRoom.getName());
+        System.out.println("Has enemy: " + currentRoom.hasEnemy());
+
         // Controlla se c'è un mercante
         if (currentRoom.hasMerchant()) {
             setCurrentMerchant(currentRoom.getMerchant());
@@ -125,14 +134,15 @@ public class GameController {
             collectTreasures();
             // Dopo aver raccolto tesori, controlla se c'è anche un nemico
             if (currentRoom.hasEnemy()) {
+                System.out.println("Tesoro raccolto, ora inizia combattimento con: " + currentRoom.getEnemy().getName());
                 startCombat(currentRoom.getEnemy());
             }
             return;
         }
 
-        // Controlla se c'è un nemico
+        // CONTROLLA NEMICO (priorità massima)
         if (currentRoom.hasEnemy()) {
-            System.out.println("Nemico trovato in stanza: " + currentRoom.getName());  // Debug
+            System.out.println("NEMICO TROVATO! Avvio combattimento con: " + currentRoom.getEnemy().getName());
             startCombat(currentRoom.getEnemy());
             return;
         }
@@ -178,38 +188,48 @@ public class GameController {
     }
 
     private void startCombat(Enemy enemy) {
-        System.out.println("startCombat chiamato per: " + enemy.getName());  // Debug
+        System.out.println("=== startCombat ===");
+        System.out.println("Nemico: " + enemy.getName());
+
         this.currentCombat = new CombatSystem(player, enemy);
-        this.inCombat.set(true);
+        setInCombat(true);  // Usa il setter della property
+
         addGameMessage("⚔️ COMBATTIMENTO INIZIATO! ⚔️");
         addGameMessage("🛡 Nemico: " + enemy.getName() + " (HP: " + enemy.getHp() + "/" + enemy.getMaxHp() + ")");
-        updateCombatLog();
     }
 
     public void playerAttack() {
+        System.out.println("=== playerAttack chiamato ===");
+        System.out.println("currentCombat: " + currentCombat);
+        System.out.println("isInCombat: " + (currentCombat != null && currentCombat.isInCombat()));
+
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.playerAttack();
+            System.out.println("Risultato attacco: " + result.getMessage());
+            System.out.println("Combat ended: " + result.isCombatEnded());
 
-            // Mostra il messaggio dell'attacco
             addGameMessage(result.getMessage());
             combatLog.set(result.getMessage());
 
-            // NON chiamare updateCombatUI qui - è responsabilità del MainController
-
             if (result.isCombatEnded() && result.isPlayerWon()) {
+                System.out.println("PLAYER HA VINTO! Chiamo endCombat");
                 endCombat(true);
             } else if (currentCombat.isInCombat()) {
-                // Turno del nemico
+                System.out.println("Turno del nemico");
                 CombatSystem.CombatResult enemyResult = currentCombat.enemyTurn();
                 addGameMessage(enemyResult.getMessage());
                 combatLog.set(enemyResult.getMessage());
 
                 if (enemyResult.isCombatEnded() && !enemyResult.isPlayerWon()) {
+                    System.out.println("PLAYER HA PERSO! Chiamo endCombat");
                     endCombat(false);
                 }
             }
+        } else {
+            System.out.println("ERRORE: currentCombat è null o non in combat");
         }
     }
+
     private void enemyTurn() {
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.enemyTurn();
@@ -271,11 +291,10 @@ public class GameController {
             combatLog.set(result.getMessage());
 
             if (!currentCombat.isInCombat()) {
-                inCombat.set(false);
+                setInCombat(false);  // Usa il setter
                 currentCombat = null;
                 addGameMessage("🏃 Sei uscito dal combattimento!");
             } else {
-                // Aggiorna la UI per mostrare i danni subiti
                 updatePlayerStats();
                 addGameMessage("❤️ HP rimanenti: " + player.getHp() + "/" + player.getMaxHp());
             }
@@ -283,6 +302,17 @@ public class GameController {
     }
 
     private void endCombat(boolean playerWon) {
+        System.out.println("=== endCombat ===");
+        System.out.println("playerWon: " + playerWon);
+
+        if (!playerWon) {
+            addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
+            gameOver = true;
+            inCombat.set(false);
+            currentCombat = null;
+            return;
+        }
+
         if (playerWon && currentCombat != null) {
             int oldLevel = player.getLevel();
 
@@ -296,29 +326,31 @@ public class GameController {
             // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // CONTROLLA SE IL GIOCATORE HA VINTO IL GIOCO
+            // Controlla vittoria gioco
             if (dungeon.isBossRoom() && currentCombat.getEnemy().isDragon()) {
-                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
+                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI VINTO IL GIOCO! 🎉🎉🎉");
                 gameWon = true;
-                inCombat.set(false);
-                currentCombat = null;
-                return;
             }
 
             if (player.getLevel() > oldLevel) {
                 addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
             }
-        } else if (!playerWon) {
-            addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
-            gameOver = true;
-            inCombat.set(false);
-            currentCombat = null;
-            return;
         }
 
+        // RESET COMPLETO
         inCombat.set(false);
         currentCombat = null;
+
+        System.out.println("endCombat completato, inCombat = false, currentCombat = null");
+
+        // Forza aggiornamento UI
         updatePlayerStats();
+
+        // Aggiorna la stanza (il nemico è stato rimosso)
+        Platform.runLater(() -> {
+            updateRoomInfo();
+            addGameMessage("📍 Ora sei in: " + dungeon.getCurrentRoom().getName());
+        });
     }
 
     // Conta quanti draghi sono ancora vivi intorno alla porta
@@ -384,6 +416,8 @@ public class GameController {
     public CombatSystem getCurrentCombat() {
         return currentCombat;
     }
+
+
 
     // Metodo per ottenere l'icona del giocatore in base alla classe
     private String getPlayerIcon(String playerClass) {
