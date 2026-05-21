@@ -1,6 +1,7 @@
 package it.unicam.cs.mpgc.rpg129876.model.world;
 
 import it.unicam.cs.mpgc.rpg129876.model.characters.Enemy;
+import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.*;
 
@@ -19,6 +20,8 @@ public class Room {
     private boolean isDoorRoom;
     private boolean hasDragon;
     private boolean dragonsDefeated;
+    private Merchant merchant;
+    private boolean hasMerchant;
 
     public Room(int x, int y) {
         this.x = x;
@@ -79,6 +82,13 @@ public class Room {
         }
         return true;
     }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+        this.hasMerchant = true;
+    }
+    public boolean hasMerchant() { return hasMerchant; }
+    public Merchant getMerchant() { return merchant; }
 
     public void addTreasure(Item item) {
         treasures.add(item);

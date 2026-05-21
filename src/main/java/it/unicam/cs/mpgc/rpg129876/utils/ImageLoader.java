@@ -46,4 +46,8 @@ public class ImageLoader {
     public static Image getPotionImage() {
         return loadImage("/images/potion.png");
     }
+
+    public static Image getMerchantImage() {
+        return loadImage("/images/merchant.png");
+    }
 }

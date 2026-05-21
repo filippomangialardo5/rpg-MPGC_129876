@@ -1,6 +1,7 @@
 package it.unicam.cs.mpgc.rpg129876.model.world;
 
 import it.unicam.cs.mpgc.rpg129876.model.characters.Enemy;
+import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
 import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.*;
@@ -99,13 +100,23 @@ public class Dungeon {
     }
 
     private void populateDungeon() {
+        int merchantsAdded = 0;
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Room room = map[y][x];
 
                 // Salta la stanza iniziale e la stanza del boss
-                if ((x == width/2 && y == height/2) ||
-                        (x == width-1 && y == height-1)) {
+                if ((x == 0 && y == 0) || (x == width-1 && y == height-1)) {
+                    continue;
+                }
+
+                // Aggiungi 2 mercanti
+                if (merchantsAdded < 2 && random.nextDouble() < 0.05) {
+                    room.setMerchant(new Merchant("🏪 Mercante"));
+                    room.setName("🏪 Negozio");
+                    room.setDescription("Un mercante amichevole vende pozioni curative! Parla con lui per acquistare.");
+                    merchantsAdded++;
                     continue;
                 }
 
@@ -120,6 +131,8 @@ public class Dungeon {
                 }
             }
         }
+
+        System.out.println("✅ Mercanti aggiunti: " + merchantsAdded);
     }
 
     private Enemy generateEnemyByLevel() {

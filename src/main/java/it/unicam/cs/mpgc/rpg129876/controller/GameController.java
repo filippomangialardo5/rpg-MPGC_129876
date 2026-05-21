@@ -1,5 +1,6 @@
 package it.unicam.cs.mpgc.rpg129876.controller;
 
+import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Enemy;
 import it.unicam.cs.mpgc.rpg129876.model.combat.CombatSystem;
@@ -34,9 +35,20 @@ public class GameController {
 
     private int enemiesDefeated = 0;
 
+    private Merchant currentMerchant;  // Semplice variabile
+
+    public Merchant getCurrentMerchant() {
+        return currentMerchant;
+    }
+
+    public void setCurrentMerchant(Merchant merchant) {
+        this.currentMerchant = merchant;
+    }
+
     public GameController() {
         // Inizializzazione vuota, il gioco parte con newGame()
     }
+
 
     // Property getters per binding JavaFX
     public ObjectProperty<Player> currentPlayerProperty() { return currentPlayer; }
@@ -97,32 +109,62 @@ public class GameController {
     private void checkRoomEvents() {
         Room currentRoom = dungeon.getCurrentRoom();
 
+        if (currentRoom.hasMerchant()) {
+            setCurrentMerchant(currentRoom.getMerchant());
+            addGameMessage("🏪 Entri in un negozio! " + currentRoom.getMerchant().getName() + " ti aspetta.");
+            return;
+        }
+
+        // Controlla se ci sono tesori (incluso l'oro)
+        if (currentRoom.hasTreasures()) {
+            collectTreasures();
+            return;  // Dopo aver raccolto i tesori, esci per non fare altre azioni
+        }
+
         // Controlla se c'è un nemico
         if (currentRoom.hasEnemy()) {
             startCombat(currentRoom.getEnemy());
+            return;
         }
-        // Controlla se ci sono tesori
-        else if (currentRoom.hasTreasures()) {
-            collectTreasures();
-        }
+
         // Controlla se è la stanza del boss
-        else if (dungeon.isBossRoom()) {
+        if (dungeon.isBossRoom()) {
             addGameMessage("👑 Sei entrato nella sala del trono... Il Drago si sveglia!");
             startCombat(currentRoom.getEnemy());
+            return;
         }
-        else {
-            addGameMessage("🔍 Esplori la stanza... " + currentRoom.getDescription());
-        }
+
+        addGameMessage("🔍 Esplori la stanza... " + currentRoom.getDescription());
+    }
+
+    public void openMerchantDialog(Merchant merchant) {
+        // Notifica la UI che c'è un mercante
+        this.currentMerchant = merchant;
+        // Questo verrà gestito dal MainController
     }
 
     private void collectTreasures() {
         Room currentRoom = dungeon.getCurrentRoom();
         var treasures = currentRoom.collectTreasures();
 
+        if (treasures.isEmpty()) {
+            return;
+        }
+
         for (Item item : treasures) {
             player.addItem(item);
             addGameMessage("💰 Trovi un tesoro! Ottieni: " + item.getIcon() + " " + item.getName());
+
+            // Se è oro, aggiungi direttamente al contatore
+            if (item.getName().contains("Gold") || item.getIcon().equals("💰")) {
+                int goldAmount = 30;  // Oro trovato
+                player.addGold(goldAmount);
+                addGameMessage("💰 +" + goldAmount + " monete d'oro!");
+            }
         }
+
+        // Aggiorna la UI
+        updatePlayerStats();
     }
 
     // Sistema di combattimento

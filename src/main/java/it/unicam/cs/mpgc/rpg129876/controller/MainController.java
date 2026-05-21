@@ -1,6 +1,7 @@
 package it.unicam.cs.mpgc.rpg129876.controller;
 
 import it.unicam.cs.mpgc.rpg129876.model.Score;
+import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
@@ -105,6 +106,9 @@ public class MainController {
     private List<Score> scores = new ArrayList<>();
     private static final String SCORES_FILE = "scores.json";
 
+    private Merchant currentMerchant;
+
+
     @FXML
     public void initialize() {
         gameController = new GameController();
@@ -119,6 +123,8 @@ public class MainController {
         addGameMessage("✨ Benvenuto in Dungeon Explorer RPG!");
         addGameMessage("🖱️ Clicca 'Inizia Avventura' per iniziare");
     }
+
+
 
     public void setScene(Scene scene) {
         this.currentScene = scene;
@@ -180,6 +186,59 @@ public class MainController {
     @FXML
     private void onStartGameFromButton() {
         showCharacterCreation();
+    }
+
+    @FXML
+    private void onMerchant() {
+        if (gameController.getPlayer() == null) return;
+
+        Room currentRoom = gameController.getCurrentRoom();
+        if (!currentRoom.hasMerchant()) {
+            addGameMessage("❌ Non c'è nessun mercante qui!");
+            return;
+        }
+
+        Merchant merchant = currentRoom.getMerchant();
+        Player player = gameController.getPlayer();
+
+        // Dialogo del mercante
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("🏪 Mercante");
+        dialog.setHeaderText(merchant.getName() + " - Benvenuto viaggiatore!");
+
+        VBox content = new VBox(10);
+        content.setPadding(new javafx.geometry.Insets(15));
+
+        Label goldLabel = new Label("💰 Oro disponibile: " + player.getGold());
+        goldLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Label itemsLabel = new Label("📦 Oggetti in vendita:");
+        itemsLabel.setStyle("-fx-font-weight: bold;");
+
+        VBox itemsBox = new VBox(5);
+        for (Item item : merchant.getItemsForSale()) {
+            int price = (item instanceof HealthPotion && ((HealthPotion) item).getHealAmount() == 30) ? 30 : 60;
+            Button buyBtn = new Button("🧪 " + item.getName() + " - " + price + "💰");
+            buyBtn.setOnAction(e -> {
+                if (merchant.buyItem(item, player)) {
+                    addGameMessage("🏪 Hai comprato " + item.getName() + " per " + price + " oro!");
+                    updatePlayerUI(player);
+                    updateInventory();
+                    dialog.close();
+                } else {
+                    addGameMessage("❌ Oro insufficiente! Ti mancano " + (price - player.getGold()) + " oro.");
+                }
+            });
+            itemsBox.getChildren().add(buyBtn);
+        }
+
+        Button closeBtn = new Button("🚪 Uscita");
+        closeBtn.setOnAction(e -> dialog.close());
+
+        content.getChildren().addAll(goldLabel, itemsLabel, itemsBox, closeBtn);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        dialog.showAndWait();
     }
 
     private void bindPlayerStats() {
@@ -444,6 +503,20 @@ public class MainController {
                     }
                     cell.setStyle("-fx-background-color: #3a1a1a; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
+                // MERCANTE
+                else if (room.hasMerchant()) {
+                    Image merchantImg = ImageLoader.getMerchantImage();
+                    if (merchantImg != null) {
+                        ImageView merchantView = new ImageView(merchantImg);
+                        merchantView.setFitWidth(40);
+                        merchantView.setFitHeight(40);
+                        cell.setGraphic(merchantView);
+                        cell.setText("");
+                    } else {
+                        cell.setText("🏪");
+                    }
+                    cell.setStyle("-fx-background-color: #2a5a5a; -fx-font-size: 18px; -fx-cursor: hand;");
+                }
                 // TESORO - usa immagine tesoro/pozione
                 else if (room.isExplored() && room.hasTreasures()) {
                     Image goldImg = ImageLoader.getGoldImage();
@@ -684,6 +757,80 @@ public class MainController {
                 !gameController.isInCombat();
     }
 
+    // Aggiungi questo metodo
+    private void checkForMerchant() {
+        Merchant merchant = gameController.getCurrentMerchant();
+        if (merchant != null) {
+            showMerchantDialog(merchant);
+            gameController.setCurrentMerchant(null);
+        }
+    }
+
+    private void showMerchantDialog(Merchant merchant) {
+        if (gameController.getPlayer() == null) return;
+
+        Player player = gameController.getPlayer();
+
+        // Dialogo del mercante
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("🏪 Mercante");
+        dialog.setHeaderText(merchant.getName() + " - Benvenuto viaggiatore!");
+
+        VBox content = new VBox(10);
+        content.setPadding(new javafx.geometry.Insets(15));
+
+        Label goldLabel = new Label("💰 Oro disponibile: " + player.getGold());
+        goldLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+        Label itemsLabel = new Label("📦 Oggetti in vendita:");
+        itemsLabel.setStyle("-fx-font-weight: bold;");
+
+        VBox itemsBox = new VBox(5);
+
+        // Pozione piccola (30 gold) - cura 30 HP
+        Button smallPotionBtn = new Button("🧪 Pozione curativa (piccola) - 30💰");
+        smallPotionBtn.setOnAction(e -> {
+            if (player.getGold() >= 30) {
+                player.addGold(-30);
+                player.addItem(new HealthPotion(1, 30));
+                addGameMessage("🏪 Hai comprato una pozione piccola per 30 oro!");
+                updatePlayerUI(player);
+                updateInventory();
+                goldLabel.setText("💰 Oro disponibile: " + player.getGold());
+                dialog.close();
+            } else {
+                addGameMessage("❌ Oro insufficiente! Ti mancano " + (30 - player.getGold()) + " oro.");
+            }
+        });
+
+        // Pozione grande (60 gold) - cura 50 HP
+        Button largePotionBtn = new Button("🧪 Pozione curativa (grande) - 60💰");
+        largePotionBtn.setOnAction(e -> {
+            if (player.getGold() >= 60) {
+                player.addGold(-60);
+                player.addItem(new HealthPotion(1, 50));
+                addGameMessage("🏪 Hai comprato una pozione grande per 60 oro!");
+                updatePlayerUI(player);
+                updateInventory();
+                goldLabel.setText("💰 Oro disponibile: " + player.getGold());
+                dialog.close();
+            } else {
+                addGameMessage("❌ Oro insufficiente! Ti mancano " + (60 - player.getGold()) + " oro.");
+            }
+        });
+
+        Button closeBtn = new Button("🚪 Uscita");
+        closeBtn.setOnAction(e -> dialog.close());
+
+        itemsBox.getChildren().addAll(smallPotionBtn, largePotionBtn);
+        content.getChildren().addAll(goldLabel, itemsLabel, itemsBox, closeBtn);
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        dialog.showAndWait();
+    }
+
+    // Chiamalo dopo ogni movimento (in updateAfterMove)
     private void updateAfterMove() {
         updateMap();
         updateInventory();
@@ -693,6 +840,7 @@ public class MainController {
                 gameController.getCurrentRoom().getName() + "\n" +
                         gameController.getCurrentRoom().getDescription()
         );
+        checkForMerchant();  // ← Aggiungi questa riga
     }
 
     @FXML
