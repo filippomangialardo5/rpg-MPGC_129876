@@ -157,15 +157,33 @@
             </VBox>
         </center>
 
-        <!-- PANNELLO INVENTARIO (DESTRA) -->
+        <!-- PANNELLO INVENTARIO E LEGENDA (DESTRA) -->
         <right>
-            <VBox spacing="10" styleClass="inventory-panel" prefWidth="200">
+            <VBox spacing="10" styleClass="inventory-panel" prefWidth="230">
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
 
-                <Label text="🎒 INVENTARIO" styleClass="section-title" style="-fx-font-size: 14px;"/>
+                <!-- INVENTARIO -->
+                <Label text="🎒 INVENTARIO" styleClass="section-title"/>
+                <Separator/>
+                <VBox fx:id="inventoryList" spacing="5"/>
+
                 <Separator/>
 
-                <VBox fx:id="inventoryList" spacing="8"/>
+                <!-- LEGENDA CON IMMAGINI (creata da Java) -->
+                <VBox fx:id="legendBox" spacing="8"/>
+
+                <Separator/>
+
+                <!-- COMANDI -->
+                <Label text="🎮 COMANDI" styleClass="section-title"/>
+                <Separator/>
+                <VBox spacing="3">
+                    <Label text="WASD o FRECCE = Muoviti" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="⚔️ ATTACCA = Colpisci" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="🧪 POZIONE = Cura +20 HP" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="🏃 FUGGI = Scappa (50%)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="🏪 MERCANTE = Compra pozioni" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                </VBox>
             </VBox>
         </right>
 

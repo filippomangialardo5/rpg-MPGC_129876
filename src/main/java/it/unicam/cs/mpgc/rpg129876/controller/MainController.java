@@ -90,6 +90,8 @@ public class MainController {
     @FXML private Label enemyDefenseLabel;
     @FXML private Label potionSuggestion;
 
+    @FXML private VBox legendBox;
+
     @FXML
     public void testButtons() {
         System.out.println("=== TEST BUTTONS ===");
@@ -128,6 +130,8 @@ public class MainController {
         gameScreen.setManaged(false);
         combatPanel.setVisible(false);
         combatPanel.setManaged(false);
+
+        setupLegend();
 
         // NON chiamare showCharacterCreation qui - aspetta che il reset lo faccia
         addGameMessage("✨ Benvenuto in Dungeon Explorer RPG!");
@@ -1495,6 +1499,121 @@ public class MainController {
         }
     }
 
+    private HBox createIconLabel(String imagePath, String text) {
+        HBox box = new HBox(8);
+        box.setAlignment(Pos.CENTER_LEFT);
+
+        Image img = ImageLoader.loadImage(imagePath);
+        ImageView icon = new ImageView(img);
+        icon.setFitWidth(24);
+        icon.setFitHeight(24);
+
+        Label label = new Label(text);
+        label.setStyle("-fx-text-fill: white; -fx-font-size: 11px;");
+
+        box.getChildren().addAll(icon, label);
+        return box;
+    }
+
+    private void setupLegend() {
+        legendBox.getChildren().clear();
+        legendBox.setStyle("-fx-padding: 5;");
+
+        Label title = new Label("📖 LEGENDA");
+        title.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #e94560;");
+        legendBox.getChildren().add(title);
+        legendBox.getChildren().add(new Separator());
+
+        // Giocatore
+        HBox playerBox = new HBox(8);
+        playerBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView playerImg = new ImageView(ImageLoader.loadImage("/images/warrior.png"));
+        playerImg.setFitWidth(24);
+        playerImg.setFitHeight(24);
+        playerBox.getChildren().addAll(playerImg, new Label("= Tu"));
+        legendBox.getChildren().add(playerBox);
+
+        // Goblin
+        HBox goblinBox = new HBox(8);
+        goblinBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView goblinImg = new ImageView(ImageLoader.loadImage("/images/goblin.png"));
+        goblinImg.setFitWidth(24);
+        goblinImg.setFitHeight(24);
+        goblinBox.getChildren().addAll(goblinImg, new Label("= Goblin"));
+        legendBox.getChildren().add(goblinBox);
+
+        // Wolf
+        HBox wolfBox = new HBox(8);
+        wolfBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView wolfImg = new ImageView(ImageLoader.loadImage("/images/wolf.png"));
+        wolfImg.setFitWidth(24);
+        wolfImg.setFitHeight(24);
+        wolfBox.getChildren().addAll(wolfImg, new Label("= Lupo"));
+        legendBox.getChildren().add(wolfBox);
+
+        // Skeleton
+        HBox skeletonBox = new HBox(8);
+        skeletonBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView skeletonImg = new ImageView(ImageLoader.loadImage("/images/skeleton.png"));
+        skeletonImg.setFitWidth(24);
+        skeletonImg.setFitHeight(24);
+        skeletonBox.getChildren().addAll(skeletonImg, new Label("= Scheletro"));
+        legendBox.getChildren().add(skeletonBox);
+
+        // Orc
+        HBox orcBox = new HBox(8);
+        orcBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView orcImg = new ImageView(ImageLoader.loadImage("/images/orc.png"));
+        orcImg.setFitWidth(24);
+        orcImg.setFitHeight(24);
+        orcBox.getChildren().addAll(orcImg, new Label("= Orco"));
+        legendBox.getChildren().add(orcBox);
+
+        // Dark Knight
+        HBox knightBox = new HBox(8);
+        knightBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView knightImg = new ImageView(ImageLoader.loadImage("/images/darkknight.png"));
+        knightImg.setFitWidth(24);
+        knightImg.setFitHeight(24);
+        knightBox.getChildren().addAll(knightImg, new Label("= Cavaliere Oscuro"));
+        legendBox.getChildren().add(knightBox);
+
+        // Dragon
+        HBox dragonBox = new HBox(8);
+        dragonBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView dragonImg = new ImageView(ImageLoader.loadImage("/images/dragon.png"));
+        dragonImg.setFitWidth(24);
+        dragonImg.setFitHeight(24);
+        dragonBox.getChildren().addAll(dragonImg, new Label("= Drago (Boss)"));
+        legendBox.getChildren().add(dragonBox);
+
+        // Merchant
+        HBox merchantBox = new HBox(8);
+        merchantBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView merchantImg = new ImageView(ImageLoader.loadImage("/images/merchant.png"));
+        merchantImg.setFitWidth(24);
+        merchantImg.setFitHeight(24);
+        merchantBox.getChildren().addAll(merchantImg, new Label("= Mercante"));
+        legendBox.getChildren().add(merchantBox);
+
+        // Porta del Tesoro
+        HBox doorBox = new HBox(8);
+        doorBox.setAlignment(Pos.CENTER_LEFT);
+        Label doorLabel = new Label("🚪🔒");
+        doorLabel.setStyle("-fx-font-size: 18px;");
+        doorBox.getChildren().addAll(doorLabel, new Label("= Porta del Tesoro"));
+        legendBox.getChildren().add(doorBox);
+
+        // Pozione
+        HBox potionBox = new HBox(8);
+        potionBox.setAlignment(Pos.CENTER_LEFT);
+        ImageView potionImg = new ImageView(ImageLoader.loadImage("/images/potion.png"));
+        potionImg.setFitWidth(24);
+        potionImg.setFitHeight(24);
+        potionBox.getChildren().addAll(potionImg, new Label("= Pozione curativa"));
+        legendBox.getChildren().add(potionBox);
+    }
+
     private void showHelpDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("📖 Guida");
@@ -1503,7 +1622,7 @@ public class MainController {
             ═══════════════════════════════════════
             
             🗺️ MOVIMENTO:
-            • Tasti WASD o FRECCE per muoverti
+            • Tasti WASD per muoverti
                         
             ⚔️ COMBATTIMENTO:
             • ATTACCA - Colpisci il nemico
@@ -1513,7 +1632,7 @@ public class MainController {
             💰 RICOMPENSE:
             • Sconfiggi nemici per XP e oro
             • Salendo di livello aumentano le statistiche
-            • Trova oro e tesori nelle stanze
+            • Trova oro e pozioni nelle stanze
             
             👑 OBIETTIVO:
             Sconfiggi i 3 Draghi he circondano l'uscita nell'angolo in basso a destra del dungeon
