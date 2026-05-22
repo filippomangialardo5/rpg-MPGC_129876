@@ -86,7 +86,7 @@ public class GameController {
     }
 
     private void addStartingItems() {
-        player.addItem(new HealthPotion(2));  // 2 invece di 3 pozioni iniziali
+        player.addItem(new HealthPotion(4));
     }
 
     // Movimento

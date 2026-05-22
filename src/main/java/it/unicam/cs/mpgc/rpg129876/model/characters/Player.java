@@ -86,12 +86,13 @@ public class Player extends GameCharacter {
     }
 
     private int getRequiredExpForLevel() {
-        // Formula: 100 XP per livello 1, +50 a ogni livello
-        // Livello 1: 100 XP
-        // Livello 2: 150 XP
-        // Livello 3: 200 XP
+        // Formula più lenta: 150 XP per livello 1, +100 a ogni livello
+        // Livello 1: 150 XP
+        // Livello 2: 250 XP
+        // Livello 3: 350 XP
+        // Livello 4: 450 XP
         // ecc.
-        return 100 + (getLevel() - 1) * 50;
+        return 150 + (getLevel() - 1) * 100;
     }
 
     private void levelUp() {

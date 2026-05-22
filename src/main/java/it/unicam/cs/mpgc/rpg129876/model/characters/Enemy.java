@@ -19,29 +19,28 @@ public class Enemy extends GameCharacter {
     public void setExperienceReward(int experienceReward) { this.experienceReward = experienceReward; }
     public void setGoldReward(int goldReward) { this.goldReward = goldReward; }
 
-    // Factory methods per creare nemici predefiniti
     public static Enemy createGoblin() {
-        return new Enemy("Goblin", 40, 12, 5, 50, 20);
+        return new Enemy("Goblin", 35, 14, 10, 40, 20);   // XP 50→40
     }
 
     public static Enemy createOrc() {
-        return new Enemy("Orc", 70, 18, 8, 100, 50);
+        return new Enemy("Orc", 70, 23, 12, 80, 50);     // XP 100→80
     }
 
     public static Enemy createSkeleton() {
-        return new Enemy("Skeleton", 50, 15, 6, 75, 30);
+        return new Enemy("Skeleton", 60, 22, 10, 60, 35); // XP 75→60
     }
 
     public static Enemy createWolf() {
-        return new Enemy("Wolf", 35, 14, 4, 45, 15);
+        return new Enemy("Wolf", 40, 24, 5, 40, 25);     // XP 45→40
     }
 
     public static Enemy createDarkKnight() {
-        return new Enemy("Dark Knight", 100, 25, 12, 150, 80);
+        return new Enemy("Dark Knight", 100, 30, 10, 120, 80); // XP 150→120
     }
 
     public static Enemy createDragon() {
-        return new Enemy("Dragon", 200, 35, 20, 500, 300);
+        return new Enemy("Dragon", 250, 50, 25, 250, 250); // XP 500→250
     }
 
     public boolean isDragon() {return this.getName().equalsIgnoreCase("Dragon");
@@ -50,14 +49,16 @@ public class Enemy extends GameCharacter {
     // Metodo per generare nemico casuale (utile per esplorazione)
     public static Enemy randomEnemy() {
         double random = Math.random();
-        if (random < 0.4) {
+        if (random < 0.27) {          // 27% Goblin
             return createGoblin();
-        } else if (random < 0.7) {
+        } else if (random < 0.47) {   // 20% Lupo
             return createWolf();
-        } else if (random < 0.9) {
+        } else if (random < 0.70) {   // 23% Scheletro
             return createSkeleton();
-        } else {
+        } else if (random < 0.87) {   // 17% Orco
             return createOrc();
+        } else {                       // 13% Cavaliere Oscuro
+            return createDarkKnight();
         }
     }
 
