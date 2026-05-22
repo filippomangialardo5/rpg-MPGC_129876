@@ -17,6 +17,9 @@
                 <MenuItem text="✨ Nuova Partita" onAction="#onNewGame"/>
                 <MenuItem text="❌ Esci" onAction="#onExit"/>
             </Menu>
+            <Menu text="🏆 Classifica">
+                <MenuItem text="📊 Vedi Classifica" onAction="#onShowLeaderboard"/>
+            </Menu>
             <Menu text="❓ Aiuto">
                 <MenuItem text="📖 Comandi" onAction="#onHelp"/>
                 <MenuItem text="ℹ️ Info" onAction="#onAbout"/>

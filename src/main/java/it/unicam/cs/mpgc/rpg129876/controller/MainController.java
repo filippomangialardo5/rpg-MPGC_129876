@@ -1175,13 +1175,19 @@ public class MainController {
 
             alert.setContentText(stats);
 
+            // Bottoni: NUOVA PARTITA, CLASSIFICA, ESCI
             ButtonType newGameBtn = new ButtonType("✨ NUOVA PARTITA");
+            ButtonType leaderboardBtn = new ButtonType("🏆 CLASSIFICA");
             ButtonType exitBtn = new ButtonType("❌ ESCI");
-            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
+            alert.getButtonTypes().setAll(newGameBtn, leaderboardBtn, exitBtn);
 
             alert.showAndWait().ifPresent(response -> {
                 if (response == newGameBtn) {
                     onNewGame();
+                } else if (response == leaderboardBtn) {
+                    showLeaderboard();
+                    // Dopo la classifica, mostra di nuovo il game over
+                    showGameOverScreen();
                 } else {
                     Platform.exit();
                 }
@@ -1190,12 +1196,23 @@ public class MainController {
     }
 
     private void showVictoryScreen() {
+        Player p = gameController.getPlayer();
+
+        // Salva il punteggio
+        Score score = new Score(
+                p.getName(),
+                p.getCharacterClass(),
+                p.getLevel(),
+                gameController.getEnemiesDefeated(),
+                p.getGold()
+        );
+        saveScore(score);
+
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("VITTORIA!");
             alert.setHeaderText("🏆 HAI VINTO IL GIOCO! 🏆");
 
-            Player p = gameController.getPlayer();
             String stats = String.format(
                     "\n📊 STATISTICHE FINALI:\n\n" +
                             "⭐ Nome: %s\n" +
@@ -1216,13 +1233,19 @@ public class MainController {
 
             alert.setContentText(stats);
 
+            // Bottoni: NUOVA PARTITA, CLASSIFICA, ESCI
             ButtonType newGameBtn = new ButtonType("✨ NUOVA PARTITA");
+            ButtonType leaderboardBtn = new ButtonType("🏆 CLASSIFICA");
             ButtonType exitBtn = new ButtonType("❌ ESCI");
-            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
+            alert.getButtonTypes().setAll(newGameBtn, leaderboardBtn, exitBtn);
 
             alert.showAndWait().ifPresent(response -> {
                 if (response == newGameBtn) {
                     onNewGame();
+                } else if (response == leaderboardBtn) {
+                    showLeaderboard();
+                    // Dopo la classifica, mostra di nuovo la vittoria
+                    showVictoryScreen();
                 } else {
                     Platform.exit();
                 }
@@ -1383,71 +1406,79 @@ public class MainController {
         }
     }
 
-    private void loadScores() {
+    // Salvataggio su file JSON
+    private void saveScore(Score score) {
         try {
-            File file = new File(SCORES_FILE);
-            if (file.exists()) {
-                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
-                scores = (List<Score>) ois.readObject();
-                ois.close();
+            // Leggi i punteggi esistenti
+            List<Score> scores = loadScoresFromFile();
+            scores.add(score);
+
+            // Ordina per punteggio decrescente
+            scores.sort((a, b) -> Integer.compare(b.getTotalScore(), a.getTotalScore()));
+
+            // Mantieni solo top 10
+            if (scores.size() > 10) {
+                scores = scores.subList(0, 10);
             }
+
+            // Salva su file
+            File file = new File("scores.json");
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
+            oos.writeObject(scores);
+            oos.close();
+
+            System.out.println("Punteggio salvato!");
         } catch (Exception e) {
-            scores = new ArrayList<>();
+            System.err.println("Errore salvataggio: " + e.getMessage());
         }
     }
 
-    private void saveScore(Score score) {
-        scores.add(score);
-        // Ordina per punteggio decrescente
-        scores.sort((a, b) -> Integer.compare(b.getTotalScore(), a.getTotalScore()));
-        // Mantieni solo top 10
-        if (scores.size() > 10) {
-            scores = scores.subList(0, 10);
-        }
-
+    private List<Score> loadScoresFromFile() {
         try {
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SCORES_FILE));
-            oos.writeObject(scores);
-            oos.close();
+            File file = new File("scores.json");
+            if (file.exists()) {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+                List<Score> scores = (List<Score>) ois.readObject();
+                ois.close();
+                return scores;
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Errore caricamento: " + e.getMessage());
         }
+        return new ArrayList<>();
     }
 
     private void showLeaderboard() {
-        loadScores();
+        List<Score> scores = loadScoresFromFile();
 
-        VBox content = new VBox(10);
-        content.setPadding(new javafx.geometry.Insets(15));
-
-        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
-
-        ListView<String> listView = new ListView<>();
+        StringBuilder message = new StringBuilder();
+        message.append("🏆 CLASSIFICA - TOP 10 🏆\n\n");
 
         if (scores.isEmpty()) {
-            listView.getItems().add("📋 Nessun punteggio registrato ancora!");
+            message.append("📋 Nessun punteggio registrato ancora!\n");
+            message.append("Gioca e batti i record!");
         } else {
             for (int i = 0; i < scores.size(); i++) {
                 Score s = scores.get(i);
-                String medal = i == 0 ? "🥇 " : (i == 1 ? "🥈 " : (i == 2 ? "🥉 " : "   "));
-                listView.getItems().add(String.format("%s%d. %s - %s (Lv.%d) - %d punti",
+                String medal = "";
+                if (i == 0) medal = "🥇 ";
+                else if (i == 1) medal = "🥈 ";
+                else if (i == 2) medal = "🥉 ";
+                else medal = "   ";
+
+                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
                         medal, i + 1, s.getPlayerName(), s.getCharacterClass(),
                         s.getLevel(), s.getTotalScore()));
             }
         }
 
-        Button closeBtn = new Button("CHIUDI");
-        closeBtn.setOnAction(e -> closeBtn.getScene().getWindow().hide());
-
-        content.getChildren().addAll(title, listView, closeBtn);
-
-        Scene scene = new Scene(content, 400, 400);
-        Stage stage = new Stage();
-        stage.setTitle("Classifica");
-        stage.setScene(scene);
-        stage.show();
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Classifica");
+        alert.setHeaderText("🏆 CLASSIFICA");
+        alert.setContentText(message.toString());
+        alert.showAndWait();
     }
+
 
     @FXML private void onShowLeaderboard() {
         showLeaderboard();
