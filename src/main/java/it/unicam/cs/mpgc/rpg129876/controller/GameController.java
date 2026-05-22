@@ -86,7 +86,7 @@ public class GameController {
     }
 
     private void addStartingItems() {
-        player.addItem(new HealthPotion(3));
+        player.addItem(new HealthPotion(2));  // 2 invece di 3 pozioni iniziali
     }
 
     // Movimento
@@ -253,12 +253,15 @@ public class GameController {
             int healed = newHp - oldHp;
 
             if (healed > 0) {
-                addGameMessage("🧪 La pozione ti ha curato " + healed + " HP!");
+                addGameMessage("🧪 La pozione ti ha curato " + healed + " HP! (da " + oldHp + " a " + newHp + ")");
+            } else if (healed == 0) {
+                addGameMessage("❌ Non hai bisogno di cura! Sei già a piena vita.");
             }
 
             // Aggiorna l'inventario
             if (item instanceof HealthPotion && ((HealthPotion) item).isEmpty()) {
                 player.removeItem(item);
+                addGameMessage("📦 La pozione è terminata!");
             }
 
             updatePlayerStats();
@@ -274,7 +277,9 @@ public class GameController {
             int healed = newHp - oldHp;
 
             if (healed > 0) {
-                addGameMessage("🧪 Usato: " + item.getName() + " +" + healed + " HP");
+                addGameMessage("🧪 Usato: " + item.getName() + " +" + healed + " HP (da " + oldHp + " a " + newHp + ")");
+            } else if (healed == 0) {
+                addGameMessage("❌ Non hai bisogno di cura! Sei già a piena vita.");
             }
 
             if (item instanceof HealthPotion && ((HealthPotion) item).isEmpty()) {
@@ -291,12 +296,12 @@ public class GameController {
             combatLog.set(result.getMessage());
 
             if (!currentCombat.isInCombat()) {
-                setInCombat(false);  // Usa il setter
+                setInCombat(false);  // Importante: notifica la UI
                 currentCombat = null;
-                addGameMessage("🏃 Sei uscito dal combattimento!");
+                addGameMessage("🏃 Sei riuscito a fuggire! Il combattimento è terminato.");
             } else {
                 updatePlayerStats();
-                addGameMessage("❤️ HP rimanenti: " + player.getHp() + "/" + player.getMaxHp());
+                addGameMessage("❤️ HP rimanenti dopo fuga fallita: " + player.getHp() + "/" + player.getMaxHp());
             }
         }
     }
@@ -333,7 +338,10 @@ public class GameController {
             }
 
             if (player.getLevel() > oldLevel) {
-                addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
+                int levelGain = player.getLevel() - oldLevel;
+                addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! (+" + levelGain + " livelli) 🎉");
+                addGameMessage("❤️ HP: " + player.getHp() + "/" + player.getMaxHp());
+                addGameMessage("⚔ Attacco: " + player.getAttack() + " | 🛡 Difesa: " + player.getDefense());
             }
         }
 

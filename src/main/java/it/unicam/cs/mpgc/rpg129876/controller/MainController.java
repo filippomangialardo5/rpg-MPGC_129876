@@ -260,8 +260,16 @@ public class MainController {
 
         loadPlayerImage(player.getCharacterClass());
 
+        int currentExp = player.getExperience();
+        int requiredExp = 100 + (player.getLevel() - 1) * 50;
+
+        // Assicurati che l'XP non superi il required
+        if (currentExp > requiredExp) {
+            currentExp = requiredExp;
+        }
+
         levelLabel.setText("⭐ Livello: " + player.getLevel());
-        expLabel.setText("📈 Esperienza: " + player.getExperience() + "/" + (100 + (player.getLevel() - 1) * 50));
+        expLabel.setText("📈 Esperienza: " + currentExp + "/" + requiredExp);
         goldLabel.setText("💰 Oro: " + player.getGold());
         attackLabel.setText("⚔ Attacco: " + player.getAttack());
         defenseLabel.setText("🛡 Difesa: " + player.getDefense());
@@ -277,7 +285,14 @@ public class MainController {
             playerCombatHealthBar.setProgress((double) p.getHp() / p.getMaxHp());
             playerCombatHealthLabel.setText(p.getHp() + "/" + p.getMaxHp());
 
-            // CARICA IMMAGINE DEL PERSONAGGIO NEL COMBATTIMENTO
+            // SUGGERIMENTO POZIONE - se HP bassi
+            if (p.getHp() < p.getMaxHp() / 3 && p.getHp() > 0) {
+                potionSuggestion.setText("⚠️ HP BASSO! USA UNA POZIONE! ⚠️");
+                potionSuggestion.setStyle("-fx-text-fill: #ff4444; -fx-font-weight: bold;");
+            } else {
+                potionSuggestion.setText("");
+            }
+
             loadPlayerImage(p.getCharacterClass());
         }
 
@@ -290,7 +305,15 @@ public class MainController {
             enemyAttackLabel.setText("⚔ Attacco: " + enemy.getAttack());
             enemyDefenseLabel.setText("🛡 Difesa: " + enemy.getDefense());
 
-            // CARICA IMMAGINE DEL NEMICO
+            // SUGGERIMENTO STRATEGICO in base al nemico
+            if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
+                potionSuggestion.setText("⚠️ ATTACCO NEMICO ALTO! USA POZIONI! ⚠️");
+                potionSuggestion.setStyle("-fx-text-fill: #ffaa44; -fx-font-weight: bold;");
+            } else if (enemy.getHp() < 20) {
+                potionSuggestion.setText("⚔️ NEMICO DEBOLE! ATTACCA! ⚔️");
+                potionSuggestion.setStyle("-fx-text-fill: #00ff00; -fx-font-weight: bold;");
+            }
+
             loadEnemyImage(enemy.getName());
         } else {
             System.out.println("Nessun combattimento attivo");
@@ -345,10 +368,12 @@ public class MainController {
         updatePlayerUI(gameController.getPlayer());
 
         // Aggiorna la descrizione della stanza
-        roomDescriptionArea.setText(
-                gameController.getCurrentRoom().getName() + "\n" +
-                        gameController.getCurrentRoom().getDescription()
-        );
+        if (gameController.getCurrentRoom() != null) {
+            roomDescriptionArea.setText(
+                    gameController.getCurrentRoom().getName() + "\n" +
+                            gameController.getCurrentRoom().getDescription()
+            );
+        }
 
         System.out.println("Combat mode disabilitata");
     }
@@ -358,6 +383,13 @@ public class MainController {
         if (gameController.getPlayer() != null) {
             int potionCount = gameController.getPlayer().getPotionCount();
             int maxPotions = gameController.getPlayer().getMaxPotions();
+
+            // ASSICURATI CHE IL CONTATORE NON SUPERA IL MASSIMO
+            if (potionCount > maxPotions) {
+                System.out.println("⚠️ WARNING: Pozioni (" + potionCount + ") superano il massimo (" + maxPotions + ")!");
+                // Forza il reset a maxPotions (opzionale)
+                // gameController.getPlayer().setPotionCount(maxPotions);
+            }
 
             // Contenitore per la pozione con immagine
             HBox potionContainer = new HBox(10);
@@ -372,7 +404,6 @@ public class MainController {
                 potionView.setFitHeight(32);
                 potionContainer.getChildren().add(potionView);
             } else {
-                // Fallback a emoji
                 Label potionEmoji = new Label("🧪");
                 potionEmoji.setStyle("-fx-font-size: 24px;");
                 potionContainer.getChildren().add(potionEmoji);
@@ -381,13 +412,17 @@ public class MainController {
             // Testo informativo
             Label potionInfo = new Label("Pozioni: " + potionCount + "/" + maxPotions);
             potionInfo.setStyle("-fx-text-fill: #ffaa66; -fx-font-size: 12px; -fx-font-weight: bold;");
-            potionContainer.getChildren().add(potionInfo);
 
+            // Colore rosso se supera il limite
+            if (potionCount > maxPotions) {
+                potionInfo.setStyle("-fx-text-fill: #ff4444; -fx-font-size: 12px; -fx-font-weight: bold;");
+            }
+
+            potionContainer.getChildren().add(potionInfo);
             inventoryList.getChildren().add(potionContainer);
 
             if (potionCount > 0) {
                 Button potionBtn = new Button("💊 Usa pozione (+20 HP)");
-
                 potionBtn.setOnAction(e -> {
                     if (gameController.getPlayer() != null) {
                         for (Item item : gameController.getPlayer().getInventory()) {
@@ -510,14 +545,15 @@ public class MainController {
                     }
                     cell.setStyle("-fx-background-color: #2a5a5a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-                // TESORO - usa immagine tesoro/pozione
+                // TESORO - mostra oro o pozione
                 else if (room.isExplored() && room.hasTreasures()) {
-                    Image goldImg = ImageLoader.getGoldImage();
-                    if (goldImg != null) {
-                        ImageView goldView = new ImageView(goldImg);
-                        goldView.setFitWidth(35);
-                        goldView.setFitHeight(35);
-                        cell.setGraphic(goldView);
+                    // Prova a caricare l'immagine del tesoro
+                    Image treasureImg = ImageLoader.getGoldImage();
+                    if (treasureImg != null) {
+                        ImageView treasureView = new ImageView(treasureImg);
+                        treasureView.setFitWidth(35);
+                        treasureView.setFitHeight(35);
+                        cell.setGraphic(treasureView);
                         cell.setText("");
                     } else {
                         cell.setText("💰");
@@ -555,7 +591,7 @@ public class MainController {
             }
         }
     }
-    
+
     // Metodo per ottenere l'icona del giocatore in base alla classe
     private String getPlayerIcon(String playerClass) {
         switch(playerClass.toLowerCase()) {
@@ -736,8 +772,14 @@ public class MainController {
         int availableSlots = maxPotions - currentPotionCount;
         int merchantPotions = merchant.getPotionsAvailable();
 
+        // Calcola massimo acquistabile (limite inventario)
         int maxBuyable = Math.min(availableSlots, merchantPotions);
         maxBuyable = Math.min(maxBuyable, player.getGold() / merchant.getPotionPrice());
+
+        // ASSICURATI CHE NON SUPERI IL LIMITE
+        if (maxBuyable > availableSlots) {
+            maxBuyable = availableSlots;
+        }
 
         Stage stage = new Stage();
         stage.setTitle("🏪 Mercante");
@@ -871,8 +913,39 @@ public class MainController {
             return;
         }
 
+        // Salva HP prima dell'attacco
+        int oldHp = gameController.getPlayer().getHp();
+        int oldEnemyHp = gameController.getCurrentCombat().getEnemy().getHp();
+
         System.out.println("Chiamo playerAttack()");
         gameController.playerAttack();
+
+        // Controlla se l'attacco ha ucciso il nemico
+        int newEnemyHp = gameController.getCurrentCombat() != null ?
+                gameController.getCurrentCombat().getEnemy().getHp() : 0;
+
+        if (oldEnemyHp > 0 && newEnemyHp <= 0) {
+            combatMessage.setText("⚔️ VITTORIA! Hai sconfitto il nemico! ⚔️");
+            addGameMessage("⚔️ VITTORIA! Hai sconfitto il nemico!");
+        } else {
+            // Messaggio casuale per l'attacco
+            String[] attackMessages = {
+                    "⚔️ COLPO CRITICO!",
+                    "💥 ATTACCO POTENTE!",
+                    "⚔️ BEL COLPO!",
+                    "💪 CONTINUA COSÌ!"
+            };
+            String randomMsg = attackMessages[(int)(Math.random() * attackMessages.length)];
+            combatMessage.setText(randomMsg);
+        }
+
+        // Controlla se il giocatore è a rischio
+        int newPlayerHp = gameController.getPlayer().getHp();
+        int maxPlayerHp = gameController.getPlayer().getMaxHp();
+
+        if (newPlayerHp < maxPlayerHp / 3 && newPlayerHp > 0) {
+            combatMessage.setText(combatMessage.getText() + "\n⚠️ HP BASSO! USA UNA POZIONE! ⚠️");
+        }
 
         // Aggiorna UI
         updateCombatUI();
@@ -901,23 +974,50 @@ public class MainController {
     @FXML
     private void onUseItem() {
         if (gameController.getPlayer() != null) {
+            // Cerca una pozione nell'inventario
             for (Item item : gameController.getPlayer().getInventory()) {
                 if (item instanceof HealthPotion && ((HealthPotion) item).getQuantity() > 0) {
+                    int oldHp = gameController.getPlayer().getHp();
+                    int maxHp = gameController.getPlayer().getMaxHp();
+
+                    System.out.println("DEBUG: oldHp=" + oldHp + ", maxHp=" + maxHp);
+
+                    if (oldHp >= maxHp) {
+                        addGameMessage("❌ Sei già a piena vita! Pozione non usata.");
+                        if (gameController.isInCombat()) {
+                            combatMessage.setText("❌ SEI GIÀ A PIENA VITA!");
+                        }
+                        return;
+                    }
+
                     gameController.useItem(item);
-                    addGameMessage("🧪 Usata una pozione curativa!");
+
+                    int newHp = gameController.getPlayer().getHp();
+                    int healed = newHp - oldHp;
+
+                    System.out.println("DEBUG: newHp=" + newHp + ", healed=" + healed);
+
+                    if (healed > 0) {
+                        String message = "🧪 POZIONE USATA! +" + healed + " HP! (da " + oldHp + " a " + newHp + ")";
+                        addGameMessage(message);
+                        if (gameController.isInCombat()) {
+                            combatMessage.setText(message);
+                        }
+                    } else {
+                        addGameMessage("❌ La pozione non ha effetto!");
+                    }
+
                     updateInventory();
                     updatePlayerUI(gameController.getPlayer());
-                    updateCombatUI();
-
                     if (gameController.isInCombat()) {
-                        combatMessage.setText("🧪 POZIONE USATA! +30 HP!");
+                        updateCombatUI();
                     }
                     return;
                 }
             }
             addGameMessage("❌ Nessuna pozione nell'inventario!");
             if (gameController.isInCombat()) {
-                combatMessage.setText("❌ NESSUNA POZIONE!");
+                combatMessage.setText("❌ NESSUNA POZIONE DISPONIBILE!");
             }
         }
     }
@@ -929,18 +1029,24 @@ public class MainController {
         if (!gameController.isInCombat()) return;
 
         System.out.println("=== FUGGI ===");
+
         gameController.flee();
 
         // Dopo la fuga, controlla se il combattimento è finito
         if (!gameController.isInCombat()) {
             System.out.println("Combattimento terminato dopo fuga");
+            combatMessage.setText("🏃 SEI RIUSCITO A FUGGIRE! 🏃");
             addGameMessage("🏃 Sei fuggito dal combattimento!");
-            // disableCombatMode() verrà chiamato dal listener
-        }
+            disableCombatMode();
+        } else {
+            // Fuga fallita
+            combatMessage.setText("⚠️ FUGA FALLITA! Subisci un attacco! ⚠️");
+            addGameMessage("⚠️ Fuga fallita! Il nemico ti colpisce!");
 
-        updateCombatUI();
-        updatePlayerUI(gameController.getPlayer());
-        updateMap();
+            // Aggiorna la UI per mostrare i danni subiti
+            updateCombatUI();
+            updatePlayerUI(gameController.getPlayer());
+        }
     }
 
     @FXML

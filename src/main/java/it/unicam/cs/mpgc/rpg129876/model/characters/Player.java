@@ -71,32 +71,51 @@ public class Player extends GameCharacter {
         int newExp = getExperience() + amount;
         setExperience(newExp);
 
-        int requiredExp = getRequiredExpForLevel();
-        if (getExperience() >= requiredExp) {
+        System.out.println("DEBUG: XP guadagnati=" + amount + ", XP totale=" + newExp);
+
+        // Continua a salire di livello finché hai abbastanza XP
+        while (getExperience() >= getRequiredExpForLevel()) {
             levelUp();
+        }
+
+        // Assicurati che l'XP non superi il required (sicurezza)
+        int required = getRequiredExpForLevel();
+        if (getExperience() > required) {
+            setExperience(required);
         }
     }
 
     private int getRequiredExpForLevel() {
+        // Formula: 100 XP per livello 1, +50 a ogni livello
+        // Livello 1: 100 XP
+        // Livello 2: 150 XP
+        // Livello 3: 200 XP
+        // ecc.
         return 100 + (getLevel() - 1) * 50;
     }
 
     private void levelUp() {
         int newLevel = getLevel() + 1;
-        int remainingExp = getExperience() - getRequiredExpForLevel();
+        int requiredExp = getRequiredExpForLevel();
+        int remainingExp = getExperience() - requiredExp;
+
+        // IMPORTANTE: assicurati che l'esperienza residua non sia negativa
+        if (remainingExp < 0) {
+            remainingExp = 0;
+        }
 
         setLevel(newLevel);
-        setExperience(remainingExp);
+        setExperience(remainingExp);  // Solo l'eccesso di XP
 
         // Calcola nuovo max HP
         int oldMaxHp = getMaxHp();
         int newMaxHp = oldMaxHp + 20;
         setMaxHp(newMaxHp);
 
-        // Invece di curare completamente, aggiungi 1/4 del nuovo max HP
+        // Cura 1/4 del nuovo max HP
         int healAmount = newMaxHp / 4;
         int newHp = getHp() + healAmount;
-        setHp(Math.min(newHp, newMaxHp));  // Non superare il massimo
+        setHp(Math.min(newHp, newMaxHp));
 
         // Aumenta attacco e difesa
         setAttack(getAttack() + 5);
@@ -106,6 +125,7 @@ public class Player extends GameCharacter {
         System.out.println("❤️ HP: " + getHp() + "/" + newMaxHp + " (+" + healAmount + " HP curati)");
         System.out.println("⚔ Attacco: " + getAttack() + " (+5)");
         System.out.println("🛡 Difesa: " + getDefense() + " (+3)");
+        System.out.println("📊 XP rimanenti per prossimo livello: " + getExperience() + "/" + getRequiredExpForLevel());
     }
 
     public void addGold(int amount) {
@@ -113,7 +133,38 @@ public class Player extends GameCharacter {
     }
 
     public void addItem(Item item) {
-        inventory.add(item);
+        // Se è una pozione, verifica il limite
+        if (item instanceof HealthPotion) {
+            int currentPotionCount = getPotionCount();
+            int potionToAdd = ((HealthPotion) item).getQuantity();
+
+            if (currentPotionCount + potionToAdd > MAX_POTIONS) {
+                // Aggiungi solo le pozioni che entrano
+                int allowedToAdd = MAX_POTIONS - currentPotionCount;
+                if (allowedToAdd > 0) {
+                    ((HealthPotion) item).setQuantity(allowedToAdd);
+                    inventory.add(item);
+                    System.out.println("⚠️ Inventario pieno! Aggiunte solo " + allowedToAdd + " pozioni su " + potionToAdd);
+                } else {
+                    System.out.println("❌ Inventario pieno! Non puoi aggiungere altre pozioni!");
+                    return;
+                }
+            } else {
+                inventory.add(item);
+            }
+        } else {
+            inventory.add(item);
+        }
+    }
+
+    public boolean canAddPotions(int quantity) {
+        int currentCount = getPotionCount();
+        boolean canAdd = currentCount + quantity <= MAX_POTIONS;
+        System.out.println("DEBUG canAddPotions: current=" + currentCount +
+                ", quantity=" + quantity +
+                ", max=" + MAX_POTIONS +
+                ", risultato=" + canAdd);
+        return canAdd;
     }
 
     public void removeItem(Item item) {
@@ -134,12 +185,19 @@ public class Player extends GameCharacter {
         return count;
     }
 
-    public boolean canAddPotions(int quantity) {
-        return getPotionCount() + quantity <= MAX_POTIONS;
-    }
-
     public int getMaxPotions() {
         return MAX_POTIONS;
+    }
+
+    public void debugPotionCount() {
+        System.out.println("=== DEBUG POZIONI ===");
+        System.out.println("Pozioni attuali: " + getPotionCount());
+        System.out.println("Max pozioni: " + MAX_POTIONS);
+        for (Item item : inventory) {
+            if (item instanceof HealthPotion) {
+                System.out.println("Pozione trovata: quantità=" + ((HealthPotion) item).getQuantity());
+            }
+        }
     }
 
     @Override

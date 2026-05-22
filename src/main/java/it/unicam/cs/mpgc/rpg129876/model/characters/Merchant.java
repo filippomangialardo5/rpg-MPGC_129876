@@ -11,10 +11,11 @@ public class Merchant {
     private int potionsAvailable;  // Massimo 8 pozioni
     private final int POTION_PRICE = 60;
     private final int POTION_HEAL = 20;
+    private static final int MAX_POTIONS = 8;  // 8 invece di 10
 
     public Merchant(String name) {
         this.name = name;
-        this.potionsAvailable = 8;  // 8 pozioni disponibili
+        this.potionsAvailable = 5;  // 5 invece di 8
     }
 
     public String getName() { return name; }
@@ -27,7 +28,13 @@ public class Merchant {
     }
 
     public void sellPotion(int quantity) {
-        potionsAvailable -= quantity;
+        if (potionsAvailable >= quantity) {
+            potionsAvailable -= quantity;
+            System.out.println("DEBUG: Pozioni vendute=" + quantity +
+                    ", rimaste al mercante=" + potionsAvailable);
+        } else {
+            System.out.println("❌ Il mercante non ha abbastanza pozioni!");
+        }
     }
 
     public HealthPotion createPotion(int quantity) {

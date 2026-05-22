@@ -8,7 +8,7 @@ public class HealthPotion implements Item {
     private int quantity;
 
     public HealthPotion() {
-        this(1, 20);  // Ora cura 20 HP invece di 30
+        this(1, 20);  // Cura 20 HP di default
     }
 
     public HealthPotion(int quantity) {
@@ -37,7 +37,7 @@ public class HealthPotion implements Item {
             int maxHp = player.getMaxHp();
             int missingHp = maxHp - currentHp;
 
-            System.out.println("DEBUG: currentHp=" + currentHp + ", maxHp=" + maxHp + ", missingHp=" + missingHp);
+            System.out.println("DEBUG POZIONE: currentHp=" + currentHp + ", maxHp=" + maxHp + ", missingHp=" + missingHp + ", healAmount=" + healAmount);
 
             // Se è già a vita piena
             if (missingHp <= 0) {
@@ -50,16 +50,14 @@ public class HealthPotion implements Item {
             player.heal(actualHeal);
             quantity--;
 
-            System.out.println("DEBUG: healed=" + actualHeal + ", newHp=" + player.getHp());
+            System.out.println("DEBUG POZIONE: healed=" + actualHeal + ", newHp=" + player.getHp());
         } else if (quantity <= 0) {
             System.out.println("❌ Nessuna pozione rimasta!");
         }
     }
 
     @Override
-    public String getIcon() {
-        return "🧪";
-    }
+    public String getIcon() { return "🧪"; }
 
     public int getHealAmount() { return healAmount; }
     public int getQuantity() { return quantity; }

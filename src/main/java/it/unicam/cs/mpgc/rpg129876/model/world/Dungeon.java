@@ -2,6 +2,7 @@ package it.unicam.cs.mpgc.rpg129876.model.world;
 
 import it.unicam.cs.mpgc.rpg129876.model.characters.Enemy;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
+import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.*;
@@ -12,8 +13,8 @@ public class Dungeon {
     private final int height;
     private final Room[][] map;
     private Room currentRoom;
-    private int currentLevel;
     private final Random random;
+    private int currentLevel = 1;
 
     public Dungeon(int width, int height) {
         this.width = width;
@@ -105,34 +106,50 @@ public class Dungeon {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Room room = map[y][x];
+                if ((x == 0 && y == 0) || (x == width-1 && y == height-1)) continue;
 
-                // Salta la stanza iniziale e la stanza del boss
-                if ((x == 0 && y == 0) || (x == width-1 && y == height-1)) {
-                    continue;
-                }
-
-                // Aggiungi 2 mercanti
-                if (merchantsAdded < 2 && random.nextDouble() < 0.10) {
+                // Mercanti (2 max) - probabilità 5%
+                if (merchantsAdded < 2 && random.nextDouble() < 0.05) {
                     room.setMerchant(new Merchant("🏪 Mercante"));
                     room.setName("🏪 Negozio");
-                    room.setDescription("Un mercante amichevole vende pozioni curative! Parla con lui per acquistare.");
+                    room.setDescription("Un mercante vende pozioni curative!");
                     merchantsAdded++;
                     continue;
                 }
 
-                // 40% probabilità di avere un nemico
-                if (random.nextDouble() < 0.4) {
-                    room.setEnemy(generateEnemyByLevel());
+                // Nemici - probabilità 35%
+                if (random.nextDouble() < 0.35) {
+                    room.setEnemy(Enemy.randomEnemy());
                 }
 
-                // 20% probabilità di avere un tesoro
-                if (random.nextDouble() < 0.2) {
+                // TESORI - probabilità 15% (né troppo alta né troppo bassa)
+                if (random.nextDouble() < 0.15) {
                     room.addTreasure(generateTreasure());
                 }
             }
         }
+    }
 
-        System.out.println("✅ Mercanti aggiunti: " + merchantsAdded);
+    private Item generateTreasure() {
+        double randomValue = this.random.nextDouble();
+        // 40% oro, 60% pozione (così le pozioni si trovano)
+        if (randomValue < 0.4) {
+            // Oro: quantità variabile da 15 a 60
+            int goldAmount = 15 + this.random.nextInt(46);
+            return new Item() {
+                @Override
+                public String getName() { return goldAmount + " monete d'oro"; }
+                @Override
+                public String getDescription() { return "Contiene " + goldAmount + " monete d'oro"; }
+                @Override
+                public void use(Player player) { player.addGold(goldAmount); }
+                @Override
+                public String getIcon() { return "💰"; }
+            };
+        } else {
+            // Pozione: quantità 1
+            return new HealthPotion(1);
+        }
     }
 
     private Enemy generateEnemyByLevel() {
@@ -150,12 +167,6 @@ public class Dungeon {
             if (r < 0.7) return Enemy.createDarkKnight();
             return Enemy.createGoblin();
         }
-    }
-
-    private Item generateTreasure() {
-        int goldAmount = 20 + random.nextInt(60);
-        // Per ora solo pozioni, poi si possono aggiungere armi/armature
-        return new HealthPotion(1 + random.nextInt(3));
     }
 
     private void setupBossArea() {

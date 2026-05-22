@@ -2,6 +2,7 @@ package it.unicam.cs.mpgc.rpg129876.model.combat;
 
 import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Enemy;
+import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.Random;
 
@@ -82,40 +83,59 @@ public class CombatSystem {
         if (!inCombat) return new CombatResult(false, "Not in combat!", false);
 
         int oldHp = player.getHp();
+        int maxHp = player.getMaxHp();
+
+        // Verifica se ha bisogno di cura
+        if (oldHp >= maxHp) {
+            CombatResult result = new CombatResult();
+            result.setMessage("❌ Sei già a piena vita! Pozione non usata.");
+            result.setItemUsed(false);
+            result.setPlayerAction(true);
+            return result;
+        }
+
+        // Salva la quantità prima di usare
+        int oldQuantity = 1;
+        if (item instanceof HealthPotion) {
+            oldQuantity = ((HealthPotion) item).getQuantity();
+        }
+
         item.use(player);
+
         int newHp = player.getHp();
         int healed = newHp - oldHp;
 
+        System.out.println("DEBUG: oldHp=" + oldHp + ", newHp=" + newHp + ", healed=" + healed);
+
         CombatResult result = new CombatResult();
         if (healed > 0) {
-            result.setMessage("🧪 Usato " + item.getIcon() + " " + item.getName() + "! +" + healed + " HP");
+            result.setMessage("🧪 Usata pozione! +" + healed + " HP! (da " + oldHp + " a " + newHp + ")");
         } else {
-            result.setMessage("🧪 Usato " + item.getIcon() + " " + item.getName() + "!");
+            result.setMessage("🧪 Usata pozione! Nessun effetto (vita piena)");
         }
         result.setItemUsed(true);
         result.setPlayerAction(true);
-
-        System.out.println(result.getMessage());
 
         return result;
     }
 
     // Tentativo di fuga
     public CombatResult flee() {
-        if (!inCombat) return new CombatResult(false, "Not in combat!", false);
-
         int chance = random.nextInt(100);
-        if (chance < 40) {  // 40% di successo (più realistico)
+        if (chance < 50) {  // 50% di successo
             inCombat = false;
-            CombatResult result = new CombatResult(true, "🏃 Sei riuscito a fuggire! 🏃", false);
+            CombatResult result = new CombatResult(true, "🏃 SEI RIUSCITO A FUGGIRE! 🏃", false);
             result.setFled(true);
+            System.out.println("Fuga riuscita!");
             return result;
         } else {
-            // Se fallisci, subisci un attacco gratuito dal nemico
+            // Fuga fallita: subisci un attacco
             int damage = calculateDamage(enemy.getAttack(), player.getDefense());
             player.takeDamage(damage);
-            CombatResult result = new CombatResult(false, "🏃 Fuga fallita! " + enemy.getName() + " ti colpisce con " + damage + " danni!", false);
+            CombatResult result = new CombatResult(false, "🏃 FUGA FALLITA! " + enemy.getName() + " ti colpisce con " + damage + " danni!", false);
             result.setFled(false);
+            result.setDamageDealt(damage);
+            System.out.println("Fuga fallita! Danno subito: " + damage);
             return result;
         }
     }

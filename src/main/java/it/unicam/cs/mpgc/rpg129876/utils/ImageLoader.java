@@ -39,10 +39,6 @@ public class ImageLoader {
         return loadImage(path);
     }
 
-    public static Image getGoldImage() {
-        return loadImage("/images/gold.png");
-    }
-
     public static Image getPotionImage() {
         return loadImage("/images/potion.png");
     }
@@ -50,4 +46,8 @@ public class ImageLoader {
     public static Image getMerchantImage() {
         return loadImage("/images/merchant.png");
     }
+
+    public static Image getGoldImage() {return loadImage("/images/gold.png");}
+
+    public static Image getChestImage() {return loadImage("/images/chest.png");}
 }
