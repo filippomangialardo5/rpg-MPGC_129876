@@ -121,6 +121,15 @@ public class GameController {
         System.out.println("=== checkRoomEvents ===");
         System.out.println("Stanza: " + currentRoom.getName());
         System.out.println("Has enemy: " + currentRoom.hasEnemy());
+        System.out.println("Is door room: " + currentRoom.isDoorRoom());
+
+        // Se è la stanza della porta e tutti i draghi sono sconfitti -> VITTORIA
+        if (currentRoom.isDoorRoom() && dungeon.areAllDragonsDefeated()) {
+            addGameMessage("🎉 HAI APERTO LA PORTA DEL TESORO! HAI VINTO IL GIOCO! 🎉");
+            gameWon = true;
+            inCombat.set(false);
+            return;
+        }
 
         // Controlla se c'è un mercante
         if (currentRoom.hasMerchant()) {
@@ -147,10 +156,10 @@ public class GameController {
             return;
         }
 
-        // Controlla se è la stanza del boss
+        // Controlla se è la stanza del boss (solo se non ci sono nemici)
         if (dungeon.isBossRoom()) {
-            addGameMessage("👑 Sei entrato nella sala del trono... Il Drago si sveglia!");
-            startCombat(currentRoom.getEnemy());
+            addGameMessage("👑 Sei entrato nella sala del trono... La porta si apre!");
+            // Vittoria già gestita sopra
             return;
         }
 
@@ -331,34 +340,23 @@ public class GameController {
             // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // Controlla vittoria gioco
-            if (dungeon.isBossRoom() && currentCombat.getEnemy().isDragon()) {
-                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI VINTO IL GIOCO! 🎉🎉🎉");
+            // CONTROLLA VITTORIA DEL GIOCO - quando si apre la porta
+            if (dungeon.getCurrentRoom().isDoorRoom() && dungeon.areAllDragonsDefeated()) {
+                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
                 gameWon = true;
+                inCombat.set(false);
+                currentCombat = null;
+                return;
             }
 
             if (player.getLevel() > oldLevel) {
-                int levelGain = player.getLevel() - oldLevel;
-                addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! (+" + levelGain + " livelli) 🎉");
-                addGameMessage("❤️ HP: " + player.getHp() + "/" + player.getMaxHp());
-                addGameMessage("⚔ Attacco: " + player.getAttack() + " | 🛡 Difesa: " + player.getDefense());
+                addGameMessage("🎉 Congratulazioni! Sei salito al livello " + player.getLevel() + "! 🎉");
             }
         }
 
-        // RESET COMPLETO
         inCombat.set(false);
         currentCombat = null;
-
-        System.out.println("endCombat completato, inCombat = false, currentCombat = null");
-
-        // Forza aggiornamento UI
         updatePlayerStats();
-
-        // Aggiorna la stanza (il nemico è stato rimosso)
-        Platform.runLater(() -> {
-            updateRoomInfo();
-            addGameMessage("📍 Ora sei in: " + dungeon.getCurrentRoom().getName());
-        });
     }
 
     // Conta quanti draghi sono ancora vivi intorno alla porta

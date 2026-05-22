@@ -224,11 +224,14 @@ public class Dungeon {
         int bossX = width - 1;
         int bossY = height - 1;
 
+        System.out.println("=== CHECK DRAGONS ===");
+
         // Controlla drago a sinistra
         if (bossX - 1 >= 0) {
             Room leftRoom = map[bossY][bossX - 1];
             if (leftRoom.hasDragon() && leftRoom.hasEnemy()) {
-                return false;  // Drago ancora vivo
+                System.out.println("Drago sinistra ancora vivo");
+                return false;
             }
         }
 
@@ -236,6 +239,7 @@ public class Dungeon {
         if (bossY - 1 >= 0) {
             Room upRoom = map[bossY - 1][bossX];
             if (upRoom.hasDragon() && upRoom.hasEnemy()) {
+                System.out.println("Drago sopra ancora vivo");
                 return false;
             }
         }
@@ -244,11 +248,13 @@ public class Dungeon {
         if (bossX - 1 >= 0 && bossY - 1 >= 0) {
             Room diagRoom = map[bossY - 1][bossX - 1];
             if (diagRoom.hasDragon() && diagRoom.hasEnemy()) {
+                System.out.println("Drago diagonale ancora vivo");
                 return false;
             }
         }
 
-        return true;  // Tutti i draghi sono stati sconfitti
+        System.out.println("TUTTI I DRAGHI SONO STATI SCONFITTI!");
+        return true;
     }
 
     public boolean isBossRoom() {

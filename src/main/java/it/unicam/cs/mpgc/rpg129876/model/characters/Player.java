@@ -12,7 +12,7 @@ public class Player extends GameCharacter {
     // Proprietà aggiuntive del giocatore
     private final IntegerProperty level = new SimpleIntegerProperty(1);
     private final IntegerProperty experience = new SimpleIntegerProperty(0);
-    private final IntegerProperty gold = new SimpleIntegerProperty(100);
+    private final IntegerProperty gold = new SimpleIntegerProperty(80);
     private final ObservableList<Item> inventory = FXCollections.observableArrayList();
     private String characterClass;
     private static final int MAX_POTIONS = 10;
@@ -69,44 +69,30 @@ public class Player extends GameCharacter {
     // Metodi di gioco
     public void gainExperience(int amount) {
         int newExp = getExperience() + amount;
+
+        System.out.println("DEBUG: XP guadagnati=" + amount + ", XP prima=" + (newExp - amount));
+
+        // Controlla quanti livelli sali
+        int levelsGained = 0;
+        while (newExp >= getRequiredExpForLevel()) {
+            int required = getRequiredExpForLevel();
+            newExp -= required;
+            levelsGained++;
+            levelUpNoExp();  // Nuovo metodo che non usa l'XP
+        }
+
+        // Imposta l'XP residuo
         setExperience(newExp);
 
-        System.out.println("DEBUG: XP guadagnati=" + amount + ", XP totale=" + newExp);
-
-        // Continua a salire di livello finché hai abbastanza XP
-        while (getExperience() >= getRequiredExpForLevel()) {
-            levelUp();
-        }
-
-        // Assicurati che l'XP non superi il required (sicurezza)
-        int required = getRequiredExpForLevel();
-        if (getExperience() > required) {
-            setExperience(required);
+        // Se hai guadagnato livelli, mostra messaggio
+        if (levelsGained > 0) {
+            System.out.println("🎉 Guadagnati " + levelsGained + " livello/i! XP residui: " + newExp);
         }
     }
 
-    private int getRequiredExpForLevel() {
-        // Formula più lenta: 150 XP per livello 1, +100 a ogni livello
-        // Livello 1: 150 XP
-        // Livello 2: 250 XP
-        // Livello 3: 350 XP
-        // Livello 4: 450 XP
-        // ecc.
-        return 150 + (getLevel() - 1) * 100;
-    }
-
-    private void levelUp() {
+    private void levelUpNoExp() {
         int newLevel = getLevel() + 1;
-        int requiredExp = getRequiredExpForLevel();
-        int remainingExp = getExperience() - requiredExp;
-
-        // IMPORTANTE: assicurati che l'esperienza residua non sia negativa
-        if (remainingExp < 0) {
-            remainingExp = 0;
-        }
-
         setLevel(newLevel);
-        setExperience(remainingExp);  // Solo l'eccesso di XP
 
         // Calcola nuovo max HP
         int oldMaxHp = getMaxHp();
@@ -123,12 +109,21 @@ public class Player extends GameCharacter {
         setDefense(getDefense() + 3);
 
         System.out.println("🎉 " + getName() + " raggiunge il livello " + newLevel + "! 🎉");
-        System.out.println("❤️ HP: " + getHp() + "/" + newMaxHp + " (+" + healAmount + " HP curati)");
-        System.out.println("⚔ Attacco: " + getAttack() + " (+5)");
-        System.out.println("🛡 Difesa: " + getDefense() + " (+3)");
-        System.out.println("📊 XP rimanenti per prossimo livello: " + getExperience() + "/" + getRequiredExpForLevel());
     }
 
+    private int getRequiredExpForLevel() {
+        // Formula più lenta: 150 XP per livello 1, +100 a ogni livello
+        // Livello 1: 150 XP
+        // Livello 2: 250 XP
+        // Livello 3: 350 XP
+        // Livello 4: 450 XP
+        // ecc.
+        return 150 + (getLevel() - 1) * 100;
+    }
+
+    private void levelUp() {
+        levelUpNoExp();
+    }
     public void addGold(int amount) {
         setGold(getGold() + amount);
     }

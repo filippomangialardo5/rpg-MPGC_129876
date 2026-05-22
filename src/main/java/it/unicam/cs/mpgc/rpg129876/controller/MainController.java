@@ -261,14 +261,22 @@ public class MainController {
         loadPlayerImage(player.getCharacterClass());
 
         int currentExp = player.getExperience();
-        int requiredExp = 100 + (player.getLevel() - 1) * 50;
+        int currentLevel = player.getLevel();
+        int requiredExp = 150 + (currentLevel - 1) * 100;  // Usa la stessa formula
 
-        // Assicurati che l'XP non superi il required
-        if (currentExp > requiredExp) {
-            currentExp = requiredExp;
+        // Se l'XP è uguale o supera il required, mostra il prossimo livello
+        if (currentExp >= requiredExp) {
+            currentExp = currentExp - requiredExp;
+            currentLevel++;
+            requiredExp = 150 + (currentLevel - 1) * 100;
         }
 
-        levelLabel.setText("⭐ Livello: " + player.getLevel());
+        // Assicurati che l'XP non sia negativo
+        if (currentExp < 0) {
+            currentExp = 0;
+        }
+
+        levelLabel.setText("⭐ Livello: " + currentLevel);
         expLabel.setText("📈 Esperienza: " + currentExp + "/" + requiredExp);
         goldLabel.setText("💰 Oro: " + player.getGold());
         attackLabel.setText("⚔ Attacco: " + player.getAttack());
@@ -1143,9 +1151,29 @@ public class MainController {
     private void showGameOverScreen() {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("💀 GAME OVER 💀");
-            alert.setHeaderText("Sei stato sconfitto!");
-            alert.setContentText("Vuoi ricominciare una nuova partita?");
+            alert.setTitle("GAME OVER");
+            alert.setHeaderText("💀 SEI STATO SCONFITTO! 💀");
+
+            Player p = gameController.getPlayer();
+            String stats = String.format(
+                    "\n📊 STATISTICHE FINALI:\n\n" +
+                            "⭐ Nome: %s\n" +
+                            "⚔️ Classe: %s\n" +
+                            "🏆 Livello: %d\n" +
+                            "👹 Nemici sconfitti: %d\n" +
+                            "💰 Oro: %d\n" +
+                            "🧪 Pozioni rimaste: %d\n" +
+                            "🏅 Punteggio: %d",
+                    p.getName(),
+                    p.getCharacterClass(),
+                    p.getLevel(),
+                    gameController.getEnemiesDefeated(),
+                    p.getGold(),
+                    p.getPotionCount(),
+                    p.getLevel() * 100 + gameController.getEnemiesDefeated() * 10 + p.getGold()
+            );
+
+            alert.setContentText(stats);
 
             ButtonType newGameBtn = new ButtonType("✨ NUOVA PARTITA");
             ButtonType exitBtn = new ButtonType("❌ ESCI");
@@ -1163,68 +1191,42 @@ public class MainController {
 
     private void showVictoryScreen() {
         Platform.runLater(() -> {
-            Stage stage = new Stage();
-            stage.setTitle("🏆 VITTORIA! 🏆");
-            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("VITTORIA!");
+            alert.setHeaderText("🏆 HAI VINTO IL GIOCO! 🏆");
 
-            VBox content = new VBox(15);
-            content.setAlignment(Pos.CENTER);
-            content.setPadding(new javafx.geometry.Insets(20));
-            content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
-
-            Label title = new Label("🏆 VITTORIA! 🏆");
-            title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
-
-            Label message = new Label("Hai completato l'avventura!\nSei diventato una leggenda!");
-            message.setStyle("-fx-font-size: 14px; -fx-text-fill: #ffffff; -fx-text-alignment: center;");
-
-            // Statistiche su sfondo scuro
-            VBox statsBox = new VBox(5);
-            statsBox.setStyle("-fx-background-color: #0f0f1a; -fx-padding: 10; -fx-background-radius: 8;");
-
-            Label statsTitle = new Label("📊 STATISTICHE FINALI");
-            statsTitle.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
-
-            Label stats = new Label(
-                    "⭐ Livello raggiunto: " + gameController.getPlayer().getLevel() + "\n" +
-                            "👹 Nemici sconfitti: " + gameController.getEnemiesDefeated() + "\n" +
-                            "💰 Oro accumulato: " + gameController.getPlayer().getGold() + "\n" +
-                            "🧪 Pozioni rimaste: " + gameController.getPlayer().getPotionCount()
+            Player p = gameController.getPlayer();
+            String stats = String.format(
+                    "\n📊 STATISTICHE FINALI:\n\n" +
+                            "⭐ Nome: %s\n" +
+                            "⚔️ Classe: %s\n" +
+                            "🏆 Livello: %d\n" +
+                            "👹 Nemici sconfitti: %d\n" +
+                            "💰 Oro: %d\n" +
+                            "🧪 Pozioni rimaste: %d\n" +
+                            "🏅 Punteggio: %d",
+                    p.getName(),
+                    p.getCharacterClass(),
+                    p.getLevel(),
+                    gameController.getEnemiesDefeated(),
+                    p.getGold(),
+                    p.getPotionCount(),
+                    p.getLevel() * 100 + gameController.getEnemiesDefeated() * 10 + p.getGold()
             );
-            stats.setStyle("-fx-font-size: 12px; -fx-text-fill: #cccccc;");
 
-            statsBox.getChildren().addAll(statsTitle, stats);
+            alert.setContentText(stats);
 
-            Button leaderboardBtn = new Button("🏆 CLASSIFICA");
-            leaderboardBtn.setStyle("-fx-background-color: #ffd700; -fx-text-fill: #1a1a2e; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
-            leaderboardBtn.setOnAction(e -> {
-                showLeaderboard();
-                stage.close();
+            ButtonType newGameBtn = new ButtonType("✨ NUOVA PARTITA");
+            ButtonType exitBtn = new ButtonType("❌ ESCI");
+            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == newGameBtn) {
+                    onNewGame();
+                } else {
+                    Platform.exit();
+                }
             });
-
-            Button newGameBtn = new Button("✨ NUOVA PARTITA");
-            newGameBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
-            newGameBtn.setOnAction(e -> {
-                stage.close();
-                onNewGame();
-            });
-
-            Button exitBtn = new Button("❌ ESCI");
-            exitBtn.setStyle("-fx-background-color: #3a3a4a; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
-            exitBtn.setOnAction(e -> {
-                stage.close();
-                Platform.exit();
-            });
-
-            HBox buttons = new HBox(15, leaderboardBtn, newGameBtn, exitBtn);
-            buttons.setAlignment(Pos.CENTER);
-
-            content.getChildren().addAll(title, message, statsBox, buttons);
-
-            Scene scene = new Scene(content, 450, 400);
-            scene.getStylesheets().add(getClass().getResource("/css/application.css").toExternalForm());
-            stage.setScene(scene);
-            stage.showAndWait();
         });
     }
 

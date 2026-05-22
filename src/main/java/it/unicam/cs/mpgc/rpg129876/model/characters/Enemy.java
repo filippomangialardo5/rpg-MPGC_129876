@@ -40,7 +40,7 @@ public class Enemy extends GameCharacter {
     }
 
     public static Enemy createDragon() {
-        return new Enemy("Dragon", 250, 50, 25, 250, 250); // XP 500→250
+        return new Enemy("Dragon", 200, 25, 15, 250, 250); // XP 500→250
     }
 
     public boolean isDragon() {return this.getName().equalsIgnoreCase("Dragon");
@@ -53,11 +53,11 @@ public class Enemy extends GameCharacter {
             return createGoblin();
         } else if (random < 0.47) {   // 20% Lupo
             return createWolf();
-        } else if (random < 0.70) {   // 23% Scheletro
+        } else if (random < 0.67) {   // 20% Scheletro
             return createSkeleton();
-        } else if (random < 0.87) {   // 17% Orco
+        } else if (random < 0.82) {   // 15% Orco
             return createOrc();
-        } else {                       // 13% Cavaliere Oscuro
+        } else {                       // 18% Cavaliere Oscuro
             return createDarkKnight();
         }
     }
