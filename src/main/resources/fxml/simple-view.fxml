@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="it.unicam.cs.mpgc.rpg129876.controller.MainController"
+            style="-fx-background-color: #0f0f1a;">
+
+    <!-- Menu -->
+    <top>
+        <MenuBar>
+            <Menu text="⚔ Gioco">
+                <MenuItem text="✨ Nuova Partita" onAction="#onNewGame"/>
+                <MenuItem text="❌ Esci" onAction="#onExit"/>
+            </Menu>
+            <Menu text="❓ Aiuto">
+                <MenuItem text="📖 Comandi" onAction="#onHelp"/>
+                <MenuItem text="ℹ️ Info" onAction="#onAbout"/>
+            </Menu>
+        </MenuBar>
+    </top>
+
+    <!-- Schermata iniziale (visibile all'inizio) -->
+    <center>
+        <VBox fx:id="startScreen" alignment="CENTER" spacing="20" visible="true"
+              style="-fx-background-color: #0f0f1a; -fx-padding: 50;">
+            <Label text="🏰 DUNGEON EXPLORER RPG 🏰"
+                   style="-fx-font-size: 42px; -fx-font-weight: bold; -fx-text-fill: #e94560;"/>
+            <Label text="⚔️ Un'avventura epica ti aspetta! ⚔️"
+                   style="-fx-font-size: 22px; -fx-text-fill: #c0c0c0;"/>
+            <Button fx:id="startBtn" text="✨ INIZIA AVVENTURA ✨" onAction="#onStartGame"
+                    style="-fx-font-size: 24px; -fx-min-width: 320px; -fx-min-height: 75px;
+                           -fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold;
+                           -fx-background-radius: 40; -fx-cursor: hand;"/>
+        </VBox>
+    </center>
+
+</BorderPane>

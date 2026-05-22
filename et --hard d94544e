@@ -1,0 +1,10 @@
+[33m4e95b87[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Revert "Fixed play again and game over modes"
+[33md94544e[m[33m ([m[1;31morigin/master[m[33m)[m Fixed play again and game over modes
+[33m73f0c48[m Add game over system
+[33m8748135[m Add new way to calculate health and potions
+[33m45171ff[m Add merchant and gold exchange
+[33m2c10d31[m Fixed WASD system
+[33m4571ed3[m improved combat and map graphics
+[33m8b101b5[m Add new start position and dragons
+[33ma7f2718[m Add ranking
+[33m5e31241[m Implement victory and defeat management
