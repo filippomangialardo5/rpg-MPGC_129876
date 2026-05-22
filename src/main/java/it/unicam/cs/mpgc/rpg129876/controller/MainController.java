@@ -258,7 +258,8 @@ public class MainController {
         playerNameLabel.setText(player.getName());
         playerClassLabel.setText(player.getCharacterClass());
 
-        // NON rifare il binding qui - è già stato fatto in showGameUI
+        loadPlayerImage(player.getCharacterClass());
+
         levelLabel.setText("⭐ Livello: " + player.getLevel());
         expLabel.setText("📈 Esperienza: " + player.getExperience() + "/" + (100 + (player.getLevel() - 1) * 50));
         goldLabel.setText("💰 Oro: " + player.getGold());
@@ -275,6 +276,9 @@ public class MainController {
             Player p = gameController.getPlayer();
             playerCombatHealthBar.setProgress((double) p.getHp() / p.getMaxHp());
             playerCombatHealthLabel.setText(p.getHp() + "/" + p.getMaxHp());
+
+            // CARICA IMMAGINE DEL PERSONAGGIO NEL COMBATTIMENTO
+            loadPlayerImage(p.getCharacterClass());
         }
 
         if (gameController.isInCombat() && gameController.getCurrentCombat() != null) {
@@ -285,6 +289,9 @@ public class MainController {
             enemyHealthLabel.setText(enemy.getHp() + "/" + enemy.getMaxHp());
             enemyAttackLabel.setText("⚔ Attacco: " + enemy.getAttack());
             enemyDefenseLabel.setText("🛡 Difesa: " + enemy.getDefense());
+
+            // CARICA IMMAGINE DEL NEMICO
+            loadEnemyImage(enemy.getName());
         } else {
             System.out.println("Nessun combattimento attivo");
         }
@@ -302,7 +309,10 @@ public class MainController {
             var enemy = gameController.getCurrentCombat().getEnemy();
             String enemyName = enemy.getName();
             System.out.println("Attivazione combattimento contro: " + enemyName);
+
+            // CARICA IMMAGINE DEL NEMICO - QUESTA RIGA C'È GIÀ MA VERIFICA
             loadEnemyImage(enemyName);
+
             updateCombatUI();
 
             combatMessage.setText("⚔️ COMBATTIMENTO CONTRO " + enemyName.toUpperCase() + "! ⚔️\nScegli la tua azione!");
@@ -630,6 +640,9 @@ public class MainController {
                 gameController.getPlayer().hpProperty().asString().concat("/").concat(gameController.getPlayer().maxHpProperty().asString())
         );
 
+        // CARICA IMMAGINE DEL PERSONAGGIO - AGGIUNGI QUESTA RIGA
+        loadPlayerImage(gameController.getPlayer().getCharacterClass());
+
         // Forza l'aggiornamento
         updatePlayerUI(gameController.getPlayer());
         updateInventory();
@@ -954,7 +967,7 @@ public class MainController {
             // Fallback a emoji
             String emoji = getPlayerIcon(characterClass);
             playerImageView.setImage(null);
-            // Puoi anche impostare un testo alternativo se vuoi
+            playerCombatImageView.setImage(null);
         }
     }
 
@@ -965,6 +978,7 @@ public class MainController {
         } else {
             // Usa emoji come fallback
             enemyNameLabel.setText(getEnemyIcon(enemyName) + " " + enemyName);
+            enemyImageView.setImage(null);
         }
     }
 
