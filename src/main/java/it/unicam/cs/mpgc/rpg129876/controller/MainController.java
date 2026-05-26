@@ -147,16 +147,18 @@ public class MainController {
 
         Scene scene = mapGrid.getScene();
         if (scene == null) {
-            // Se la scena non è ancora disponibile, riprova dopo
             Platform.runLater(() -> setupKeyBindings());
             return;
         }
 
-        scene.setOnKeyPressed(event -> {
+        // Aggiungi un EventFilter invece di setOnKeyPressed
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (!gameScreen.isVisible() || gameController.getPlayer() == null) return;
             if (gameController.isInCombat()) return;
 
             KeyCode code = event.getCode();
+
+            System.out.println("EventFilter - Tasto: " + code);
 
             if (code == KeyCode.W || code == KeyCode.UP) {
                 onMoveNorth();
@@ -174,7 +176,7 @@ public class MainController {
         });
 
         keysRegistered = true;
-        System.out.println("✅ Key bindings registrati");
+        System.out.println("✅ Key bindings registrati con EventFilter");
     }
 
     // Crea un handler separato per i tasti
@@ -705,6 +707,12 @@ public class MainController {
         addGameMessage("🏰 La tua avventura ha inizio!");
         addGameMessage("📍 Ti trovi in: " + gameController.getCurrentRoom().getName());
         addGameMessage("🎮 Usa WASD o le FRECCE per muoverti!");
+
+        // Forza il focus sulla mappa per i tasti
+        Platform.runLater(() -> {
+                    mapGrid.requestFocus();
+                    mapGrid.setFocusTraversable(true);
+                    System.out.println("Focus impostato sulla mappa");});
     }
 
     // Azioni movimento
