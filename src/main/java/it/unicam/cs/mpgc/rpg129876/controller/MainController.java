@@ -539,10 +539,10 @@ public class MainController {
                 // PORTA DEL TESORO
                 else if (room.isDoorRoom()) {
                     if (gameController.getDungeon().areAllDragonsDefeated()) {
-                        cell.setText("🚪✨");
+                        cell.setText("🚪");
                         cell.setStyle("-fx-background-color: #ffd700; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                     } else {
-                        cell.setText("🚪🔒");
+                        cell.setText("🚪");
                         cell.setStyle("-fx-background-color: #8B4513; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                     }
                 }
