@@ -20,27 +20,27 @@ public class Enemy extends GameCharacter {
     public void setGoldReward(int goldReward) { this.goldReward = goldReward; }
 
     public static Enemy createGoblin() {
-        return new Enemy("Goblin", 35, 14, 10, 40, 20);   // XP 50→40
-    }
-
-    public static Enemy createOrc() {
-        return new Enemy("Orco", 70, 23, 12, 80, 50);     // XP 100→80
-    }
-
-    public static Enemy createSkeleton() {
-        return new Enemy("Scheletro", 60, 22, 10, 60, 35); // XP 75→60
+        return new Enemy("Goblin", 30, 15, 6, 40, 20);
     }
 
     public static Enemy createWolf() {
-        return new Enemy("Lupo", 40, 24, 5, 40, 25);     // XP 45→40
+        return new Enemy("Lupo", 40, 18, 8, 40, 25);
+    }
+
+    public static Enemy createSkeleton() {
+        return new Enemy("Scheletro", 50, 21, 9, 60, 35);
+    }
+
+    public static Enemy createOrc() {
+        return new Enemy("Orco", 60, 22, 12, 80, 50);
     }
 
     public static Enemy createDarkKnight() {
-        return new Enemy("Cavaliere oscuro", 100, 30, 10, 120, 80); // XP 150→120
+        return new Enemy("Cavaliere oscuro", 100, 30, 10, 120, 80);
     }
 
     public static Enemy createDragon() {
-        return new Enemy("Drago", 200, 25, 15, 250, 250); // XP 500→250
+        return new Enemy("Drago", 200, 25, 15, 250, 250);
     }
 
     public boolean isDragon() {return this.getName().equalsIgnoreCase("Dragon");

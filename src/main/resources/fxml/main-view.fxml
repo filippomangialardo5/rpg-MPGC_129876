@@ -65,7 +65,7 @@
                 <Label fx:id="playerClassLabel" styleClass="player-class" style="-fx-font-size: 13px;" text="-"/>
 
                 <!-- SALUTE -->
-                <Label text="❤SALUTE" style="-fx-font-size: 12px;"/>
+                <Label text="❤ SALUTE" style="-fx-font-size: 12px;"/>
                 <ProgressBar fx:id="healthBar" prefWidth="270" progress="0"/>
                 <Label fx:id="healthLabel" text="0/0" style="-fx-font-size: 12px; -fx-text-fill: #ff6666;"/>
 
@@ -139,7 +139,7 @@
                 <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
 
                 <!-- TITOLO MAPPA -->
-                <Label text="🗺️ MAPPA DEL DUNGEON" styleClass="section-title" style="-fx-font-size: 16px;"/>
+                <Label text="🗺 MAPPA DEL DUNGEON" styleClass="section-title" style="-fx-font-size: 16px;"/>
 
                 <!-- MAPPA -->
                 <GridPane fx:id="mapGrid" alignment="CENTER" hgap="5" vgap="5"
@@ -179,9 +179,10 @@
                 <Separator/>
                 <VBox spacing="3">
                     <Label text="WASD o FRECCE = Muoviti" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
-                    <Label text="⚔️ ATTACCA = Colpisci" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
-                    <Label text="🧪 POZIONE = Cura +20 HP" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
-                    <Label text="🏃 FUGGI = Scappa (50%)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="⚔ ATTACCA o Z = Colpisci" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="⚗POZIONE o P = +20 HP(non in combatt.)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="⚗POZIONE o X = +?HP(in combatt.)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="🏃 FUGGI o C = Scappa (50%)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
                     <Label text="🏪 MERCANTE = Compra pozioni" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
                 </VBox>
             </VBox>

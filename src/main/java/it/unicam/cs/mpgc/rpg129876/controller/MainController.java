@@ -351,10 +351,10 @@ public class MainController {
 
             // SUGGERIMENTO STRATEGICO in base al nemico
             if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
-                potionSuggestion.setText("⚠️ ATTACCO NEMICO ALTO! USA POZIONI! ⚠️");
+                potionSuggestion.setText("⚠ ATTACCO NEMICO ALTO! USA POZIONI! ⚠");
                 potionSuggestion.setStyle("-fx-text-fill: #ffaa44; -fx-font-weight: bold;");
             } else if (enemy.getHp() < 20) {
-                potionSuggestion.setText("⚔️ NEMICO DEBOLE! ATTACCA! ⚔️");
+                potionSuggestion.setText("⚔ NEMICO DEBOLE! ATTACCA! ⚔");
                 potionSuggestion.setStyle("-fx-text-fill: #00ff00; -fx-font-weight: bold;");
             }
 
@@ -382,8 +382,8 @@ public class MainController {
 
             updateCombatUI();
 
-            combatMessage.setText("⚔️ COMBATTIMENTO CONTRO " + enemyName.toUpperCase() + "! ⚔️\nScegli la tua azione!");
-            addGameMessage("⚔️ INIZIA COMBATTIMENTO contro " + enemyName + "!");
+            combatMessage.setText("⚔ COMBATTIMENTO CONTRO " + enemyName.toUpperCase() + "! ⚔\nScegli la tua azione!");
+            addGameMessage("⚔ INIZIA COMBATTIMENTO contro " + enemyName + "!");
         } else {
             System.out.println("ERRORE: currentCombat è null!");
         }
@@ -466,7 +466,7 @@ public class MainController {
             inventoryList.getChildren().add(potionContainer);
 
             if (potionCount > 0) {
-                Button potionBtn = new Button("💊 Usa pozione (+20 HP)");
+                Button potionBtn = new Button("⚗ Usa pozione (+20 HP)");
                 potionBtn.setOnAction(e -> {
                     if (gameController.getPlayer() != null) {
                         for (Item item : gameController.getPlayer().getInventory()) {
@@ -639,7 +639,7 @@ public class MainController {
     // Metodo per ottenere l'icona del giocatore in base alla classe
     private String getPlayerIcon(String playerClass) {
         switch(playerClass.toLowerCase()) {
-            case "warrior": return "⚔️";
+            case "warrior": return "⚔";
             case "mage": return "🔮";
             case "rogue": return "🗡️";
             default: return "⭐";
@@ -698,9 +698,9 @@ public class MainController {
         // Animazione del messaggio di combattimento
         combatMessage.setStyle("-fx-text-fill: #ffaa00; -fx-font-size: 14px; -fx-font-weight: bold;");
         Timeline timeline = new Timeline(
-                new KeyFrame(Duration.seconds(0), e -> combatMessage.setText("⚔️ COLPO INFERTO! ⚔️")),
+                new KeyFrame(Duration.seconds(0), e -> combatMessage.setText("⚔ COLPO INFERTO! ⚔")),
                 new KeyFrame(Duration.seconds(0.5), e -> combatMessage.setText("")),
-                new KeyFrame(Duration.seconds(1), e -> combatMessage.setText("⚔️ CONTINUA IL COMBATTIMENTO! ⚔️"))
+                new KeyFrame(Duration.seconds(1), e -> combatMessage.setText("⚔ CONTINUA IL COMBATTIMENTO! ⚔"))
         );
         timeline.setCycleCount(1);
         timeline.play();
@@ -975,14 +975,14 @@ public class MainController {
                 gameController.getCurrentCombat().getEnemy().getHp() : 0;
 
         if (oldEnemyHp > 0 && newEnemyHp <= 0) {
-            combatMessage.setText("⚔️ VITTORIA! Hai sconfitto il nemico! ⚔️");
-            addGameMessage("⚔️ VITTORIA! Hai sconfitto il nemico!");
+            combatMessage.setText("⚔ VITTORIA! Hai sconfitto il nemico! ⚔");
+            addGameMessage("⚔ VITTORIA! Hai sconfitto il nemico!");
         } else {
             // Messaggio casuale per l'attacco
             String[] attackMessages = {
-                    "⚔️ COLPO CRITICO!",
+                    "⚔ COLPO CRITICO!",
                     "💥 ATTACCO POTENTE!",
-                    "⚔️ BEL COLPO!",
+                    "⚔ BEL COLPO!",
                     "💪 CONTINUA COSÌ!"
             };
             String randomMsg = attackMessages[(int)(Math.random() * attackMessages.length)];
@@ -1200,11 +1200,11 @@ public class MainController {
             String stats = String.format(
                     "\n📊 STATISTICHE FINALI:\n\n" +
                             "⭐ Nome: %s\n" +
-                            "⚔️ Classe: %s\n" +
+                            "⚔ Classe: %s\n" +
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
-                            "🧪 Pozioni rimaste: %d\n" +
+                            "⚗ Pozioni rimaste: %d\n" +
                             "🏅 Punteggio: %d",
                     p.getName(),
                     p.getCharacterClass(),
@@ -1682,26 +1682,31 @@ public class MainController {
         alert.setContentText("""
         ═══════════════════════════════════════
         
-        🗺️ MOVIMENTO:
+        🗺 MOVIMENTO:
         • Tasti WASD o FRECCE per muoverti
                     
-        ⚔️ COMBATTIMENTO (tasti rapidi):
+        ⚔ COMBATTIMENTO (tasti rapidi):
         • Z = ATTACCA
-        • X = USA POZIONE
+        • X = USA POZIONE (in combatt.)
+        • P = USA POZIONE (non in combatt.)
         • C = FUGGI
         
         🔘 BOTTONI SCHERMO:
         • ATTACCA - Colpisci il nemico
-        • POZIONE - Cura 20 HP
+        • POZIONE 
+            - Cura 20 HP se usata non 
+              durante un combattimento
+            - Cura un valore minore di 20 HP in combattimento perché
+              viene usata mentre il personaggio è stordito
         • FUGGI - Scappa (50% successo)
         
         💰 RICOMPENSE:
         • Sconfiggi nemici per XP e oro
-        • Salendo di livello aumentano le statistiche
+        • Salendo di livello aumentano le statistiche del proprio personaggio 
         • Trova oro e pozioni nelle stanze
         
         👑 OBIETTIVO:
-        Sconfiggi i 3 Draghi che circondano l'uscita!
+        Sconfiggi i 3 Draghi che circondano l'uscita e entra nella porta finale!
         
         ═══════════════════════════════════════
         """);

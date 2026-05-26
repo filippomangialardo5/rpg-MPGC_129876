@@ -75,8 +75,8 @@ public class Dungeon {
 
     private void setupRooms() {
         String[] nomi = {
-                "🌿 Stanza della Foresta", "🪦 Cripta Antica", "💧 Caverna Umida",
-                "🔥 Sala del Fuoco", "❄️ Tempio di Ghiaccio", "⚡ Torre del Tuono",
+                "🌿 Stanza della Foresta", "⚰ Cripta Antica", "💧 Caverna Umida",
+                "🔥 Sala del Fuoco", "❄ Tempio di Ghiaccio", "⚡ Torre del Tuono",
                 "🌑 Abisso Oscuro", "✨ Camera dei Cristalli", "🍄 Fungaia Tossica",
                 "🏺 Magazzino Abbandonato", "📚 Biblioteca Arcana", "🔮 Sala delle Profezie"
         };
