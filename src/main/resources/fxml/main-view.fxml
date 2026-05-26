@@ -122,9 +122,9 @@
 
                     <!-- BOTTONI AZIONI -->
                     <HBox spacing="10" alignment="CENTER">
-                        <Button fx:id="attackBtn" text="⚔️ ATTACCA" onAction="#onAttack"
+                        <Button fx:id="attackBtn" text="⚔ ATTACCA" onAction="#onAttack"
                                 style="-fx-font-size: 13px; -fx-min-width: 95px; -fx-min-height: 38px; -fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>
-                        <Button fx:id="useItemBtn" text="🧪 POZIONE" onAction="#onUseItem"
+                        <Button fx:id="useItemBtn" text="⚗ POZIONE" onAction="#onUseItem"
                                 style="-fx-font-size: 13px; -fx-min-width: 95px; -fx-min-height: 38px; -fx-background-color: #2196f3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>
                         <Button fx:id="fleeBtn" text="🏃 FUGGI" onAction="#onFlee"
                                 style="-fx-font-size: 13px; -fx-min-width: 95px; -fx-min-height: 38px; -fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;"/>

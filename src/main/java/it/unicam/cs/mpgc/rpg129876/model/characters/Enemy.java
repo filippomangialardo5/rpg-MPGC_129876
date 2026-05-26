@@ -20,15 +20,15 @@ public class Enemy extends GameCharacter {
     public void setGoldReward(int goldReward) { this.goldReward = goldReward; }
 
     public static Enemy createGoblin() {
-        return new Enemy("Goblin", 30, 15, 6, 40, 20);
+        return new Enemy("Goblin", 30, 14, 5, 40, 20);
     }
 
     public static Enemy createWolf() {
-        return new Enemy("Lupo", 40, 18, 8, 40, 25);
+        return new Enemy("Lupo", 40, 17, 7, 40, 25);
     }
 
     public static Enemy createSkeleton() {
-        return new Enemy("Scheletro", 50, 21, 9, 60, 35);
+        return new Enemy("Scheletro", 50, 20, 8, 60, 35);
     }
 
     public static Enemy createOrc() {

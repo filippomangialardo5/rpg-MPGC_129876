@@ -351,10 +351,13 @@ public class GameController {
 
             // CONTROLLA VITTORIA DEL GIOCO - quando si apre la porta
             if (dungeon.getCurrentRoom().isDoorRoom() && dungeon.areAllDragonsDefeated()) {
-                addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
-                gameWon = true;
-                inCombat.set(false);
-                currentCombat = null;
+                // Controlla se non abbiamo già impostato gameWon
+                if (!gameWon) {
+                    addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
+                    gameWon = true;
+                    inCombat.set(false);
+                    currentCombat = null;
+                }
                 return;
             }
 

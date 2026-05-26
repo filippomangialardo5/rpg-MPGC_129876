@@ -1090,8 +1090,8 @@ public class MainController {
             disableCombatMode();
         } else {
             // Fuga fallita
-            combatMessage.setText("⚠️ FUGA FALLITA! Subisci un attacco! ⚠️");
-            addGameMessage("⚠️ Fuga fallita! Il nemico ti colpisce!");
+            combatMessage.setText("⚠ FUGA FALLITA! Subisci un attacco! ⚠");
+            addGameMessage("⚠ Fuga fallita! Il nemico ti colpisce!");
 
             // Aggiorna la UI per mostrare i danni subiti
             updateCombatUI();
@@ -1179,14 +1179,21 @@ public class MainController {
             if (gameStatusChecker != null) {
                 gameStatusChecker.stop();
             }
-            showVictoryScreen();
-            gameController.setGameWon(false);
+            // Aggiungo un controllo per evitare doppie chiamate
+            if (!isGameWon) {
+                isGameWon = true;
+                showVictoryScreen();
+                gameController.setGameWon(false);
+            }
         } else if (gameController.isGameOver()) {
             if (gameStatusChecker != null) {
                 gameStatusChecker.stop();
             }
-            showGameOverScreen();
-            gameController.setGameOver(false);
+            if (!isGameOver) {
+                isGameOver = true;
+                showGameOverScreen();
+                gameController.setGameOver(false);
+            }
         }
     }
 
@@ -1258,11 +1265,11 @@ public class MainController {
             String stats = String.format(
                     "\n📊 STATISTICHE FINALI:\n\n" +
                             "⭐ Nome: %s\n" +
-                            "⚔️ Classe: %s\n" +
+                            "⚔ Classe: %s\n" +
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
-                            "🧪 Pozioni rimaste: %d\n" +
+                            "⚗ Pozioni rimaste: %d\n" +
                             "🏅 Punteggio: %d",
                     p.getName(),
                     p.getCharacterClass(),
@@ -1460,25 +1467,25 @@ public class MainController {
     // Salvataggio su file JSON
     private void saveScore(Score score) {
         try {
-            // Leggi i punteggi esistenti
             List<Score> scores = loadScoresFromFile();
+
+            // Aggiungi sempre il nuovo punteggio
             scores.add(score);
 
             // Ordina per punteggio decrescente
             scores.sort((a, b) -> Integer.compare(b.getTotalScore(), a.getTotalScore()));
 
-            // Mantieni solo top 10
+            // Mantieni solo top 10 (se vuoi solo i migliori)
             if (scores.size() > 10) {
                 scores = scores.subList(0, 10);
             }
 
-            // Salva su file
-            File file = new File("scores.json");
+            File file = new File(SCORES_FILE);
             ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
             oos.writeObject(scores);
             oos.close();
 
-            System.out.println("Punteggio salvato!");
+            System.out.println("Punteggio salvato per: " + score.getPlayerName());
         } catch (Exception e) {
             System.err.println("Errore salvataggio: " + e.getMessage());
         }
@@ -1517,8 +1524,17 @@ public class MainController {
                 else if (i == 2) medal = "🥉 ";
                 else medal = "   ";
 
+                // Traduci la classe in italiano per visualizzazione
+                String italianClass;
+                switch(s.getCharacterClass()) {
+                    case "Warrior": italianClass = "Guerriero"; break;
+                    case "Mage": italianClass = "Mago"; break;
+                    case "Rogue": italianClass = "Ladro"; break;
+                    default: italianClass = s.getCharacterClass();
+                }
+
                 message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
-                        medal, i + 1, s.getPlayerName(), s.getCharacterClass(),
+                        medal, i + 1, s.getPlayerName(), italianClass,
                         s.getLevel(), s.getTotalScore()));
             }
         }
