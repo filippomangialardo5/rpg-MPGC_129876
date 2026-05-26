@@ -40,14 +40,12 @@ public class ImageLoader {
     }
 
     public static Image getPotionImage() {
-        return loadImage("/images/potion.png");
+        return loadImage("/images/pozione.png");
     }
 
     public static Image getMerchantImage() {
-        return loadImage("/images/merchant.png");
+        return loadImage("/images/mercante.png");
     }
 
     public static Image getGoldImage() {return loadImage("/images/gold.png");}
-
-    public static Image getChestImage() {return loadImage("/images/chest.png");}
 }

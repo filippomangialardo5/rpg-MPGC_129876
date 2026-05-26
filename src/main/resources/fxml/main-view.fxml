@@ -65,7 +65,7 @@
                 <Label fx:id="playerClassLabel" styleClass="player-class" style="-fx-font-size: 13px;" text="-"/>
 
                 <!-- SALUTE -->
-                <Label text="❤️ SALUTE" style="-fx-font-size: 12px;"/>
+                <Label text="❤SALUTE" style="-fx-font-size: 12px;"/>
                 <ProgressBar fx:id="healthBar" prefWidth="270" progress="0"/>
                 <Label fx:id="healthLabel" text="0/0" style="-fx-font-size: 12px; -fx-text-fill: #ff6666;"/>
 
@@ -79,7 +79,7 @@
                 <Separator/>
 
                 <!-- SEZIONE COMBATTIMENTO -->
-                <Label text="⚔️ COMBATTIMENTO ⚔️" styleClass="section-title" style="-fx-font-size: 14px;"/>
+                <Label text="⚔ COMBATTIMENTO ⚔" styleClass="section-title" style="-fx-font-size: 14px;"/>
                 <Separator/>
 
                 <VBox fx:id="combatPanel" spacing="10" alignment="CENTER"

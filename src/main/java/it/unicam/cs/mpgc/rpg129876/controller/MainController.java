@@ -548,7 +548,7 @@ public class MainController {
                 }
                 // DRAGO - usa immagine drago
                 else if (room.hasDragon() && room.hasEnemy() && room.getEnemy().isAlive()) {
-                    Image dragonImg = ImageLoader.getEnemyImage("Dragon");
+                    Image dragonImg = ImageLoader.getEnemyImage("Drago");
                     if (dragonImg != null) {
                         ImageView dragonView = new ImageView(dragonImg);
                         dragonView.setFitWidth(45);
@@ -1576,9 +1576,16 @@ public class MainController {
         playerBox.setAlignment(Pos.CENTER_LEFT);
 
         // Carica l'immagine in base alla classe del giocatore
-        String playerClass = "warrior"; // default
+        String playerClass = "guerriero"; // default
         if (gameController != null && gameController.getPlayer() != null) {
-            playerClass = gameController.getPlayer().getCharacterClass().toLowerCase();
+            String englishClass = gameController.getPlayer().getCharacterClass();
+            // Traduco inglese → italiano per il nome del file
+            switch(englishClass) {
+                case "Warrior": playerClass = "guerriero"; break;
+                case "Mage": playerClass = "mago"; break;
+                case "Rogue": playerClass = "ladro"; break;
+                default: playerClass = "guerriero";
+            }
         }
 
         ImageView playerImg = new ImageView(ImageLoader.loadImage("/images/" + playerClass + ".png"));
@@ -1599,7 +1606,7 @@ public class MainController {
         // Wolf
         HBox wolfBox = new HBox(8);
         wolfBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView wolfImg = new ImageView(ImageLoader.loadImage("/images/wolf.png"));
+        ImageView wolfImg = new ImageView(ImageLoader.loadImage("/images/lupo.png"));
         wolfImg.setFitWidth(24);
         wolfImg.setFitHeight(24);
         wolfBox.getChildren().addAll(wolfImg, new Label("= Lupo"));
@@ -1608,7 +1615,7 @@ public class MainController {
         // Skeleton
         HBox skeletonBox = new HBox(8);
         skeletonBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView skeletonImg = new ImageView(ImageLoader.loadImage("/images/skeleton.png"));
+        ImageView skeletonImg = new ImageView(ImageLoader.loadImage("/images/scheletro.png"));
         skeletonImg.setFitWidth(24);
         skeletonImg.setFitHeight(24);
         skeletonBox.getChildren().addAll(skeletonImg, new Label("= Scheletro"));
@@ -1617,7 +1624,7 @@ public class MainController {
         // Orc
         HBox orcBox = new HBox(8);
         orcBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView orcImg = new ImageView(ImageLoader.loadImage("/images/orc.png"));
+        ImageView orcImg = new ImageView(ImageLoader.loadImage("/images/orco.png"));
         orcImg.setFitWidth(24);
         orcImg.setFitHeight(24);
         orcBox.getChildren().addAll(orcImg, new Label("= Orco"));
@@ -1626,7 +1633,7 @@ public class MainController {
         // Dark Knight
         HBox knightBox = new HBox(8);
         knightBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView knightImg = new ImageView(ImageLoader.loadImage("/images/darkknight.png"));
+        ImageView knightImg = new ImageView(ImageLoader.loadImage("/images/cavaliereoscuro.png"));
         knightImg.setFitWidth(24);
         knightImg.setFitHeight(24);
         knightBox.getChildren().addAll(knightImg, new Label("= Cavaliere Oscuro"));
@@ -1635,7 +1642,7 @@ public class MainController {
         // Dragon
         HBox dragonBox = new HBox(8);
         dragonBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView dragonImg = new ImageView(ImageLoader.loadImage("/images/dragon.png"));
+        ImageView dragonImg = new ImageView(ImageLoader.loadImage("/images/drago.png"));
         dragonImg.setFitWidth(24);
         dragonImg.setFitHeight(24);
         dragonBox.getChildren().addAll(dragonImg, new Label("= Drago (Boss)"));
@@ -1644,7 +1651,7 @@ public class MainController {
         // Merchant
         HBox merchantBox = new HBox(8);
         merchantBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView merchantImg = new ImageView(ImageLoader.loadImage("/images/merchant.png"));
+        ImageView merchantImg = new ImageView(ImageLoader.loadImage("/images/mercante.png"));
         merchantImg.setFitWidth(24);
         merchantImg.setFitHeight(24);
         merchantBox.getChildren().addAll(merchantImg, new Label("= Mercante"));
@@ -1653,7 +1660,7 @@ public class MainController {
         // Porta del Tesoro
         HBox doorBox = new HBox(8);
         doorBox.setAlignment(Pos.CENTER_LEFT);
-        Label doorLabel = new Label("🚪🔒");
+        Label doorLabel = new Label("🚪");
         doorLabel.setStyle("-fx-font-size: 18px;");
         doorBox.getChildren().addAll(doorLabel, new Label("= Porta del Tesoro"));
         legendBox.getChildren().add(doorBox);
@@ -1661,7 +1668,7 @@ public class MainController {
         // Pozione
         HBox potionBox = new HBox(8);
         potionBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView potionImg = new ImageView(ImageLoader.loadImage("/images/potion.png"));
+        ImageView potionImg = new ImageView(ImageLoader.loadImage("/images/pozione.png"));
         potionImg.setFitWidth(24);
         potionImg.setFitHeight(24);
         potionBox.getChildren().addAll(potionImg, new Label("= Pozione curativa"));
@@ -1691,7 +1698,7 @@ public class MainController {
         💰 RICOMPENSE:
         • Sconfiggi nemici per XP e oro
         • Salendo di livello aumentano le statistiche
-        • Trova oro e tesori nelle stanze
+        • Trova oro e pozioni nelle stanze
         
         👑 OBIETTIVO:
         Sconfiggi i 3 Draghi che circondano l'uscita!
