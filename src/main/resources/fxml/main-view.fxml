@@ -32,7 +32,7 @@
         <VBox fx:id="startScreen" alignment="CENTER" spacing="25" visible="true" managed="true">
             <Label text="🏰 DUNGEON EXPLORER RPG 🏰"
                    style="-fx-font-size: 42px; -fx-font-weight: bold; -fx-text-fill: #e94560;"/>
-            <Label text="⚔️ Un'avventura epica ti aspetta! ⚔️"
+            <Label text="⚔ Un'avventura epica ti aspetta ⚔"
                    style="-fx-font-size: 22px; -fx-text-fill: #c0c0c0;"/>
             <Label text="Sconfiggi i 3 draghi e apri la porta del tesoro!"
                    style="-fx-font-size: 14px; -fx-text-fill: #a0a0a0;"/>

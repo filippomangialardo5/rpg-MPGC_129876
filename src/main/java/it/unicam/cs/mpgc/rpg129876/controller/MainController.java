@@ -190,7 +190,7 @@ public class MainController {
             }
         }
 
-        // AZIONI DI COMBATTIMENTO (funzionano anche fuori combattimento per X)
+        // AZIONI
         switch(code) {
             case Z:
                 if (gameController.isInCombat()) {
@@ -201,8 +201,9 @@ public class MainController {
                 }
                 break;
             case X:
-                System.out.println("🟢 Tasto X: POZIONE");
-                onUseItem();
+            case P:  // Tasto P per usare pozione (funziona sempre, dentro e fuori combattimento)
+                System.out.println("🟢 Tasto " + code + ": POZIONE");
+                onUseItem();  // Questo metodo gestisce già sia dentro che fuori combattimento
                 break;
             case C:
                 if (gameController.isInCombat()) {
@@ -273,6 +274,8 @@ public class MainController {
     private void updatePlayerUI(Player player) {
         playerNameLabel.setText(player.getName());
         playerClassLabel.setText(player.getCharacterClass());
+        // Aggiorna l'immagine nella legenda quando cambia personaggio
+        updateLegendPlayerImage(player.getCharacterClass());
 
         loadPlayerImage(player.getCharacterClass());
 
@@ -299,6 +302,23 @@ public class MainController {
         defenseLabel.setText("🛡 Difesa: " + player.getDefense());
 
         updateInventory();
+    }
+
+    private void updateLegendPlayerImage(String characterClass) {
+        // Cerca il primo HBox nella legendBox (dovrebbe essere quello del giocatore)
+        if (legendBox.getChildren().size() > 2) {
+            Object firstItem = legendBox.getChildren().get(2);
+            if (firstItem instanceof HBox) {
+                HBox playerBox = (HBox) firstItem;
+                if (playerBox.getChildren().get(0) instanceof ImageView) {
+                    ImageView playerImg = (ImageView) playerBox.getChildren().get(0);
+                    Image newImg = ImageLoader.loadImage("/images/" + characterClass.toLowerCase() + ".png");
+                    if (newImg != null) {
+                        playerImg.setImage(newImg);
+                    }
+                }
+            }
+        }
     }
 
     private void updateCombatUI() {
@@ -1355,7 +1375,7 @@ public class MainController {
 
         Platform.runLater(() -> nameField.requestFocus());
 
-        Label classLabel = new Label("⚔️ Classe:");
+        Label classLabel = new Label("⚔ Classe:");
         classLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
 
         ComboBox<String> classBox = new ComboBox<>();
@@ -1369,13 +1389,13 @@ public class MainController {
         classBox.setOnAction(e -> {
             switch(classBox.getValue()) {
                 case "Warrior": classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente"); break;
-                case "Mage": classDesc.setText("🔮 Mago: Alto attacco magico, bassa difesa"); break;
-                case "Rogue": classDesc.setText("🗡️ Ladro: Equilibrato, alta probabilità di critico"); break;
+                case "Mage": classDesc.setText("🔮 Mago: Alto attacco, bassa difesa"); break;
+                case "Rogue": classDesc.setText("🗡Ladro: Attacco e difesa equilibrati"); break;
             }
         });
         classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente");
 
-        Button startBtn = new Button("⚔️ INIZIA L'AVVENTURA ⚔️");
+        Button startBtn = new Button("⚔ INIZIA L'AVVENTURA ⚔");
         startBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
         startBtn.setOnAction(e -> {
             String name = nameField.getText().trim();
@@ -1542,10 +1562,17 @@ public class MainController {
         legendBox.getChildren().add(title);
         legendBox.getChildren().add(new Separator());
 
-        // Giocatore
+        // Giocatore (USA L'IMMAGINE DELLA CLASSE SCELTA)
         HBox playerBox = new HBox(8);
         playerBox.setAlignment(Pos.CENTER_LEFT);
-        ImageView playerImg = new ImageView(ImageLoader.loadImage("/images/warrior.png"));
+
+        // Carica l'immagine in base alla classe del giocatore
+        String playerClass = "warrior"; // default
+        if (gameController != null && gameController.getPlayer() != null) {
+            playerClass = gameController.getPlayer().getCharacterClass().toLowerCase();
+        }
+
+        ImageView playerImg = new ImageView(ImageLoader.loadImage("/images/" + playerClass + ".png"));
         playerImg.setFitWidth(24);
         playerImg.setFitHeight(24);
         playerBox.getChildren().addAll(playerImg, new Label("= Tu"));
