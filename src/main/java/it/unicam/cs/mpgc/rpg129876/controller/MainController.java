@@ -12,9 +12,7 @@ import it.unicam.cs.mpgc.rpg129876.utils.ImageLoader;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -142,6 +140,7 @@ public class MainController {
         setupKeyBindings();
     }
 
+
     private void setupKeyBindings() {
         if (keysRegistered) return;
 
@@ -151,56 +150,67 @@ public class MainController {
             return;
         }
 
-        // Aggiungi un EventFilter invece di setOnKeyPressed
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (!gameScreen.isVisible() || gameController.getPlayer() == null) return;
-            if (gameController.isInCombat()) return;
+        // Rimuovi eventuali listener esistenti
+        scene.removeEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
 
-            KeyCode code = event.getCode();
-
-            System.out.println("EventFilter - Tasto: " + code);
-
-            if (code == KeyCode.W || code == KeyCode.UP) {
-                onMoveNorth();
-                event.consume();
-            } else if (code == KeyCode.S || code == KeyCode.DOWN) {
-                onMoveSouth();
-                event.consume();
-            } else if (code == KeyCode.A || code == KeyCode.LEFT) {
-                onMoveWest();
-                event.consume();
-            } else if (code == KeyCode.D || code == KeyCode.RIGHT) {
-                onMoveEast();
-                event.consume();
-            }
-        });
+        // Aggiungi il listener unificato
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
 
         keysRegistered = true;
-        System.out.println("✅ Key bindings registrati con EventFilter");
+        System.out.println("✅ Key bindings registrati:");
+        System.out.println("   MOVIMENTO: WASD o FRECCE");
+        System.out.println("   ATTACCA: Z");
+        System.out.println("   POZIONE: X");
+        System.out.println("   FUGGI: C");
     }
 
-    // Crea un handler separato per i tasti
+    // Handler unificato per tutti i tasti
     private final EventHandler<KeyEvent> keyEventHandler = event -> {
         if (!gameScreen.isVisible() || gameController.getPlayer() == null) return;
-        if (gameController.isInCombat()) return;
 
         KeyCode code = event.getCode();
-
-        // Consuma l'evento per evitare che venga processato due volte
         event.consume();
 
+        // MOVIMENTO (solo se non in combattimento)
+        if (!gameController.isInCombat()) {
+            switch(code) {
+                case W: case UP:
+                    onMoveNorth();
+                    return;
+                case S: case DOWN:
+                    onMoveSouth();
+                    return;
+                case A: case LEFT:
+                    onMoveWest();
+                    return;
+                case D: case RIGHT:
+                    onMoveEast();
+                    return;
+                default: break;
+            }
+        }
+
+        // AZIONI DI COMBATTIMENTO (funzionano anche fuori combattimento per X)
         switch(code) {
-            case W: case UP:
-                onMoveNorth();
+            case Z:
+                if (gameController.isInCombat()) {
+                    System.out.println("🔴 Tasto Z: ATTACCA");
+                    onAttack();
+                } else {
+                    addGameMessage("⚠️ Non sei in combattimento!");
+                }
                 break;
-            case S: case DOWN:
-                onMoveSouth();
+            case X:
+                System.out.println("🟢 Tasto X: POZIONE");
+                onUseItem();
                 break;
-            case A: case LEFT:
-                onMoveWest();
-                break;
-            case D: case RIGHT:
-                onMoveEast();
+            case C:
+                if (gameController.isInCombat()) {
+                    System.out.println("🟡 Tasto C: FUGGI");
+                    onFlee();
+                } else {
+                    addGameMessage("⚠️ Non sei in combattimento!");
+                }
                 break;
             default: break;
         }
@@ -1624,31 +1634,37 @@ public class MainController {
 
     private void showHelpDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("📖 Guida");
+        alert.setTitle("Comandi");
         alert.setHeaderText("🎮 COME GIOCARE");
         alert.setContentText("""
-            ═══════════════════════════════════════
-            
-            🗺️ MOVIMENTO:
-            • Tasti WASD per muoverti
-                        
-            ⚔️ COMBATTIMENTO:
-            • ATTACCA - Colpisci il nemico
-            • POZIONE - Cura 20 HP
-            • FUGGI - Scappa (50% di successo)
-            
-            💰 RICOMPENSE:
-            • Sconfiggi nemici per XP e oro
-            • Salendo di livello aumentano le statistiche
-            • Trova oro e pozioni nelle stanze
-            
-            👑 OBIETTIVO:
-            Sconfiggi i 3 Draghi he circondano l'uscita nell'angolo in basso a destra del dungeon
-            
-            ═══════════════════════════════════════
-            """);
+        ═══════════════════════════════════════
+        
+        🗺️ MOVIMENTO:
+        • Tasti WASD o FRECCE per muoverti
+                    
+        ⚔️ COMBATTIMENTO (tasti rapidi):
+        • Z = ATTACCA
+        • X = USA POZIONE
+        • C = FUGGI
+        
+        🔘 BOTTONI SCHERMO:
+        • ATTACCA - Colpisci il nemico
+        • POZIONE - Cura 20 HP
+        • FUGGI - Scappa (50% successo)
+        
+        💰 RICOMPENSE:
+        • Sconfiggi nemici per XP e oro
+        • Salendo di livello aumentano le statistiche
+        • Trova oro e tesori nelle stanze
+        
+        👑 OBIETTIVO:
+        Sconfiggi i 3 Draghi che circondano l'uscita!
+        
+        ═══════════════════════════════════════
+        """);
         alert.showAndWait();
     }
+
 
     private void showAboutDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
