@@ -24,23 +24,23 @@ public class Enemy extends GameCharacter {
     }
 
     public static Enemy createOrc() {
-        return new Enemy("Orc", 70, 23, 12, 80, 50);     // XP 100→80
+        return new Enemy("Orco", 70, 23, 12, 80, 50);     // XP 100→80
     }
 
     public static Enemy createSkeleton() {
-        return new Enemy("Skeleton", 60, 22, 10, 60, 35); // XP 75→60
+        return new Enemy("Scheletro", 60, 22, 10, 60, 35); // XP 75→60
     }
 
     public static Enemy createWolf() {
-        return new Enemy("Wolf", 40, 24, 5, 40, 25);     // XP 45→40
+        return new Enemy("Lupo", 40, 24, 5, 40, 25);     // XP 45→40
     }
 
     public static Enemy createDarkKnight() {
-        return new Enemy("Dark Knight", 100, 30, 10, 120, 80); // XP 150→120
+        return new Enemy("Cavaliere oscuro", 100, 30, 10, 120, 80); // XP 150→120
     }
 
     public static Enemy createDragon() {
-        return new Enemy("Dragon", 200, 25, 15, 250, 250); // XP 500→250
+        return new Enemy("Drago", 200, 25, 15, 250, 250); // XP 500→250
     }
 
     public boolean isDragon() {return this.getName().equalsIgnoreCase("Dragon");

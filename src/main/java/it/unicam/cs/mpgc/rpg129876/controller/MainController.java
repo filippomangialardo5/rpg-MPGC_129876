@@ -650,11 +650,11 @@ public class MainController {
     private String getEnemyIcon(String enemyName) {
         switch(enemyName.toLowerCase()) {
             case "goblin": return "👺";
-            case "orc": return "👹";
-            case "skeleton": return "💀";
-            case "dragon": return "🐉";
-            case "wolf": return "🐺";
-            case "dark knight": return "⚔️";
+            case "orco": return "👹";
+            case "scheletro": return "💀";
+            case "drago": return "🐉";
+            case "lupo": return "🐺";
+            case "cavaliere oscuro": return "⚔️";
             default: return "👾";
         }
     }
@@ -1379,8 +1379,8 @@ public class MainController {
         classLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
 
         ComboBox<String> classBox = new ComboBox<>();
-        classBox.getItems().addAll("Warrior", "Mage", "Rogue");
-        classBox.setValue("Warrior");
+        classBox.getItems().addAll("Guerriero", "Mago", "Ladro");
+        classBox.setValue("Guerriero");
         classBox.setPrefWidth(250);
         classBox.setStyle("-fx-background-color: #ffffff; -fx-text-fill: #000000; -fx-border-color: #e94560; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 8;");
 
@@ -1388,9 +1388,9 @@ public class MainController {
         classDesc.setStyle("-fx-text-fill: #c0c0c0; -fx-padding: 5 0 0 0;");
         classBox.setOnAction(e -> {
             switch(classBox.getValue()) {
-                case "Warrior": classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente"); break;
-                case "Mage": classDesc.setText("🔮 Mago: Alto attacco, bassa difesa"); break;
-                case "Rogue": classDesc.setText("🗡Ladro: Attacco e difesa equilibrati"); break;
+                case "Guerriero": classDesc.setText("💪 Guerriero: Alto HP, medio attacco, buona difesa"); break;
+                case "Mago": classDesc.setText("🔮 Mago: Alto attacco, Basso hp, buona difesa"); break;
+                case "Ladro": classDesc.setText("🗡Ladro: Attacco e difesa equilibrati, buon hp"); break;
             }
         });
         classDesc.setText("💪 Guerriero: Alto HP, buona difesa, attacco potente");
@@ -1400,6 +1400,15 @@ public class MainController {
         startBtn.setOnAction(e -> {
             String name = nameField.getText().trim();
             if (!name.isEmpty() && classBox.getValue() != null) {
+
+                String englishClass;
+                switch(classBox.getValue()) {
+                    case "Guerriero": englishClass = "Warrior"; break;
+                    case "Mago": englishClass = "Mage"; break;
+                    case "Ladro": englishClass = "Rogue"; break;
+                    default: englishClass = "Warrior";
+                }
+
                 gameController.startNewGame(name, classBox.getValue());
                 stage.close();
                 showGameUI();

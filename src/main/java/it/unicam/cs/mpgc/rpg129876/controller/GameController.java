@@ -80,9 +80,18 @@ public class GameController {
 
         addStartingItems();
         updateRoomInfo();
-        addGameMessage("✨ Benvenuto " + playerName + " il " + characterClass + "!");
+        addGameMessage("✨ Benvenuto " + playerName + " il " + getItalianClassName(characterClass) + "!");
         addGameMessage("🏰 La tua avventura nel dungeon di " + dungeon.getWidth() + "x" + dungeon.getHeight() + " stanze ha inizio!");
         addGameMessage("📍 Ti trovi nella stanza: " + dungeon.getCurrentRoom().getName());
+    }
+
+    private String getItalianClassName(String englishClass) {
+        switch(englishClass) {
+            case "Warrior": return "Guerriero";
+            case "Mage": return "Mago";
+            case "Rogue": return "Ladro";
+            default: return englishClass;
+        }
     }
 
     private void addStartingItems() {
