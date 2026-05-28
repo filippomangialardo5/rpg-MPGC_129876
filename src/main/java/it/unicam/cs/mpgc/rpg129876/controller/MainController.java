@@ -245,21 +245,14 @@ public class MainController {
             }
         });
 
-        // QUESTO LISTENER È FONDAMENTALE PER IL COMBATTIMENTO
+        // QUESTO LISTENER DEVE CHIAMARE enableCombatMode
         gameController.inCombatProperty().addListener((obs, old, inCombat) -> {
             Platform.runLater(() -> {
                 System.out.println("inCombat cambiato: " + inCombat);
                 if (inCombat) {
-                    combatPanel.setVisible(true);
-                    combatPanel.setManaged(true);
-                    combatPanel.setDisable(false);
-                    updateCombatUI();
+                    enableCombatMode();  // <-- QUI VIENE CHIAMATO
                 } else {
-                    combatPanel.setVisible(false);
-                    combatPanel.setManaged(false);
-                    combatPanel.setDisable(true);
-                    updateMap();
-                    updateInventory();
+                    disableCombatMode();
                 }
             });
         });
@@ -372,15 +365,21 @@ public class MainController {
         combatPanel.setManaged(true);
         combatPanel.setDisable(false);
 
-        // SOLO IL PRIMO MESSAGGIO
-        combatMessage.setText("⚔ Scegli la tua azione! ⚔");
+        // RESETTA IL MESSAGGIO ALL'INIZIO DI OGNI COMBATTIMENTO
+        combatMessage.setText("⚔️ Scegli la tua azione! ⚔️");
+        combatMessage.setStyle("-fx-text-fill: yellow; -fx-font-size: 13px; -fx-font-weight: bold;");
 
+        // Carica l'immagine del nemico
         if (gameController.getCurrentCombat() != null) {
             var enemy = gameController.getCurrentCombat().getEnemy();
             String enemyName = enemy.getName();
+            System.out.println("Attivazione combattimento contro: " + enemyName);
             loadEnemyImage(enemyName);
             updateCombatUI();
-            addGameMessage("⚔ INIZIA COMBATTIMENTO contro " + enemyName + "!");
+
+            addGameMessage("⚔️ INIZIA COMBATTIMENTO contro " + enemyName + "!");
+        } else {
+            System.out.println("ERRORE: currentCombat è null!");
         }
     }
 
