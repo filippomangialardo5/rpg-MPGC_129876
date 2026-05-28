@@ -116,6 +116,7 @@ public class MainController {
     private boolean movementKeysRegistered = false;
     private boolean isVictoryInProgress = false;
     private boolean isGameOverInProgress = false;
+    private boolean isSavingScore = false;
 
     @FXML
     public void initialize() {
@@ -366,7 +367,7 @@ public class MainController {
         combatPanel.setDisable(false);
 
         // RESETTA IL MESSAGGIO ALL'INIZIO DI OGNI COMBATTIMENTO
-        combatMessage.setText("⚔️ Scegli la tua azione! ⚔️");
+        combatMessage.setText("⚔ Scegli la tua azione! ⚔");
         combatMessage.setStyle("-fx-text-fill: yellow; -fx-font-size: 13px; -fx-font-weight: bold;");
 
         // Carica l'immagine del nemico
@@ -377,7 +378,7 @@ public class MainController {
             loadEnemyImage(enemyName);
             updateCombatUI();
 
-            addGameMessage("⚔️ INIZIA COMBATTIMENTO contro " + enemyName + "!");
+            addGameMessage("⚔ INIZIA COMBATTIMENTO contro " + enemyName + "!");
         } else {
             System.out.println("ERRORE: currentCombat è null!");
         }
@@ -651,7 +652,7 @@ public class MainController {
             case "scheletro": return "💀";
             case "drago": return "🐉";
             case "lupo": return "🐺";
-            case "cavaliere oscuro": return "⚔️";
+            case "cavaliere oscuro": return "⚔";
             default: return "👾";
         }
     }
@@ -1179,9 +1180,6 @@ public class MainController {
     }
 
     private void showGameOverScreen() {
-        if (isGameOverInProgress) return;
-        isGameOverInProgress = true;
-
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("GAME OVER");
@@ -1195,7 +1193,7 @@ public class MainController {
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
-                            "⚗ Pozioni rimaste: %d\n" +
+                            "🧪 Pozioni rimaste: %d\n" +
                             "🏅 Punteggio: %d",
                     p.getName(),
                     p.getCharacterClass(),
@@ -1209,17 +1207,12 @@ public class MainController {
             alert.setContentText(stats);
 
             ButtonType newGameBtn = new ButtonType("✨ NUOVA PARTITA");
-            ButtonType leaderboardBtn = new ButtonType("🏆 CLASSIFICA");
             ButtonType exitBtn = new ButtonType("❌ ESCI");
-            alert.getButtonTypes().setAll(newGameBtn, leaderboardBtn, exitBtn);
+            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
 
             alert.showAndWait().ifPresent(response -> {
-                isGameOverInProgress = false;
                 if (response == newGameBtn) {
                     onNewGame();
-                } else if (response == leaderboardBtn) {
-                    showLeaderboard();
-                    showGameOverScreen();
                 } else {
                     Platform.exit();
                 }
@@ -1227,15 +1220,77 @@ public class MainController {
         });
     }
 
-    private void showVictoryScreen() {
-        // Evita chiamate multiple
-        if (isVictoryInProgress) return;
-        isVictoryInProgress = true;
+    private void showLeaderboardFromGameOver() {
+        List<Score> scores = loadScoresFromFile();
 
+        StringBuilder message = new StringBuilder();
+        message.append("🏆 CLASSIFICA - TOP 10 🏆\n\n");
+
+        if (scores.isEmpty()) {
+            message.append("📋 Nessun punteggio registrato ancora!\n");
+        } else {
+            for (int i = 0; i < scores.size(); i++) {
+                Score s = scores.get(i);
+                String medal = "";
+                if (i == 0) medal = "🥇 ";
+                else if (i == 1) medal = "🥈 ";
+                else if (i == 2) medal = "🥉 ";
+                else medal = "   ";
+
+                String italianClass;
+                switch(s.getCharacterClass()) {
+                    case "Warrior": italianClass = "Guerriero"; break;
+                    case "Mage": italianClass = "Mago"; break;
+                    case "Rogue": italianClass = "Ladro"; break;
+                    default: italianClass = s.getCharacterClass();
+                }
+
+                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
+                        medal, i + 1, s.getPlayerName(), italianClass,
+                        s.getLevel(), s.getTotalScore()));
+            }
+        }
+
+        Stage stage = new Stage();
+        stage.setTitle("Classifica");
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new javafx.geometry.Insets(20));
+        content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
+
+        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+        TextArea textArea = new TextArea(message.toString());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setStyle("-fx-background-color: #0f0f1a; -fx-text-fill: #a0f0a0; -fx-font-family: monospace; -fx-font-size: 12px;");
+        textArea.setPrefHeight(300);
+        textArea.setPrefWidth(350);
+
+        Button backBtn = new Button("◀ TORNA INDIETRO");
+        backBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 20; -fx-cursor: hand;");
+        backBtn.setOnAction(e -> {
+            stage.close();
+            showGameOverScreen();
+        });
+
+        content.getChildren().addAll(title, textArea, backBtn);
+
+        Scene scene = new Scene(content, 450, 450);
+        stage.setScene(scene);
+        stage.showAndWait();
+    }
+
+    private Stage victoryStage = null;
+
+    private void showVictoryScreen() {
         Platform.runLater(() -> {
             Player p = gameController.getPlayer();
 
-            // Salva il punteggio UNA SOLA VOLTA
+            // Salva il punteggio
             Score score = new Score(
                     p.getName(),
                     p.getCharacterClass(),
@@ -1270,22 +1325,147 @@ public class MainController {
             alert.setContentText(stats);
 
             ButtonType newGameBtn = new ButtonType("✨ NUOVA PARTITA");
-            ButtonType leaderboardBtn = new ButtonType("🏆 CLASSIFICA");
             ButtonType exitBtn = new ButtonType("❌ ESCI");
-            alert.getButtonTypes().setAll(newGameBtn, leaderboardBtn, exitBtn);
+            alert.getButtonTypes().setAll(newGameBtn, exitBtn);
 
             alert.showAndWait().ifPresent(response -> {
-                isVictoryInProgress = false;
                 if (response == newGameBtn) {
                     onNewGame();
-                } else if (response == leaderboardBtn) {
-                    showLeaderboard();
-                    // Non richiamare showVictoryScreen() per evitare doppioni
                 } else {
                     Platform.exit();
                 }
             });
         });
+    }
+
+    private void showLeaderboardEmbedded(Stage parentStage) {
+        List<Score> scores = loadScoresFromFile();
+
+        Stage stage = new Stage();
+        stage.setTitle("Classifica");
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new javafx.geometry.Insets(20));
+        content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
+
+        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+        StringBuilder message = new StringBuilder();
+        if (scores.isEmpty()) {
+            message.append("📋 Nessun punteggio registrato ancora!\n");
+            message.append("Gioca e batti i record!");
+        } else {
+            for (int i = 0; i < scores.size(); i++) {
+                Score s = scores.get(i);
+                String medal = "";
+                if (i == 0) medal = "🥇 ";
+                else if (i == 1) medal = "🥈 ";
+                else if (i == 2) medal = "🥉 ";
+                else medal = "   ";
+
+                String italianClass;
+                switch(s.getCharacterClass()) {
+                    case "Warrior": italianClass = "Guerriero"; break;
+                    case "Mage": italianClass = "Mago"; break;
+                    case "Rogue": italianClass = "Ladro"; break;
+                    default: italianClass = s.getCharacterClass();
+                }
+
+                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
+                        medal, i + 1, s.getPlayerName(), italianClass,
+                        s.getLevel(), s.getTotalScore()));
+            }
+        }
+
+        TextArea textArea = new TextArea(message.toString());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setStyle("-fx-background-color: #0f0f1a; -fx-text-fill: #a0f0a0; -fx-font-family: monospace; -fx-font-size: 12px;");
+        textArea.setPrefHeight(300);
+        textArea.setPrefWidth(380);
+
+        Button backBtn = new Button("◀ TORNA INDIETRO");
+        backBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 20; -fx-cursor: hand;");
+        backBtn.setOnAction(e -> {
+            stage.close();
+            // Non fare nulla, la finestra di vittoria è ancora aperta
+        });
+
+        content.getChildren().addAll(title, textArea, backBtn);
+
+        Scene scene = new Scene(content, 450, 450);
+        stage.setScene(scene);
+        stage.showAndWait();
+    }
+
+    private void showLeaderboardFromVictory() {
+        List<Score> scores = loadScoresFromFile();
+
+        StringBuilder message = new StringBuilder();
+        message.append("🏆 CLASSIFICA - TOP 10 🏆\n\n");
+
+        if (scores.isEmpty()) {
+            message.append("📋 Nessun punteggio registrato ancora!\n");
+            message.append("Gioca e batti i record!");
+        } else {
+            for (int i = 0; i < scores.size(); i++) {
+                Score s = scores.get(i);
+                String medal = "";
+                if (i == 0) medal = "🥇 ";
+                else if (i == 1) medal = "🥈 ";
+                else if (i == 2) medal = "🥉 ";
+                else medal = "   ";
+
+                String italianClass;
+                switch(s.getCharacterClass()) {
+                    case "Warrior": italianClass = "Guerriero"; break;
+                    case "Mage": italianClass = "Mago"; break;
+                    case "Rogue": italianClass = "Ladro"; break;
+                    default: italianClass = s.getCharacterClass();
+                }
+
+                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
+                        medal, i + 1, s.getPlayerName(), italianClass,
+                        s.getLevel(), s.getTotalScore()));
+            }
+        }
+
+        // Usa Stage invece di Alert per avere più controllo
+        Stage stage = new Stage();
+        stage.setTitle("Classifica");
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new javafx.geometry.Insets(20));
+        content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
+
+        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
+
+        TextArea textArea = new TextArea(message.toString());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setStyle("-fx-background-color: #0f0f1a; -fx-text-fill: #a0f0a0; -fx-font-family: monospace; -fx-font-size: 12px;");
+        textArea.setPrefHeight(300);
+        textArea.setPrefWidth(350);
+
+        Button backBtn = new Button("◀ TORNA INDIETRO");
+        backBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 20; -fx-cursor: hand;");
+        backBtn.setOnAction(e -> {
+            stage.close();
+            // Riapri la schermata di vittoria
+            showVictoryScreen();
+        });
+
+        content.getChildren().addAll(title, textArea, backBtn);
+
+        Scene scene = new Scene(content, 450, 450);
+        stage.setScene(scene);
+        stage.showAndWait();
     }
 
     @FXML
