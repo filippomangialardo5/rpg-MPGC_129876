@@ -328,6 +328,12 @@ public class GameController {
         System.out.println("=== endCombat ===");
         System.out.println("playerWon: " + playerWon);
 
+        // Evita chiamate multiple
+        if (!inCombat.get()) {
+            System.out.println("endCombat: già uscito dal combattimento");
+            return;
+        }
+
         if (!playerWon) {
             addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
             gameOver = true;
@@ -345,20 +351,14 @@ public class GameController {
                     currentCombat.getEnemy().getGoldReward() + " monete d'oro!");
 
             enemiesDefeated++;
-
-            // Rimuovi il nemico dalla stanza
             dungeon.getCurrentRoom().setEnemy(null);
 
-            // CONTROLLA VITTORIA DEL GIOCO - quando si apre la porta
+            // VITTORIA DEL GIOCO (solo se si apre la porta)
             if (dungeon.getCurrentRoom().isDoorRoom() && dungeon.areAllDragonsDefeated()) {
-                // Controlla se non abbiamo già impostato gameWon
                 if (!gameWon) {
-                    addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI APERTO LA PORTA DEL TESORO E VINTO IL GIOCO! 🎉🎉🎉");
+                    addGameMessage("🎉🎉🎉 CONGRATULAZIONI! HAI VINTO IL GIOCO! 🎉🎉🎉");
                     gameWon = true;
-                    inCombat.set(false);
-                    currentCombat = null;
                 }
-                return;
             }
 
             if (player.getLevel() > oldLevel) {
