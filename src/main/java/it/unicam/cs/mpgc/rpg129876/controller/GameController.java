@@ -101,7 +101,7 @@ public class GameController {
     // Movimento
     public boolean move(Direction direction) {
         if (inCombat.get()) {
-            addGameMessage("⚠️ Non puoi muoverti durante il combattimento!");
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
             return false;
         }
 
@@ -212,7 +212,7 @@ public class GameController {
         this.currentCombat = new CombatSystem(player, enemy);
         setInCombat(true);  // Usa il setter della property
 
-        addGameMessage("⚔️ COMBATTIMENTO INIZIATO! ⚔️");
+        addGameMessage("⚔ COMBATTIMENTO INIZIATO! ⚔");
         addGameMessage("🛡 Nemico: " + enemy.getName() + " (HP: " + enemy.getHp() + "/" + enemy.getMaxHp() + ")");
     }
 

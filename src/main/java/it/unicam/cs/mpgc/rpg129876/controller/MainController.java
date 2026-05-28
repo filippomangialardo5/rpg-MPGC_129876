@@ -198,7 +198,7 @@ public class MainController {
                     System.out.println("🔴 Tasto Z: ATTACCA");
                     onAttack();
                 } else {
-                    addGameMessage("⚠️ Non sei in combattimento!");
+                    addGameMessage("⚠ Non sei in combattimento!");
                 }
                 break;
             case X:
@@ -211,7 +211,7 @@ public class MainController {
                     System.out.println("🟡 Tasto C: FUGGI");
                     onFlee();
                 } else {
-                    addGameMessage("⚠️ Non sei in combattimento!");
+                    addGameMessage("⚠ Non sei in combattimento!");
                 }
                 break;
             default: break;
@@ -332,7 +332,7 @@ public class MainController {
 
             // SUGGERIMENTO POZIONE - se HP bassi
             if (p.getHp() < p.getMaxHp() / 3 && p.getHp() > 0) {
-                potionSuggestion.setText("⚠️ HP BASSO! USA UNA POZIONE! ⚠️");
+                potionSuggestion.setText("⚠ HP BASSO! USA UNA POZIONE! ⚠");
                 potionSuggestion.setStyle("-fx-text-fill: #ff4444; -fx-font-weight: bold;");
             } else {
                 potionSuggestion.setText("");
@@ -372,20 +372,15 @@ public class MainController {
         combatPanel.setManaged(true);
         combatPanel.setDisable(false);
 
-        // RESETTA IL MESSAGGIO ALL'INIZIO DEL COMBATTIMENTO
+        // SOLO IL PRIMO MESSAGGIO
         combatMessage.setText("⚔ Scegli la tua azione! ⚔");
 
-        // Carica l'immagine del nemico
         if (gameController.getCurrentCombat() != null) {
             var enemy = gameController.getCurrentCombat().getEnemy();
             String enemyName = enemy.getName();
-            System.out.println("Attivazione combattimento contro: " + enemyName);
             loadEnemyImage(enemyName);
             updateCombatUI();
-
             addGameMessage("⚔ INIZIA COMBATTIMENTO contro " + enemyName + "!");
-        } else {
-            System.out.println("ERRORE: currentCombat è null!");
         }
     }
 
@@ -753,7 +748,7 @@ public class MainController {
     private void onMoveNorth() {
         if (gameController == null || gameController.getPlayer() == null) return;
         if (gameController.isInCombat()) {
-            addGameMessage("⚠️ Non puoi muoverti durante il combattimento!");
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
             return;
         }
         if (gameController.isPlayerAlive()) {
@@ -766,7 +761,7 @@ public class MainController {
     private void onMoveSouth() {
         if (gameController == null || gameController.getPlayer() == null) return;
         if (gameController.isInCombat()) {
-            addGameMessage("⚠️ Non puoi muoverti durante il combattimento!");
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
             return;
         }
         if (gameController.isPlayerAlive()) {
@@ -779,7 +774,7 @@ public class MainController {
     private void onMoveEast() {
         if (gameController == null || gameController.getPlayer() == null) return;
         if (gameController.isInCombat()) {
-            addGameMessage("⚠️ Non puoi muoverti durante il combattimento!");
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
             return;
         }
         if (gameController.isPlayerAlive()) {
@@ -792,7 +787,7 @@ public class MainController {
     private void onMoveWest() {
         if (gameController == null || gameController.getPlayer() == null) return;
         if (gameController.isInCombat()) {
-            addGameMessage("⚠️ Non puoi muoverti durante il combattimento!");
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
             return;
         }
         if (gameController.isPlayerAlive()) {
@@ -959,28 +954,55 @@ public class MainController {
         if (gameController == null) return;
         if (!gameController.isInCombat()) return;
 
+        // Salva stato prima dell'attacco
+        boolean wasEnemyAlive = gameController.getCurrentCombat() != null &&
+                gameController.getCurrentCombat().getEnemy().isAlive();
+        int oldEnemyHp = wasEnemyAlive ? gameController.getCurrentCombat().getEnemy().getHp() : 0;
+
         gameController.playerAttack();
 
-        // Controlla se il nemico è ancora vivo
+        // Controlla se il nemico è morto
         boolean isEnemyAlive = gameController.getCurrentCombat() != null &&
                 gameController.getCurrentCombat().getEnemy().isAlive();
+        int newEnemyHp = isEnemyAlive ? gameController.getCurrentCombat().getEnemy().getHp() : 0;
 
-        if (isEnemyAlive) {
-            // Il nemico è ancora vivo, mostra il messaggio di default
-            combatMessage.setText("⚔ Scegli la tua azione! ⚔");
-        } else {
-            // Nemico sconfitto - il pannello si chiuderà
+        if (wasEnemyAlive && !isEnemyAlive) {
+            // Nemico sconfitto
             addGameMessage("⚔ Vittoria! Nemico sconfitto!");
+            // Non mostrare messaggio nel pannello perché si chiuderà
+        } else {
+            // Messaggio casuale per l'attacco
+            String[] attackMessages = {
+                    "⚔ COLPO CRITICO!",
+                    "💥 ATTACCO POTENTE!",
+                    "⚔ BEL COLPO!",
+                    "💪 CONTINUA COSÌ!"
+            };
+            String randomMsg = attackMessages[(int)(Math.random() * attackMessages.length)];
+
+            // Calcola danno approssimativo
+            int damageDealt = oldEnemyHp - newEnemyHp;
+            if (damageDealt > 0) {
+                combatMessage.setText(randomMsg + " (" + damageDealt + " danni)");
+            } else {
+                combatMessage.setText(randomMsg);
+            }
+
+            // Suggerimento tattico in base al nemico
+            if (gameController.getCurrentCombat() != null) {
+                var enemy = gameController.getCurrentCombat().getEnemy();
+                if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
+                    combatMessage.setText(combatMessage.getText() + "\n⚠ ATTACCO NEMICO ALTO! USA POZIONI!");
+                }
+            }
         }
 
-        // Controlla se il giocatore è a rischio (solo se il nemico è ancora vivo)
-        if (isEnemyAlive) {
-            int newPlayerHp = gameController.getPlayer().getHp();
-            int maxPlayerHp = gameController.getPlayer().getMaxHp();
+        // Controlla se il giocatore è a rischio
+        int newPlayerHp = gameController.getPlayer().getHp();
+        int maxPlayerHp = gameController.getPlayer().getMaxHp();
 
-            if (newPlayerHp < maxPlayerHp / 3 && newPlayerHp > 0) {
-                combatMessage.setText("⚠ HP BASSO! USA UNA POZIONE! ⚠\n⚔ Scegli la tua azione! ⚔");
-            }
+        if (newPlayerHp < maxPlayerHp / 3 && newPlayerHp > 0) {
+            combatMessage.setText(combatMessage.getText() + "\n⚠ HP BASSO! USA UNA POZIONE! ⚠");
         }
 
         updateCombatUI();
@@ -1014,9 +1036,7 @@ public class MainController {
 
                     if (oldHp >= maxHp) {
                         addGameMessage("❌ Sei già a piena vita!");
-                        if (gameController.isInCombat()) {
-                            combatMessage.setText("❌ SEI GIÀ A PIENA VITA!\n⚔️ Scegli la tua azione! ⚔️");
-                        }
+                        combatMessage.setText("❌ SEI GIÀ A PIENA VITA!");
                         return;
                     }
 
@@ -1027,8 +1047,11 @@ public class MainController {
 
                     if (healed > 0) {
                         addGameMessage("🧪 Usata una pozione! +" + healed + " HP");
-                        if (gameController.isInCombat()) {
-                            combatMessage.setText("🧪 POZIONE USATA! +" + healed + " HP\n⚔ Scegli la tua azione! ⚔");
+                        combatMessage.setText("🧪 POZIONE USATA! +" + healed + " HP");
+
+                        // Suggerimento se ancora a rischio
+                        if (newHp < maxHp / 3) {
+                            combatMessage.setText(combatMessage.getText() + "\n⚠ ANCORA A RISCHIO! USA UN'ALTRA POZIONE!");
                         }
                     }
 
@@ -1041,9 +1064,7 @@ public class MainController {
                 }
             }
             addGameMessage("❌ Nessuna pozione nell'inventario!");
-            if (gameController.isInCombat()) {
-                combatMessage.setText("❌ NESSUNA POZIONE!\n⚔ Scegli la tua azione! ⚔");
-            }
+            combatMessage.setText("❌ NESSUNA POZIONE DISPONIBILE!");
         }
     }
 
@@ -1057,10 +1078,9 @@ public class MainController {
 
         if (!gameController.isInCombat()) {
             addGameMessage("🏃 Sei fuggito dal combattimento!");
-            // Il pannello si chiuderà da solo
         } else {
             // Fuga fallita
-            combatMessage.setText("⚠️ FUGA FALLITA!\n⚔️ Scegli la tua azione! ⚔️");
+            combatMessage.setText("⚠ FUGA FALLITA! Il nemico ti colpisce!");
             updateCombatUI();
             updatePlayerUI(gameController.getPlayer());
             updateMap();
@@ -1172,7 +1192,7 @@ public class MainController {
             String stats = String.format(
                     "\n📊 STATISTICHE FINALI:\n\n" +
                             "⭐ Nome: %s\n" +
-                            "⚔️ Classe: %s\n" +
+                            "⚔ Classe: %s\n" +
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
@@ -1233,7 +1253,7 @@ public class MainController {
             String stats = String.format(
                     "\n📊 STATISTICHE FINALI:\n\n" +
                             "⭐ Nome: %s\n" +
-                            "⚔️ Classe: %s\n" +
+                            "⚔ Classe: %s\n" +
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
