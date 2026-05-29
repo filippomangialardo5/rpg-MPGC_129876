@@ -180,7 +180,7 @@
                 <VBox spacing="3">
                     <Label text="WASD o FRECCE = Muoviti" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
                     <Label text="⚔ ATTACCA o Z = Colpisci" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
-                    <Label text="⚗POZIONE o P = +20 HP(non in combatt.)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
+                    <Label text="⚗POZIONE o X = +20 HP(non in combatt.)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
                     <Label text="⚗POZIONE o X = +?HP(in combatt.)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
                     <Label text="🏃 FUGGI o C = Scappa (50%)" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>
                     <Label text="🏪 MERCANTE = Compra pozioni" style="-fx-text-fill: #a0f0a0; -fx-font-size: 10px;"/>

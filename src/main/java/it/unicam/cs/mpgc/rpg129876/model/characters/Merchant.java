@@ -1,17 +1,13 @@
 package it.unicam.cs.mpgc.rpg129876.model.characters;
 
 import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
-import it.unicam.cs.mpgc.rpg129876.model.items.Item;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 public class Merchant {
 
-    private String name;
+    private final String name;
     private int potionsAvailable;  // Massimo 8 pozioni
     private final int POTION_PRICE = 60;
     private final int POTION_HEAL = 20;
-    private static final int MAX_POTIONS = 8;  // 8 invece di 10
 
     public Merchant(String name) {
         this.name = name;

@@ -5,12 +5,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Score implements Serializable {
-    private String playerName;
-    private String characterClass;
-    private int level;
-    private int enemiesDefeated;
-    private int gold;
-    private String date;
+    private final String playerName;
+    private final String characterClass;
+    private final int level;
+    private final int enemiesDefeated;
+    private final int gold;
+    private final String date;
 
     public Score(String playerName, String characterClass, int level, int enemiesDefeated, int gold) {
         this.playerName = playerName;
@@ -25,9 +25,6 @@ public class Score implements Serializable {
     public String getPlayerName() { return playerName; }
     public String getCharacterClass() { return characterClass; }
     public int getLevel() { return level; }
-    public int getEnemiesDefeated() { return enemiesDefeated; }
-    public int getGold() { return gold; }
-    public String getDate() { return date; }
 
     // Calcolo punteggio totale
     public int getTotalScore() {

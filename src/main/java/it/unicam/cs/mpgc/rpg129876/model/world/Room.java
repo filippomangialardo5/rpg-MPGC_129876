@@ -16,10 +16,8 @@ public class Room {
     private Enemy enemy;
     private final List<Item> treasures;
     private final Map<Direction, Room> exits;
-    private int dragonCount = 0;
     private boolean isDoorRoom;
     private boolean hasDragon;
-    private boolean dragonsDefeated;
     private Merchant merchant;
     private boolean hasMerchant;
 
@@ -32,12 +30,6 @@ public class Room {
         this.visited = false;
         this.treasures = new ArrayList<>();
         this.exits = new HashMap<>();
-    }
-
-    public Room(int x, int y, String name, String description) {
-        this(x, y);
-        this.name = name;
-        this.description = description;
     }
 
     // Getters
@@ -54,16 +46,9 @@ public class Room {
     public boolean hasEnemy() { return enemy != null && enemy.isAlive(); }
     public Enemy getEnemy() { return enemy; }
     public void setEnemy(Enemy enemy) { this.enemy = enemy; }
-    public List<Item> getTreasures() { return treasures; }
     public boolean hasTreasures() { return !treasures.isEmpty(); }
 
-    public void setDragonCount(int count) { this.dragonCount = count; }
-    public int getDragonCount() { return dragonCount; }
-    public void defeatDragon() {
-        dragonCount--;
-        if (dragonCount <= 0) {
-            enemy = null;
-        }
+    public void setDragonCount(int count) {
     }
 
     public void setDoorRoom(boolean isDoor) { this.isDoorRoom = isDoor; }
@@ -72,15 +57,7 @@ public class Room {
     public void setHasDragon(boolean has) { this.hasDragon = has; }
     public boolean hasDragon() { return hasDragon; }
 
-    public void setDragonsDefeated(boolean defeated) { this.dragonsDefeated = defeated; }
-    public boolean areDragonsDefeated() { return dragonsDefeated; }
-
-    // Controlla se la stanza è accessibile (se è porta, verifica draghi sconfitti)
-    public boolean isAccessible() {
-        if (isDoorRoom) {
-            return areDragonsDefeated();
-        }
-        return true;
+    public void setDragonsDefeated(boolean defeated) {
     }
 
     public void setMerchant(Merchant merchant) {
@@ -110,12 +87,6 @@ public class Room {
 
     public Room getExit(Direction direction) {
         return exits.get(direction);
-    }
-
-    public Map<Direction, Room> getExits() { return exits; }
-
-    public List<Direction> getAvailableDirections() {
-        return new ArrayList<>(exits.keySet());
     }
 
     public String getExitsDescription() {

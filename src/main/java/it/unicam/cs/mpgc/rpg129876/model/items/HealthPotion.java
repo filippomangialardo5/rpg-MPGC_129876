@@ -7,10 +7,6 @@ public class HealthPotion implements Item {
     private int healAmount;
     private int quantity;
 
-    public HealthPotion() {
-        this(1, 20);  // Cura 20 HP di default
-    }
-
     public HealthPotion(int quantity) {
         this(quantity, 20);
     }
@@ -59,7 +55,6 @@ public class HealthPotion implements Item {
     @Override
     public String getIcon() { return "🧪"; }
 
-    public int getHealAmount() { return healAmount; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
     public void addQuantity(int amount) { this.quantity += amount; }

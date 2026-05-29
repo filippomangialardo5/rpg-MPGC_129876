@@ -23,11 +23,8 @@ public abstract class GameCharacter {
     }
 
     // Property getters per binding (JavaFX)
-    public StringProperty nameProperty() { return name; }
     public IntegerProperty hpProperty() { return hp; }
     public IntegerProperty maxHpProperty() { return maxHp; }
-    public IntegerProperty attackProperty() { return attack; }
-    public IntegerProperty defenseProperty() { return defense; }
 
     // Getters
     public String getName() { return name.get(); }
@@ -37,7 +34,6 @@ public abstract class GameCharacter {
     public int getDefense() { return defense.get(); }
 
     // Setters with bounds
-    public void setName(String name) { this.name.set(name); }
     public void setHp(int hp) { this.hp.set(Math.max(0, Math.min(hp, maxHp.get()))); }
     public void setMaxHp(int maxHp) { this.maxHp.set(maxHp); }
     public void setAttack(int attack) { this.attack.set(attack); }

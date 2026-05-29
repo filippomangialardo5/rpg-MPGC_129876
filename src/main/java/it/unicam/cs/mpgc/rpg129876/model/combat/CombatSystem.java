@@ -8,10 +8,10 @@ import java.util.Random;
 
 public class CombatSystem {
 
-    private Player player;
-    private Enemy enemy;
+    private final Player player;
+    private final Enemy enemy;
     private boolean inCombat;
-    private Random random;
+    private final Random random;
 
     public CombatSystem(Player player, Enemy enemy) {
         this.player = player;
@@ -22,7 +22,6 @@ public class CombatSystem {
 
     // Getters
     public boolean isInCombat() { return inCombat; }
-    public Player getPlayer() { return player; }
     public Enemy getEnemy() { return enemy; }
 
     // Metodo principale per l'attacco del giocatore
@@ -92,12 +91,6 @@ public class CombatSystem {
             result.setItemUsed(false);
             result.setPlayerAction(true);
             return result;
-        }
-
-        // Salva la quantità prima di usare
-        int oldQuantity = 1;
-        if (item instanceof HealthPotion) {
-            oldQuantity = ((HealthPotion) item).getQuantity();
         }
 
         item.use(player);
@@ -202,16 +195,14 @@ public class CombatSystem {
         public boolean isPlayerWon() { return playerWon; }
         public void setPlayerWon(boolean playerWon) { this.playerWon = playerWon; }
 
-        public boolean isItemUsed() { return itemUsed; }
         public void setItemUsed(boolean itemUsed) { this.itemUsed = itemUsed; }
 
-        public boolean isFled() { return fled; }
         public void setFled(boolean fled) { this.fled = fled; }
 
-        public boolean isPlayerAction() { return playerAction; }
         public void setPlayerAction(boolean playerAction) { this.playerAction = playerAction; }
 
         public String getMessage() { return message; }
+
         public void setMessage(String message) { this.message = message; }
 
         public int getDamageDealt() { return damageDealt; }

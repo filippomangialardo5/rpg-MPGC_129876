@@ -14,7 +14,7 @@ public class Player extends GameCharacter {
     private final IntegerProperty experience = new SimpleIntegerProperty(0);
     private final IntegerProperty gold = new SimpleIntegerProperty(80);
     private final ObservableList<Item> inventory = FXCollections.observableArrayList();
-    private String characterClass;
+    private final String characterClass;
     private static final int MAX_POTIONS = 10;
 
     public Player(String name, String characterClass) {
@@ -50,9 +50,7 @@ public class Player extends GameCharacter {
     }
 
     // Property getters per binding JavaFX
-    public IntegerProperty levelProperty() { return level; }
-    public IntegerProperty experienceProperty() { return experience; }
-    public IntegerProperty goldProperty() { return gold; }
+
     public ObservableList<Item> getInventory() { return inventory; }
 
     // Getters
@@ -121,9 +119,6 @@ public class Player extends GameCharacter {
         return 150 + (getLevel() - 1) * 100;
     }
 
-    private void levelUp() {
-        levelUpNoExp();
-    }
     public void addGold(int amount) {
         setGold(getGold() + amount);
     }
@@ -143,7 +138,6 @@ public class Player extends GameCharacter {
                     System.out.println("⚠️ Inventario pieno! Aggiunte solo " + allowedToAdd + " pozioni su " + potionToAdd);
                 } else {
                     System.out.println("❌ Inventario pieno! Non puoi aggiungere altre pozioni!");
-                    return;
                 }
             } else {
                 inventory.add(item);
@@ -167,9 +161,6 @@ public class Player extends GameCharacter {
         inventory.remove(item);
     }
 
-    public boolean hasItem(Item item) {
-        return inventory.contains(item);
-    }
 
     public int getPotionCount() {
         int count = 0;
@@ -185,18 +176,7 @@ public class Player extends GameCharacter {
         return MAX_POTIONS;
     }
 
-    public void debugPotionCount() {
-        System.out.println("=== DEBUG POZIONI ===");
-        System.out.println("Pozioni attuali: " + getPotionCount());
-        System.out.println("Max pozioni: " + MAX_POTIONS);
-        for (Item item : inventory) {
-            if (item instanceof HealthPotion) {
-                System.out.println("Pozione trovata: quantità=" + ((HealthPotion) item).getQuantity());
-            }
-        }
-    }
-
-    @Override
+     @Override
     public String toString() {
         return getName() + " (Lv." + getLevel() + " " + characterClass + ") - HP: " + getHp() + "/" + getMaxHp();
     }

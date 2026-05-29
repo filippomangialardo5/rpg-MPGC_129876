@@ -7,18 +7,13 @@ public enum Direction {
     WEST("⬅ Ovest", -1, 0);
 
     private final String displayName;
-    private final int dx;
-    private final int dy;
 
     Direction(String displayName, int dx, int dy) {
         this.displayName = displayName;
-        this.dx = dx;
-        this.dy = dy;
     }
 
     public String getDisplayName() { return displayName; }
-    public int getDx() { return dx; }
-    public int getDy() { return dy; }
+
 
     public Direction getOpposite() {
         switch(this) {
@@ -28,12 +23,5 @@ public enum Direction {
             case WEST: return EAST;
             default: return this;
         }
-    }
-
-    public static Direction fromString(String str) {
-        for (Direction d : values()) {
-            if (d.name().equalsIgnoreCase(str)) return d;
-        }
-        return null;
     }
 }

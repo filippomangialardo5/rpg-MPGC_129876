@@ -9,7 +9,6 @@ import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import it.unicam.cs.mpgc.rpg129876.model.world.Direction;
 import it.unicam.cs.mpgc.rpg129876.model.world.Dungeon;
 import it.unicam.cs.mpgc.rpg129876.model.world.Room;
-import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,7 +24,6 @@ public class GameController {
 
     public boolean isGameWon() { return gameWon; }
     public boolean isGameOver() { return gameOver; }
-    public void resetGameFlags() { gameWon = false; gameOver = false; }
 
     // Observable properties per il binding con la UI
     private final ObjectProperty<Player> currentPlayer = new SimpleObjectProperty<>();
@@ -58,7 +56,6 @@ public class GameController {
     // Property getters per binding JavaFX
     public ObjectProperty<Player> currentPlayerProperty() { return currentPlayer; }
     public BooleanProperty inCombatProperty() { return inCombat; }
-    public StringProperty combatLogProperty() { return combatLog; }
     public StringProperty roomDescriptionProperty() { return roomDescription; }
     public ObservableList<String> getGameMessages() { return gameMessages; }
 
@@ -99,20 +96,18 @@ public class GameController {
     }
 
     // Movimento
-    public boolean move(Direction direction) {
+    public void move(Direction direction) {
         if (inCombat.get()) {
             addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
-            return false;
+            return;
         }
 
         if (dungeon.move(direction)) {
             addGameMessage("🚶 Ti muovi verso " + direction.getDisplayName());
             updateRoomInfo();
             checkRoomEvents();
-            return true;
         } else {
             addGameMessage("🚫 Non puoi andare in quella direzione!");
-            return false;
         }
     }
 
@@ -173,12 +168,6 @@ public class GameController {
         }
 
         addGameMessage("🔍 Esplori la stanza... " + currentRoom.getDescription());
-    }
-
-    public void openMerchantDialog(Merchant merchant) {
-        // Notifica la UI che c'è un mercante
-        this.currentMerchant = merchant;
-        // Questo verrà gestito dal MainController
     }
 
     private void collectTreasures() {
@@ -371,26 +360,6 @@ public class GameController {
         updatePlayerStats();
     }
 
-    // Conta quanti draghi sono ancora vivi intorno alla porta
-    private int countRemainingDragons() {
-        int bossX = dungeon.getWidth() - 1;
-        int bossY = dungeon.getHeight() - 1;
-        int count = 0;
-
-        if (bossX - 1 >= 0) {
-            Room leftRoom = dungeon.getRoomAt(bossX - 1, bossY);
-            if (leftRoom.hasDragon() && leftRoom.hasEnemy()) count++;
-        }
-        if (bossY - 1 >= 0) {
-            Room upRoom = dungeon.getRoomAt(bossX, bossY - 1);
-            if (upRoom.hasDragon() && upRoom.hasEnemy()) count++;
-        }
-        if (bossX - 1 >= 0 && bossY - 1 >= 0) {
-            Room diagRoom = dungeon.getRoomAt(bossX - 1, bossY - 1);
-            if (diagRoom.hasDragon() && diagRoom.hasEnemy()) count++;
-        }
-        return count;
-    }
 
     private void updateCombatLog() {
         if (currentCombat != null) {
@@ -433,30 +402,5 @@ public class GameController {
 
     public CombatSystem getCurrentCombat() {
         return currentCombat;
-    }
-
-
-
-    // Metodo per ottenere l'icona del giocatore in base alla classe
-    private String getPlayerIcon(String playerClass) {
-        switch(playerClass.toLowerCase()) {
-            case "warrior": return "⚔️";
-            case "mage": return "🔮";
-            case "rogue": return "🗡️";
-            default: return "⭐";
-        }
-    }
-
-    // Metodo per ottenere l'icona del nemico
-    private String getEnemyIcon(String enemyName) {
-        switch(enemyName.toLowerCase()) {
-            case "goblin": return "👺";
-            case "orc": return "👹";
-            case "skeleton": return "💀";
-            case "dragon": return "🐉";
-            case "wolf": return "🐺";
-            case "dark knight": return "⚔️";
-            default: return "👾";
-        }
     }
 }

@@ -44,7 +44,6 @@ public class MainController {
     // UI Components - Schermate
     @FXML private VBox startScreen;
     @FXML private BorderPane gameScreen;
-    @FXML private Button startGameBtn;
 
     // UI Components - Statistiche
     @FXML private Label playerNameLabel;
@@ -63,7 +62,7 @@ public class MainController {
 
     // UI Components - Combattimento
     @FXML private VBox combatPanel;
-    @FXML private Label combatStatusLabel;
+
     @FXML private ProgressBar playerCombatHealthBar;
     @FXML private Label playerCombatHealthLabel;
     @FXML private Label enemyNameLabel;
@@ -71,8 +70,7 @@ public class MainController {
     @FXML private Label enemyHealthLabel;
     @FXML private Label combatMessage;
     @FXML private Button attackBtn;
-    @FXML private Button useItemBtn;
-    @FXML private Button fleeBtn;
+
 
     // UI Components - Altro
     @FXML private VBox inventoryList;
@@ -82,7 +80,6 @@ public class MainController {
     @FXML private ImageView playerImageView;
     @FXML private ImageView playerCombatImageView;
     @FXML private ImageView enemyImageView;
-    @FXML private ImageView mapBackground;
 
     @FXML private Label enemyAttackLabel;
     @FXML private Label enemyDefenseLabel;
@@ -90,33 +87,12 @@ public class MainController {
 
     @FXML private VBox legendBox;
 
-    @FXML
-    public void testButtons() {
-        System.out.println("=== TEST BUTTONS ===");
-        System.out.println("attackBtn: " + attackBtn);
-        System.out.println("useItemBtn: " + useItemBtn);
-        System.out.println("fleeBtn: " + fleeBtn);
-        System.out.println("combatPanel: " + combatPanel);
-
-        if (attackBtn != null) {
-            attackBtn.setVisible(true);
-            attackBtn.setText("✅ TEST");
-        }
-    }
-
     private Scene currentScene;
 
-    private List<Score> scores = new ArrayList<>();
     private static final String SCORES_FILE = "scores.json";
     private Timeline gameStatusChecker;
     private boolean keysRegistered = false;
-    private Merchant currentMerchant;
-    private boolean isGameWon = false;
-    private boolean isGameOver = false;
-    private boolean movementKeysRegistered = false;
-    private boolean isVictoryInProgress = false;
-    private boolean isGameOverInProgress = false;
-    private boolean isSavingScore = false;
+
 
     @FXML
     public void initialize() {
@@ -192,7 +168,7 @@ public class MainController {
             }
         }
 
-        // AZIONI
+        // AZIONI DI COMBATTIMENTO
         switch(code) {
             case Z:
                 if (gameController.isInCombat()) {
@@ -203,9 +179,8 @@ public class MainController {
                 }
                 break;
             case X:
-            case P:  // Tasto P per usare pozione (funziona sempre, dentro e fuori combattimento)
-                System.out.println("🟢 Tasto " + code + ": POZIONE");
-                onUseItem();  // Questo metodo gestisce già sia dentro che fuori combattimento
+                System.out.println("🟢 Tasto X: POZIONE");
+                onUseItem();
                 break;
             case C:
                 if (gameController.isInCombat()) {
@@ -218,21 +193,6 @@ public class MainController {
             default: break;
         }
     };
-
-    private void enableMapKeyBindings() {
-        mapGrid.setOnKeyPressed(event -> {
-            if (gameController.isInCombat()) return;
-
-            switch(event.getCode()) {
-                case W: case UP: onMoveNorth(); break;
-                case S: case DOWN: onMoveSouth(); break;
-                case A: case LEFT: onMoveWest(); break;
-                case D: case RIGHT: onMoveEast(); break;
-                default: break;
-            }
-        });
-        mapGrid.setFocusTraversable(true);
-    }
 
     @FXML
     private void onStartGameFromButton() {
@@ -658,7 +618,7 @@ public class MainController {
     }
     private void setupMessageListener() {
         messageListView.setItems(gameController.getGameMessages());
-        messageListView.setCellFactory(lv -> new ListCell<String>() {
+        messageListView.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -682,26 +642,6 @@ public class MainController {
 
     private void addGameMessage(String message) {
         // handled by GameController
-    }
-
-    private void animateAttack() {
-        // Animazione del bottone
-        attackBtn.setScaleX(0.9);
-        attackBtn.setScaleY(0.9);
-        ScaleTransition st = new ScaleTransition(Duration.millis(100), attackBtn);
-        st.setToX(1);
-        st.setToY(1);
-        st.play();
-
-        // Animazione del messaggio di combattimento
-        combatMessage.setStyle("-fx-text-fill: #ffaa00; -fx-font-size: 14px; -fx-font-weight: bold;");
-        Timeline timeline = new Timeline(
-                new KeyFrame(Duration.seconds(0), e -> combatMessage.setText("⚔ COLPO INFERTO! ⚔")),
-                new KeyFrame(Duration.seconds(0.5), e -> combatMessage.setText("")),
-                new KeyFrame(Duration.seconds(1), e -> combatMessage.setText("⚔ CONTINUA IL COMBATTIMENTO! ⚔"))
-        );
-        timeline.setCycleCount(1);
-        timeline.play();
     }
 
     private void showGameUI() {
@@ -796,13 +736,6 @@ public class MainController {
         }
     }
 
-    private boolean canMove() {
-        return gameController.getPlayer() != null &&
-                gameController.isPlayerAlive() &&
-                !gameController.isInCombat();
-    }
-
-    // Aggiungi questo metodo
     private void checkForMerchant() {
         Merchant merchant = gameController.getCurrentMerchant();
         if (merchant != null) {
@@ -1109,7 +1042,6 @@ public class MainController {
             playerCombatImageView.setImage(img);
         } else {
             // Fallback a emoji
-            String emoji = getPlayerIcon(characterClass);
             playerImageView.setImage(null);
             playerCombatImageView.setImage(null);
         }
@@ -1123,24 +1055,6 @@ public class MainController {
             // Usa emoji come fallback
             enemyNameLabel.setText(getEnemyIcon(enemyName) + " " + enemyName);
             enemyImageView.setImage(null);
-        }
-    }
-
-    private void loadItemImages() {
-        // Per l'inventario - opzionale
-        Image potionImg = ImageLoader.getPotionImage();
-        // Non usiamo immagini per i bottoni, solo testo
-    }
-
-    private void loadMapBackground() {
-        try {
-            var inputStream = getClass().getResourceAsStream("/images/map_background.png");
-            if (inputStream != null) {
-                javafx.scene.image.Image img = new javafx.scene.image.Image(inputStream);
-                mapBackground.setImage(img);
-            }
-        } catch (Exception e) {
-            // Ignora - usa solo colore di sfondo
         }
     }
 
@@ -1220,72 +1134,6 @@ public class MainController {
         });
     }
 
-    private void showLeaderboardFromGameOver() {
-        List<Score> scores = loadScoresFromFile();
-
-        StringBuilder message = new StringBuilder();
-        message.append("🏆 CLASSIFICA - TOP 10 🏆\n\n");
-
-        if (scores.isEmpty()) {
-            message.append("📋 Nessun punteggio registrato ancora!\n");
-        } else {
-            for (int i = 0; i < scores.size(); i++) {
-                Score s = scores.get(i);
-                String medal = "";
-                if (i == 0) medal = "🥇 ";
-                else if (i == 1) medal = "🥈 ";
-                else if (i == 2) medal = "🥉 ";
-                else medal = "   ";
-
-                String italianClass;
-                switch(s.getCharacterClass()) {
-                    case "Warrior": italianClass = "Guerriero"; break;
-                    case "Mage": italianClass = "Mago"; break;
-                    case "Rogue": italianClass = "Ladro"; break;
-                    default: italianClass = s.getCharacterClass();
-                }
-
-                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
-                        medal, i + 1, s.getPlayerName(), italianClass,
-                        s.getLevel(), s.getTotalScore()));
-            }
-        }
-
-        Stage stage = new Stage();
-        stage.setTitle("Classifica");
-        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-
-        VBox content = new VBox(15);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new javafx.geometry.Insets(20));
-        content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
-
-        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
-
-        TextArea textArea = new TextArea(message.toString());
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
-        textArea.setStyle("-fx-background-color: #0f0f1a; -fx-text-fill: #a0f0a0; -fx-font-family: monospace; -fx-font-size: 12px;");
-        textArea.setPrefHeight(300);
-        textArea.setPrefWidth(350);
-
-        Button backBtn = new Button("◀ TORNA INDIETRO");
-        backBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 20; -fx-cursor: hand;");
-        backBtn.setOnAction(e -> {
-            stage.close();
-            showGameOverScreen();
-        });
-
-        content.getChildren().addAll(title, textArea, backBtn);
-
-        Scene scene = new Scene(content, 450, 450);
-        stage.setScene(scene);
-        stage.showAndWait();
-    }
-
-    private Stage victoryStage = null;
-
     private void showVictoryScreen() {
         Platform.runLater(() -> {
             Player p = gameController.getPlayer();
@@ -1336,136 +1184,6 @@ public class MainController {
                 }
             });
         });
-    }
-
-    private void showLeaderboardEmbedded(Stage parentStage) {
-        List<Score> scores = loadScoresFromFile();
-
-        Stage stage = new Stage();
-        stage.setTitle("Classifica");
-        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-
-        VBox content = new VBox(15);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new javafx.geometry.Insets(20));
-        content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
-
-        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
-
-        StringBuilder message = new StringBuilder();
-        if (scores.isEmpty()) {
-            message.append("📋 Nessun punteggio registrato ancora!\n");
-            message.append("Gioca e batti i record!");
-        } else {
-            for (int i = 0; i < scores.size(); i++) {
-                Score s = scores.get(i);
-                String medal = "";
-                if (i == 0) medal = "🥇 ";
-                else if (i == 1) medal = "🥈 ";
-                else if (i == 2) medal = "🥉 ";
-                else medal = "   ";
-
-                String italianClass;
-                switch(s.getCharacterClass()) {
-                    case "Warrior": italianClass = "Guerriero"; break;
-                    case "Mage": italianClass = "Mago"; break;
-                    case "Rogue": italianClass = "Ladro"; break;
-                    default: italianClass = s.getCharacterClass();
-                }
-
-                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
-                        medal, i + 1, s.getPlayerName(), italianClass,
-                        s.getLevel(), s.getTotalScore()));
-            }
-        }
-
-        TextArea textArea = new TextArea(message.toString());
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
-        textArea.setStyle("-fx-background-color: #0f0f1a; -fx-text-fill: #a0f0a0; -fx-font-family: monospace; -fx-font-size: 12px;");
-        textArea.setPrefHeight(300);
-        textArea.setPrefWidth(380);
-
-        Button backBtn = new Button("◀ TORNA INDIETRO");
-        backBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 20; -fx-cursor: hand;");
-        backBtn.setOnAction(e -> {
-            stage.close();
-            // Non fare nulla, la finestra di vittoria è ancora aperta
-        });
-
-        content.getChildren().addAll(title, textArea, backBtn);
-
-        Scene scene = new Scene(content, 450, 450);
-        stage.setScene(scene);
-        stage.showAndWait();
-    }
-
-    private void showLeaderboardFromVictory() {
-        List<Score> scores = loadScoresFromFile();
-
-        StringBuilder message = new StringBuilder();
-        message.append("🏆 CLASSIFICA - TOP 10 🏆\n\n");
-
-        if (scores.isEmpty()) {
-            message.append("📋 Nessun punteggio registrato ancora!\n");
-            message.append("Gioca e batti i record!");
-        } else {
-            for (int i = 0; i < scores.size(); i++) {
-                Score s = scores.get(i);
-                String medal = "";
-                if (i == 0) medal = "🥇 ";
-                else if (i == 1) medal = "🥈 ";
-                else if (i == 2) medal = "🥉 ";
-                else medal = "   ";
-
-                String italianClass;
-                switch(s.getCharacterClass()) {
-                    case "Warrior": italianClass = "Guerriero"; break;
-                    case "Mage": italianClass = "Mago"; break;
-                    case "Rogue": italianClass = "Ladro"; break;
-                    default: italianClass = s.getCharacterClass();
-                }
-
-                message.append(String.format("%s%d. %s - %s (Lv.%d) - %d punti\n",
-                        medal, i + 1, s.getPlayerName(), italianClass,
-                        s.getLevel(), s.getTotalScore()));
-            }
-        }
-
-        // Usa Stage invece di Alert per avere più controllo
-        Stage stage = new Stage();
-        stage.setTitle("Classifica");
-        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-
-        VBox content = new VBox(15);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new javafx.geometry.Insets(20));
-        content.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 15;");
-
-        Label title = new Label("🏆 CLASSIFICA - TOP 10 🏆");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffd700;");
-
-        TextArea textArea = new TextArea(message.toString());
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
-        textArea.setStyle("-fx-background-color: #0f0f1a; -fx-text-fill: #a0f0a0; -fx-font-family: monospace; -fx-font-size: 12px;");
-        textArea.setPrefHeight(300);
-        textArea.setPrefWidth(350);
-
-        Button backBtn = new Button("◀ TORNA INDIETRO");
-        backBtn.setStyle("-fx-background-color: #e94560; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 20; -fx-cursor: hand;");
-        backBtn.setOnAction(e -> {
-            stage.close();
-            // Riapri la schermata di vittoria
-            showVictoryScreen();
-        });
-
-        content.getChildren().addAll(title, textArea, backBtn);
-
-        Scene scene = new Scene(content, 450, 450);
-        stage.setScene(scene);
-        stage.showAndWait();
     }
 
     @FXML
@@ -1613,23 +1331,6 @@ public class MainController {
         stage.showAndWait();
     }
 
-    private void fullGameReset() {
-        System.out.println("=== FULL GAME RESET ===");
-
-        try {
-            // Ottieni lo stage
-            Stage stage = (Stage) startScreen.getScene().getWindow();
-
-            // Ricarica l'intera applicazione
-            MainApp mainApp = new MainApp();
-            mainApp.start(stage);
-
-        } catch (Exception e) {
-            System.err.println("Errore durante il reset: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     // Salvataggio su file JSON
     private void saveScore(Score score) {
         try {
@@ -1684,7 +1385,7 @@ public class MainController {
         } else {
             for (int i = 0; i < scores.size(); i++) {
                 Score s = scores.get(i);
-                String medal = "";
+                String medal;
                 if (i == 0) medal = "🥇 ";
                 else if (i == 1) medal = "🥈 ";
                 else if (i == 2) medal = "🥉 ";
@@ -1715,33 +1416,6 @@ public class MainController {
 
     @FXML private void onShowLeaderboard() {
         showLeaderboard();
-    }
-
-    private void printGameState() {
-        System.out.println("=== GAME STATE ===");
-        System.out.println("Player: " + gameController.getPlayer());
-        System.out.println("In combat: " + gameController.isInCombat());
-        System.out.println("Current room: " + gameController.getCurrentRoom().getName());
-        System.out.println("Room has enemy: " + gameController.getCurrentRoom().hasEnemy());
-        if (gameController.getCurrentRoom().hasEnemy()) {
-            System.out.println("Enemy: " + gameController.getCurrentRoom().getEnemy().getName());
-        }
-    }
-
-    private HBox createIconLabel(String imagePath, String text) {
-        HBox box = new HBox(8);
-        box.setAlignment(Pos.CENTER_LEFT);
-
-        Image img = ImageLoader.loadImage(imagePath);
-        ImageView icon = new ImageView(img);
-        icon.setFitWidth(24);
-        icon.setFitHeight(24);
-
-        Label label = new Label(text);
-        label.setStyle("-fx-text-fill: white; -fx-font-size: 11px;");
-
-        box.getChildren().addAll(icon, label);
-        return box;
     }
 
     private void setupLegend() {
@@ -1869,8 +1543,7 @@ public class MainController {
                     
         ⚔ COMBATTIMENTO (tasti rapidi):
         • Z = ATTACCA
-        • X = USA POZIONE (in combatt.)
-        • P = USA POZIONE (non in combatt.)
+        • X = USA POZIONE
         • C = FUGGI
         
         🔘 BOTTONI SCHERMO:

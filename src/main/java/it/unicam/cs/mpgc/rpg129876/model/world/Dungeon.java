@@ -14,7 +14,7 @@ public class Dungeon {
     private final Room[][] map;
     private Room currentRoom;
     private final Random random;
-    private int currentLevel = 1;
+    private int currentLevel;
 
     public Dungeon(int width, int height) {
         this.width = width;
@@ -152,22 +152,6 @@ public class Dungeon {
         }
     }
 
-    private Enemy generateEnemyByLevel() {
-        double r = random.nextDouble();
-        if (currentLevel == 1) {
-            if (r < 0.6) return Enemy.createGoblin();
-            if (r < 0.9) return Enemy.createWolf();
-            return Enemy.createSkeleton();
-        } else if (currentLevel == 2) {
-            if (r < 0.5) return Enemy.createSkeleton();
-            if (r < 0.8) return Enemy.createOrc();
-            return Enemy.createGoblin();
-        } else {
-            if (r < 0.4) return Enemy.createOrc();
-            if (r < 0.7) return Enemy.createDarkKnight();
-            return Enemy.createGoblin();
-        }
-    }
 
     private void setupBossArea() {
         int bossX = width - 1;
@@ -288,30 +272,4 @@ public class Dungeon {
     public int getWidth() { return width; }
     public int getHeight() { return height; }
     public Room getRoomAt(int x, int y) { return map[y][x]; }
-
-    public void nextLevel() {
-        currentLevel++;
-        // Rigenera i nemici per il nuovo livello (opzionale)
-    }
-
-
-    public String getMapAsString(boolean showAll) {
-        StringBuilder sb = new StringBuilder();
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Room room = map[y][x];
-                if (room == currentRoom) {
-                    sb.append("[X]");
-                } else if (showAll || room.isExplored()) {
-                    if (room.hasEnemy()) sb.append("[E]");
-                    else if (room.hasTreasures()) sb.append("[T]");
-                    else sb.append("[ ]");
-                } else {
-                    sb.append("[?]");
-                }
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
 }

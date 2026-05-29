@@ -10,10 +10,6 @@ public interface Item {
 
     void use(Player player);
 
-    default boolean isStackable() {
-        return true;
-    }
-
     default String getIcon() {
         return "📦";
     }

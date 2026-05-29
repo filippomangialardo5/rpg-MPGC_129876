@@ -2,8 +2,8 @@ package it.unicam.cs.mpgc.rpg129876.model.characters;
 
 public class Enemy extends GameCharacter {
 
-    private int experienceReward;
-    private int goldReward;
+    private final int experienceReward;
+    private final int goldReward;
 
     public Enemy(String name, int maxHp, int attack, int defense, int experienceReward, int goldReward) {
         super(name, maxHp, attack, defense);
@@ -15,9 +15,6 @@ public class Enemy extends GameCharacter {
     public int getExperienceReward() { return experienceReward; }
     public int getGoldReward() { return goldReward; }
 
-    // Setters
-    public void setExperienceReward(int experienceReward) { this.experienceReward = experienceReward; }
-    public void setGoldReward(int goldReward) { this.goldReward = goldReward; }
 
     public static Enemy createGoblin() {
         return new Enemy("Goblin", 30, 14, 5, 40, 20);
@@ -43,8 +40,6 @@ public class Enemy extends GameCharacter {
         return new Enemy("Drago", 200, 25, 15, 250, 250);
     }
 
-    public boolean isDragon() {return this.getName().equalsIgnoreCase("Dragon");
-    }
 
     // Metodo per generare nemico casuale (utile per esplorazione)
     public static Enemy randomEnemy() {
