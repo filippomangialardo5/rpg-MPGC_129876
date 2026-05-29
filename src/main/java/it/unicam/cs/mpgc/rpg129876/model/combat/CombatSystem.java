@@ -119,16 +119,30 @@ public class CombatSystem {
             inCombat = false;
             CombatResult result = new CombatResult(true, "🏃 SEI RIUSCITO A FUGGIRE! 🏃", false);
             result.setFled(true);
-            System.out.println("Fuga riuscita!");
             return result;
         } else {
             // Fuga fallita: subisci un attacco
             int damage = calculateDamage(enemy.getAttack(), player.getDefense());
             player.takeDamage(damage);
+
+            System.out.println("Fuga fallita! Danno subito: " + damage + ", HP rimasti: " + player.getHp());
+
+            // Se il giocatore è morto, il combattimento termina
+            if (!player.isAlive()) {
+                inCombat = false;
+                CombatResult result = new CombatResult(true, "🏃 FUGA FALLITA! " + enemy.getName() + " ti colpisce con " + damage + " danni e ti ha sconfitto! 💀", false);
+                result.setFled(false);
+                result.setDamageDealt(damage);
+                result.setCombatEnded(true);
+                result.setPlayerWon(false);
+                return result;
+            }
+
+            // Se il giocatore è ancora vivo, il combattimento continua
             CombatResult result = new CombatResult(false, "🏃 FUGA FALLITA! " + enemy.getName() + " ti colpisce con " + damage + " danni!", false);
             result.setFled(false);
             result.setDamageDealt(damage);
-            System.out.println("Fuga fallita! Danno subito: " + damage);
+            result.setCombatEnded(false);  // IMPORTANTE: false = combattimento continua
             return result;
         }
     }

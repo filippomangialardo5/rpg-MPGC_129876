@@ -24,7 +24,7 @@ public class MainApp extends Application {
         URL cssUrl = getClass().getResource("/css/application.css");
         scene.getStylesheets().add(cssUrl.toExternalForm());
 
-        primaryStage.setTitle("Dungeon Explorer RPG - Matricola 129876");
+        primaryStage.setTitle("Shadow of the Dungeon - Matricola 129876");
         primaryStage.setScene(scene);
         primaryStage.show();
     }

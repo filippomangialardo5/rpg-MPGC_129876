@@ -17,27 +17,27 @@ public class Enemy extends GameCharacter {
 
 
     public static Enemy createGoblin() {
-        return new Enemy("Goblin", 30, 14, 5, 40, 20);
+        return new Enemy("Goblin", 30, 15, 6, 40, 20);
     }
 
     public static Enemy createWolf() {
-        return new Enemy("Lupo", 40, 17, 7, 40, 25);
+        return new Enemy("Lupo", 40, 18, 8, 40, 25);
     }
 
     public static Enemy createSkeleton() {
-        return new Enemy("Scheletro", 50, 20, 8, 60, 35);
+        return new Enemy("Scheletro", 50, 20, 9, 50, 35);
     }
 
     public static Enemy createOrc() {
-        return new Enemy("Orco", 60, 22, 12, 80, 50);
+        return new Enemy("Orco", 60, 23, 13, 60, 50);
     }
 
     public static Enemy createDarkKnight() {
-        return new Enemy("Cavaliere oscuro", 100, 30, 10, 120, 80);
+        return new Enemy("Cavaliere oscuro", 100, 30, 11, 100, 60);
     }
 
     public static Enemy createDragon() {
-        return new Enemy("Drago", 200, 25, 15, 250, 250);
+        return new Enemy("Drago", 200, 25, 15, 0, 100);
     }
 
 

@@ -303,12 +303,19 @@ public class GameController {
             combatLog.set(result.getMessage());
 
             if (!currentCombat.isInCombat()) {
-                setInCombat(false);  // Importante: notifica la UI
+                // Combattimento terminato (fuga riuscita O giocatore morto)
+                if (!player.isAlive()) {
+                    addGameMessage("💀 GAME OVER - Sei stato sconfitto... 💀");
+                    gameOver = true;
+                } else {
+                    addGameMessage("🏃 Sei uscito dal combattimento!");
+                }
+                setInCombat(false);
                 currentCombat = null;
-                addGameMessage("🏃 Sei riuscito a fuggire! Il combattimento è terminato.");
             } else {
+                // Fuga fallita ma giocatore ancora vivo, il combattimento continua
                 updatePlayerStats();
-                addGameMessage("❤️ HP rimanenti dopo fuga fallita: " + player.getHp() + "/" + player.getMaxHp());
+                addGameMessage("❤️ HP rimanenti: " + player.getHp() + "/" + player.getMaxHp());
             }
         }
     }

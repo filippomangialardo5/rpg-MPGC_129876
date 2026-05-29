@@ -979,8 +979,8 @@ public class MainController {
                     int healed = newHp - oldHp;
 
                     if (healed > 0) {
-                        addGameMessage("🧪 Usata una pozione! +" + healed + " HP");
-                        combatMessage.setText("🧪 POZIONE USATA! +" + healed + " HP");
+                        addGameMessage("⚗ Usata una pozione! +" + healed + " HP");
+                        combatMessage.setText("⚗ POZIONE USATA! +" + healed + " HP");
 
                         // Suggerimento se ancora a rischio
                         if (newHp < maxHp / 3) {
@@ -1007,16 +1007,27 @@ public class MainController {
         if (gameController.getPlayer() == null) return;
         if (!gameController.isInCombat()) return;
 
+        System.out.println("=== FUGGI ===");
+
+        // Salva lo stato prima della fuga
+        boolean wasAlive = gameController.isPlayerAlive();
+
         gameController.flee();
 
+        // Aggiorna UI
+        updateCombatUI();
+        updatePlayerUI(gameController.getPlayer());
+        updateMap();
+
+        // Mostra messaggio appropriato
         if (!gameController.isInCombat()) {
-            addGameMessage("🏃 Sei fuggito dal combattimento!");
+            if (!gameController.isPlayerAlive()) {
+                combatMessage.setText("💀 SEI MORTO! GAME OVER! 💀");
+            } else {
+                combatMessage.setText("🏃 SEI RIUSCITO A FUGGIRE! 🏃");
+            }
         } else {
-            // Fuga fallita
-            combatMessage.setText("⚠ FUGA FALLITA! Il nemico ti colpisce!");
-            updateCombatUI();
-            updatePlayerUI(gameController.getPlayer());
-            updateMap();
+            combatMessage.setText("⚠ FUGA FALLITA! Subisci un attacco! ⚠");
         }
     }
 
@@ -1077,11 +1088,17 @@ public class MainController {
     private void checkGameStatus() {
         if (gameController == null) return;
 
+        // Controlla se il giocatore è morto
+        if (gameController.getPlayer() != null && !gameController.isPlayerAlive()) {
+            if (!gameController.isGameOver()) {
+                gameController.setGameOver(true);
+            }
+        }
+
         if (gameController.isGameWon()) {
             if (gameStatusChecker != null) {
                 gameStatusChecker.stop();
             }
-            // Resetta il flag per evitare che venga rilevato di nuovo
             gameController.setGameWon(false);
             showVictoryScreen();
         } else if (gameController.isGameOver()) {
@@ -1107,7 +1124,7 @@ public class MainController {
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
-                            "🧪 Pozioni rimaste: %d\n" +
+                            "⚗ Pozioni rimaste: %d\n" +
                             "🏅 Punteggio: %d",
                     p.getName(),
                     p.getCharacterClass(),
@@ -1159,7 +1176,7 @@ public class MainController {
                             "🏆 Livello: %d\n" +
                             "👹 Nemici sconfitti: %d\n" +
                             "💰 Oro: %d\n" +
-                            "🧪 Pozioni rimaste: %d\n" +
+                            "⚗ Pozioni rimaste: %d\n" +
                             "🏅 Punteggio: %d",
                     p.getName(),
                     p.getCharacterClass(),
