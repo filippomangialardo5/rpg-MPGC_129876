@@ -1444,6 +1444,19 @@ public class MainController {
         legendBox.getChildren().add(title);
         legendBox.getChildren().add(new Separator());
 
+        // FRASE INFORMATIVA SULL'ORDINE DEI NEMICI - con più Label
+        Label orderInfo1 = new Label("⚠ I nemici sono elencati in ordine");
+        orderInfo1.setStyle("-fx-text-fill: #ffaa66; -fx-font-size: 10px;");
+        legendBox.getChildren().add(orderInfo1);
+
+        Label orderInfo2 = new Label("dal più debole al più forte!");
+        orderInfo2.setStyle("-fx-text-fill: #ffaa66; -fx-font-size: 10px;");
+        legendBox.getChildren().add(orderInfo2);
+
+        Label orderInfo3 = new Label("Affrontali con cautela!");
+        orderInfo3.setStyle("-fx-text-fill: #ffaa66; -fx-font-size: 10px; -fx-padding: 0 0 5 0;");
+        legendBox.getChildren().add(orderInfo3);
+
         // Giocatore (USA L'IMMAGINE DELLA CLASSE SCELTA)
         HBox playerBox = new HBox(8);
         playerBox.setAlignment(Pos.CENTER_LEFT);
