@@ -1,6 +1,5 @@
 package it.unicam.cs.mpgc.rpg129876.controller;
 
-import it.unicam.cs.mpgc.rpg129876.MainApp;
 import it.unicam.cs.mpgc.rpg129876.model.Score;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
@@ -25,7 +24,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.animation.ScaleTransition;
 import javafx.scene.layout.HBox;
 import javafx.scene.input.KeyEvent;
 import java.io.*;
@@ -109,7 +107,6 @@ public class MainController {
 
         setupLegend();
 
-        // NON chiamare showCharacterCreation qui - aspetta che il reset lo faccia
         addGameMessage("✨ Benvenuto in Dungeon Explorer RPG!");
     }
 
@@ -206,7 +203,6 @@ public class MainController {
             }
         });
 
-        // QUESTO LISTENER DEVE CHIAMARE enableCombatMode
         gameController.inCombatProperty().addListener((obs, old, inCombat) -> {
             Platform.runLater(() -> {
                 System.out.println("inCombat cambiato: " + inCombat);
@@ -236,7 +232,7 @@ public class MainController {
 
         int currentExp = player.getExperience();
         int currentLevel = player.getLevel();
-        int requiredExp = 150 + (currentLevel - 1) * 100;  // Usa la stessa formula
+        int requiredExp = 150 + (currentLevel - 1) * 100;
 
         // Se l'XP è uguale o supera il required, mostra il prossimo livello
         if (currentExp >= requiredExp) {
@@ -245,7 +241,7 @@ public class MainController {
             requiredExp = 150 + (currentLevel - 1) * 100;
         }
 
-        // Assicurati che l'XP non sia negativo
+        // Assicura che l'XP non sia negativo
         if (currentExp < 0) {
             currentExp = 0;
         }
@@ -386,19 +382,15 @@ public class MainController {
             int potionCount = gameController.getPlayer().getPotionCount();
             int maxPotions = gameController.getPlayer().getMaxPotions();
 
-            // ASSICURATI CHE IL CONTATORE NON SUPERA IL MASSIMO
+            // ASSICURA CHE IL CONTATORE NON SUPERA IL MASSIMO
             if (potionCount > maxPotions) {
                 System.out.println("⚠ WARNING: Pozioni (" + potionCount + ") superano il massimo (" + maxPotions + ")!");
-                // Forza il reset a maxPotions (opzionale)
-                // gameController.getPlayer().setPotionCount(maxPotions);
             }
 
-            // Contenitore per la pozione con immagine
             HBox potionContainer = new HBox(10);
             potionContainer.setAlignment(Pos.CENTER_LEFT);
             potionContainer.setStyle("-fx-padding: 5;");
 
-            // Immagine pozione
             Image potionImg = ImageLoader.getPotionImage();
             if (potionImg != null) {
                 ImageView potionView = new ImageView(potionImg);
@@ -411,11 +403,9 @@ public class MainController {
                 potionContainer.getChildren().add(potionEmoji);
             }
 
-            // Testo informativo
             Label potionInfo = new Label("Pozioni: " + potionCount + "/" + maxPotions);
             potionInfo.setStyle("-fx-text-fill: #ffaa66; -fx-font-size: 12px; -fx-font-weight: bold;");
 
-            // Colore rosso se supera il limite
             if (potionCount > maxPotions) {
                 potionInfo.setStyle("-fx-text-fill: #ff4444; -fx-font-size: 12px; -fx-font-weight: bold;");
             }
@@ -479,7 +469,7 @@ public class MainController {
                 cell.setMaxSize(55, 55);
                 cell.setStyle("-fx-cursor: hand; -fx-padding: 0; -fx-background-radius: 8;");
 
-                // STANZA CORRENTE (GIOCATORE) - usa immagine personaggio
+                // STANZA CORRENTE (GIOCATORE)
                 if (room == gameController.getCurrentRoom()) {
                     String playerClass = gameController.getPlayer().getCharacterClass();
                     Image playerImg = ImageLoader.getPlayerImage(playerClass);
@@ -504,7 +494,7 @@ public class MainController {
                         cell.setStyle("-fx-background-color: #8B4513; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");
                     }
                 }
-                // DRAGO - usa immagine drago
+                // DRAGO
                 else if (room.hasDragon() && room.hasEnemy() && room.getEnemy().isAlive()) {
                     Image dragonImg = ImageLoader.getEnemyImage("Drago");
                     if (dragonImg != null) {
@@ -518,7 +508,7 @@ public class MainController {
                     }
                     cell.setStyle("-fx-background-color: #8B0000; -fx-cursor: hand; -fx-background-radius: 8;");
                 }
-                // ALTRI NEMICI - usa immagine del nemico
+                // ALTRI NEMICI
                 else if (room.hasEnemy() && room.getEnemy().isAlive()) {
                     String enemyName = room.getEnemy().getName();
                     Image enemyImg = ImageLoader.getEnemyImage(enemyName);
@@ -547,7 +537,7 @@ public class MainController {
                     }
                     cell.setStyle("-fx-background-color: #2a5a5a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-                // TESORO - mostra oro o pozione
+                // TESORO
                 else if (room.isExplored() && room.hasTreasures()) {
                     // Prova a caricare l'immagine del tesoro
                     Image treasureImg = ImageLoader.getGoldImage();
@@ -658,7 +648,6 @@ public class MainController {
                 gameController.getPlayer().hpProperty().asString().concat("/").concat(gameController.getPlayer().maxHpProperty().asString())
         );
 
-        // CARICA IMMAGINE DEL PERSONAGGIO - AGGIUNGI QUESTA RIGA
         loadPlayerImage(gameController.getPlayer().getCharacterClass());
 
         // Forza l'aggiornamento
@@ -757,7 +746,6 @@ public class MainController {
         int maxBuyable = Math.min(availableSlots, merchantPotions);
         maxBuyable = Math.min(maxBuyable, player.getGold() / merchant.getPotionPrice());
 
-        // ASSICURATI CHE NON SUPERI IL LIMITE
         if (maxBuyable > availableSlots) {
             maxBuyable = availableSlots;
         }
@@ -1228,7 +1216,7 @@ public class MainController {
         gameController = new GameController();
         keysRegistered = false;
 
-        // RICHOAMA IL BINDING DEI LISTENER (importante!)
+        // RICHAMA IL BINDING DEI LISTENER
         bindPlayerStats();
         setupMessageListener();
 

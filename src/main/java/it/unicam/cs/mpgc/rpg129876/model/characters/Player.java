@@ -49,7 +49,6 @@ public class Player extends GameCharacter {
         }
     }
 
-    // Property getters per binding JavaFX
 
     public ObservableList<Item> getInventory() { return inventory; }
 
@@ -70,13 +69,12 @@ public class Player extends GameCharacter {
 
         System.out.println("DEBUG: XP guadagnati=" + amount + ", XP prima=" + (newExp - amount));
 
-        // Controlla quanti livelli sali
         int levelsGained = 0;
         while (newExp >= getRequiredExpForLevel()) {
             int required = getRequiredExpForLevel();
             newExp -= required;
             levelsGained++;
-            levelUpNoExp();  // Nuovo metodo che non usa l'XP
+            levelUpNoExp();
         }
 
         // Imposta l'XP residuo

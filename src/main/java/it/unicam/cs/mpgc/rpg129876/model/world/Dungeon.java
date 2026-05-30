@@ -28,7 +28,6 @@ public class Dungeon {
         // FORZA l'esplorazione della stanza iniziale e delle aree circostanti per test
         map[0][0].setExplored(true);
 
-        // Per debug: stampa la posizione della porta
         Room door = map[height-1][width-1];
         System.out.println("Porta creata in posizione: [" + (width-1) + "," + (height-1) + "]");
         System.out.println("isDoorRoom: " + door.isDoorRoom());
@@ -122,7 +121,7 @@ public class Dungeon {
                     room.setEnemy(Enemy.randomEnemy());
                 }
 
-                // TESORI - probabilità 15% (né troppo alta né troppo bassa)
+                // TESORI - probabilità 15%
                 if (random.nextDouble() < 0.15) {
                     room.addTreasure(generateTreasure());
                 }
@@ -132,7 +131,7 @@ public class Dungeon {
 
     private Item generateTreasure() {
         double randomValue = this.random.nextDouble();
-        // 40% oro, 60% pozione (così le pozioni si trovano)
+        // 40% oro, 60% pozione
         if (randomValue < 0.4) {
             // Oro: quantità variabile da 15 a 60
             int goldAmount = 15 + this.random.nextInt(46);
@@ -147,7 +146,6 @@ public class Dungeon {
                 public String getIcon() { return "💰"; }
             };
         } else {
-            // Pozione: quantità 1
             return new HealthPotion(1);
         }
     }

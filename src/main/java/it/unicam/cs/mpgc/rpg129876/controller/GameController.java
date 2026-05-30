@@ -153,7 +153,7 @@ public class GameController {
             return;
         }
 
-        // CONTROLLA NEMICO (priorità massima)
+        // CONTROLLA NEMICO
         if (currentRoom.hasEnemy()) {
             System.out.println("NEMICO TROVATO! Avvio combattimento con: " + currentRoom.getEnemy().getName());
             startCombat(currentRoom.getEnemy());
