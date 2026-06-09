@@ -1,4 +1,4 @@
-# ⚔️ Dungeon Explorer RPG
+# ⚔️ Shadow of the Dungeon 
 
 Un gioco di ruolo (RPG) a turni in cui esplori un dungeon generato proceduralmente,
 affronti nemici di difficoltà crescente, potenzi il tuo eroe e cerchi di raggiungere
