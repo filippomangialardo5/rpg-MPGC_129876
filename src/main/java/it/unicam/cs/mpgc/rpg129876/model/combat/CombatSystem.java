@@ -2,10 +2,16 @@ package it.unicam.cs.mpgc.rpg129876.model.combat;
 
 import it.unicam.cs.mpgc.rpg129876.model.characters.Player;
 import it.unicam.cs.mpgc.rpg129876.model.characters.Enemy;
-import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.Random;
 
+/**
+ * Gestisce il sistema di combattimento a turni.
+ * Calcola i danni, gestisce gli attacchi del giocatore e del nemico, e la fuga.
+ *
+ * @author Filippo Mangialardo
+ * @version 1.0
+ */
 public class CombatSystem {
 
     private final Player player;
@@ -22,9 +28,15 @@ public class CombatSystem {
 
     // Getters
     public boolean isInCombat() { return inCombat; }
+
     public Enemy getEnemy() { return enemy; }
 
-    // Metodo principale per l'attacco del giocatore
+    /**
+     * Esegue l'attacco del giocatore contro il nemico.
+     * Calcola il danno in base ad attacco del giocatore e difesa del nemico.
+     *
+     * @return risultato del combattimento con messaggio e danno inflitto
+     */
     public CombatResult playerAttack() {
         if (!inCombat) return new CombatResult(false, "Combat is over!", false);
 
@@ -48,7 +60,12 @@ public class CombatSystem {
         return result;
     }
 
-    // Metodo per l'attacco del nemico
+    /**
+     * Esegue l'attacco del nemico contro il giocatore.
+     * Calcola il danno in base ad attacco del nemico e difesa del giocatore.
+     *
+     * @return risultato del combattimento con messaggio e danno inflitto
+     */
     public CombatResult enemyAttack() {
         if (!inCombat) return new CombatResult(false, "Combat is over!", false);
 
@@ -72,12 +89,25 @@ public class CombatSystem {
         return result;
     }
 
-    // Turno completo del nemico (dopo l'attacco del giocatore)
+    /**
+     * Esegue il turno del nemico durante il combattimento.
+     * Calcola il danno inflitto dal nemico al giocatore e aggiorna gli HP.
+     * Se il giocatore muore, termina il combattimento.
+     *
+     * @return un oggetto CombatResult contenente l'esito del turno
+     */
     public CombatResult enemyTurn() {
         if (!inCombat) return new CombatResult(false, "Combat is over!", false);
         return enemyAttack();
     }
 
+    /**
+     * Utilizza un oggetto (es. pozione) durante il combattimento.
+     * Applica l'effetto dell'oggetto al giocatore (es. cura HP).
+     *
+     * @param item l'oggetto da utilizzare (deve implementare l'interfaccia Item)
+     * @return un oggetto CombatResult con il messaggio dell'effetto
+     */
     public CombatResult useItem(Item item) {
         if (!inCombat) return new CombatResult(false, "Not in combat!", false);
 
@@ -112,7 +142,15 @@ public class CombatSystem {
         return result;
     }
 
-    // Tentativo di fuga
+    /**
+     * Tenta la fuga dal combattimento.
+     *
+     * Meccanica:
+     * - 50% di probabilità di successo → il combattimento termina
+     * - 50% di probabilità di fallimento → il giocatore subisce un attacco gratuito
+     *
+     * @return CombatResult con esito della fuga (riuscita/fallita) e eventuale danno subito
+     */
     public CombatResult flee() {
         int chance = random.nextInt(100);
         if (chance < 50) {  // 50% di successo
@@ -147,6 +185,20 @@ public class CombatSystem {
         }
     }
 
+    /**
+     * Calcola il danno inflitto in un attacco.
+     *
+     * Formula:
+     *
+     * dannoBase = attacco - (difesa / 2) → minimo 3
+     * variazione = casuale tra -2 e +2
+     * danno finale = max(1, dannoBase + variazione)
+     *
+     *
+     * @param attack il valore di attacco dell'attaccante
+     * @param defense il valore di difesa del difensore
+     * @return il danno calcolato (minimo 1)
+     */
     private int calculateDamage(int attack, int defense) {
         // Danno base = attacco - difesa/2 (minimo 3)
         int baseDamage = Math.max(3, attack - defense / 2);
@@ -161,7 +213,12 @@ public class CombatSystem {
         return finalDamage;
     }
 
-    // Assegna ricompense al giocatore (XP e oro) dopo la vittoria
+    /**
+     * Assegna le ricompense al giocatore dopo la vittoria.
+     * Il giocatore guadagna:
+     * - Esperienza (XP) per salire di livello
+     * - Oro per acquistare oggetti dai mercanti
+     */
     public void awardRewards() {
         if (!enemy.isAlive()) {
             int expGained = enemy.getExperienceReward();
@@ -174,7 +231,17 @@ public class CombatSystem {
         }
     }
 
-    // Restituisce le statistiche attuali del combattimento
+    /**
+     * Restituisce una stringa con lo stato attuale del combattimento.
+     * Mostra gli HP di giocatore e nemico in un formato leggibile.
+     *
+     * Formato:
+     *
+     * Giocatore: X/Y HP
+     * Nemico: X/Y HP
+     *
+     * @return stringa con lo stato del combattimento
+     */
     public String getCombatStatus() {
         return String.format(
                 "⚔ %s: %d/%d HP ⚔\n" +
@@ -184,7 +251,19 @@ public class CombatSystem {
         );
     }
 
-    // Classe interna per i risultati del combattimento
+    /**
+     * Classe interna che rappresenta il risultato di un'azione di combattimento.
+     * Contiene tutte le informazioni necessarie per aggiornare l'interfaccia utente.
+     *
+     * Campi principali:
+     * - combatEnded: true se il combattimento è terminato
+     * - playerWon: true se il giocatore ha vinto (solo se combatEnded = true)
+     * - itemUsed: true se è stato usato un oggetto
+     * - fled: true se il giocatore è riuscito a fuggire
+     * - playerAction: true se l'azione è del giocatore (false se del nemico)
+     * - message: messaggio descrittivo da mostrare all'utente
+     * - damageDealt: quantità di danno inflitto nell'attacco
+     */
     public static class CombatResult {
         private boolean combatEnded;
         private boolean playerWon;
@@ -194,8 +273,18 @@ public class CombatSystem {
         private String message;
         private int damageDealt;
 
+        /**
+         * Costruttore vuoto per risultato predefinito.
+         */
         public CombatResult() {}
 
+        /**
+         * Costruttore per risultato con esito immediato (fine combattimento).
+         *
+         * @param combatEnded true se il combattimento è terminato
+         * @param message messaggio descrittivo
+         * @param playerWon true se il giocatore ha vinto
+         */
         public CombatResult(boolean combatEnded, String message, boolean playerWon) {
             this.combatEnded = combatEnded;
             this.message = message;
@@ -204,9 +293,11 @@ public class CombatSystem {
 
         // Getters e Setters
         public boolean isCombatEnded() { return combatEnded; }
+
         public void setCombatEnded(boolean combatEnded) { this.combatEnded = combatEnded; }
 
         public boolean isPlayerWon() { return playerWon; }
+
         public void setPlayerWon(boolean playerWon) { this.playerWon = playerWon; }
 
         public void setItemUsed(boolean itemUsed) { this.itemUsed = itemUsed; }
@@ -220,6 +311,7 @@ public class CombatSystem {
         public void setMessage(String message) { this.message = message; }
 
         public int getDamageDealt() { return damageDealt; }
+
         public void setDamageDealt(int damageDealt) { this.damageDealt = damageDealt; }
 
         @Override

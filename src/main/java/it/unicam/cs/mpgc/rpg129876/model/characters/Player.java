@@ -7,6 +7,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 
+/**
+ * Rappresenta il personaggio giocatore.
+ * Gestisce statistiche, livello, esperienza, oro e inventario.
+ *
+ * @author Filippo Mangialardo
+ * @version 1.0
+ */
 public class Player extends GameCharacter {
 
     // Proprietà aggiuntive del giocatore
@@ -23,6 +30,26 @@ public class Player extends GameCharacter {
         initializeClassStats();
     }
 
+    public ObservableList<Item> getInventory() { return inventory; }
+
+    // Getters
+    public int getLevel() { return level.get(); }
+    public int getExperience() { return experience.get(); }
+    public int getGold() { return gold.get(); }
+    public String getCharacterClass() { return characterClass; }
+
+    // Setters
+    public void setLevel(int level) { this.level.set(level); }
+    public void setExperience(int experience) { this.experience.set(experience); }
+    public void setGold(int gold) { this.gold.set(gold); }
+
+    /**
+     * Inizializza le statistiche del personaggio in base alla classe scelta.
+     *
+     * **Guerriero (Warrior):** HP 120, Attacco 20, Difesa 15
+     * **Mago (Mage):** HP 80, Attacco 25, Difesa 8
+     * **Ladro (Rogue):** HP 100, Attacco 22, Difesa 12
+     */
     private void initializeClassStats() {
         switch(characterClass) {
             case "Warrior":
@@ -49,21 +76,12 @@ public class Player extends GameCharacter {
         }
     }
 
-
-    public ObservableList<Item> getInventory() { return inventory; }
-
-    // Getters
-    public int getLevel() { return level.get(); }
-    public int getExperience() { return experience.get(); }
-    public int getGold() { return gold.get(); }
-    public String getCharacterClass() { return characterClass; }
-
-    // Setters
-    public void setLevel(int level) { this.level.set(level); }
-    public void setExperience(int experience) { this.experience.set(experience); }
-    public void setGold(int gold) { this.gold.set(gold); }
-
-    // Metodi di gioco
+    /**
+     * Aggiunge esperienza al giocatore.
+     * Se l'esperienza supera la soglia, il giocatore sale di livello.
+     *
+     * @param amount quantità di esperienza da aggiungere
+     */
     public void gainExperience(int amount) {
         int newExp = getExperience() + amount;
 
@@ -86,6 +104,10 @@ public class Player extends GameCharacter {
         }
     }
 
+    /**
+     * Aumenta il livello del giocatore.
+     * Incrementa HP massimi, attacco, difesa e cura parzialmente il personaggio.
+     */
     private void levelUpNoExp() {
         int newLevel = getLevel() + 1;
         setLevel(newLevel);
@@ -107,20 +129,37 @@ public class Player extends GameCharacter {
         System.out.println("🎉 " + getName() + " raggiunge il livello " + newLevel + "! 🎉");
     }
 
-    private int getRequiredExpForLevel() {
-        // Formula più lenta: 150 XP per livello 1, +100 a ogni livello
-        // Livello 1: 150 XP
-        // Livello 2: 250 XP
-        // Livello 3: 350 XP
-        // Livello 4: 450 XP
-        // ecc.
+    /**
+     * Calcola l'esperienza necessaria per salire al livello successivo.
+     * La formula è: 150 + (livello - 1) * 100
+     *
+     * Esempi:
+     * - Livello 1 → 150 XP
+     * - Livello 2 → 250 XP
+     * - Livello 3 → 350 XP
+     *
+     * @return l'esperienza richiesta per il prossimo livello
+     */
+    private int getRequiredExpForLevel(){
         return 150 + (getLevel() - 1) * 100;
     }
 
+    /**
+     * Aggiunge una quantità di oro al giocatore.
+     * L'oro viene utilizzato per acquistare pozioni dai mercanti.
+     *
+     * @param amount la quantità di oro da aggiungere (può essere negativa per spendere)
+     */
     public void addGold(int amount) {
         setGold(getGold() + amount);
     }
 
+    /**
+     * Aggiunge un oggetto all'inventario del giocatore.
+     * Se l'oggetto è una pozione, controlla che non venga superato il limite massimo.
+     *
+     * @param item l'oggetto da aggiungere all'inventario
+     */
     public void addItem(Item item) {
         // Se è una pozione, verifica il limite
         if (item instanceof HealthPotion) {
@@ -145,6 +184,13 @@ public class Player extends GameCharacter {
         }
     }
 
+    /**
+     * Verifica se è possibile aggiungere una certa quantità di pozioni all'inventario.
+     * Il limite massimo di pozioni è 10.
+     *
+     * @param quantity la quantità di pozioni che si vuole aggiungere
+     * @return true se l'aggiunta è possibile, false se supera il limite
+     */
     public boolean canAddPotions(int quantity) {
         int currentCount = getPotionCount();
         boolean canAdd = currentCount + quantity <= MAX_POTIONS;
@@ -155,11 +201,21 @@ public class Player extends GameCharacter {
         return canAdd;
     }
 
+    /**
+     * Rimuove un oggetto dall'inventario del giocatore.
+     *
+     * @param item l'oggetto da rimuovere
+     */
     public void removeItem(Item item) {
         inventory.remove(item);
     }
 
-
+    /**
+     * Calcola il numero totale di pozioni presenti nell'inventario.
+     * Somma le quantità di tutte le istanze di HealthPotion.
+     *
+     * @return il numero totale di pozioni nell'inventario
+     */
     public int getPotionCount() {
         int count = 0;
         for (Item item : inventory) {
@@ -174,6 +230,12 @@ public class Player extends GameCharacter {
         return MAX_POTIONS;
     }
 
+    /**
+     * Restituisce una rappresentazione testuale del giocatore.
+     * Formato: "Nome (Lv.X Classe) - HP: Y/Z"
+     *
+     * @return stringa descrittiva del giocatore
+     */
      @Override
     public String toString() {
         return getName() + " (Lv." + getLevel() + " " + characterClass + ") - HP: " + getHp() + "/" + getMaxHp();

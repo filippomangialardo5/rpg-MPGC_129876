@@ -13,6 +13,14 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+/**
+ * Controller della logica di gioco.
+ * Gestisce il movimento nel dungeon, il combattimento e la progressione del giocatore.
+ * È indipendente dall'interfaccia grafica.
+ *
+ * @author Filippo Mangialardo
+ * @version 1.0
+ */
 public class GameController {
 
     private Player player;
@@ -21,9 +29,6 @@ public class GameController {
 
     private boolean gameWon = false;
     private boolean gameOver = false;
-
-    public boolean isGameWon() { return gameWon; }
-    public boolean isGameOver() { return gameOver; }
 
     // Observable properties per il binding con la UI
     private final ObjectProperty<Player> currentPlayer = new SimpleObjectProperty<>();
@@ -34,7 +39,11 @@ public class GameController {
 
     private int enemiesDefeated = 0;
 
-    private Merchant currentMerchant;  // Semplice variabile
+    private Merchant currentMerchant;
+
+    public boolean isGameWon() { return gameWon; }
+
+    public boolean isGameOver() { return gameOver; }
 
     public Merchant getCurrentMerchant() {
         return currentMerchant;
@@ -69,7 +78,42 @@ public class GameController {
         this.inCombat.set(value);
     }
 
-    // Nuova partita
+    private void addStartingItems() {
+        player.addItem(new HealthPotion(4));
+    }
+
+    // Metodi per la mappa
+    public Room getCurrentRoom() {
+        return dungeon.getCurrentRoom();
+    }
+
+    public Room getRoomAt(int x, int y) {
+        return dungeon.getRoomAt(x, y);
+    }
+
+    public int getDungeonWidth() {
+        return dungeon.getWidth();
+    }
+
+    public int getDungeonHeight() {
+        return dungeon.getHeight();
+    }
+
+    public boolean isPlayerAlive() {
+        return player != null && player.isAlive();
+    }
+
+    public CombatSystem getCurrentCombat() {
+        return currentCombat;
+    }
+
+    /**
+     * Avvia una nuova partita con il nome e la classe specificati.
+     * Crea un nuovo giocatore, genera il dungeon e inizializza le variabili di gioco.
+     *
+     * @param playerName nome del giocatore
+     * @param characterClass classe del personaggio (Warrior, Mage, Rogue)
+     */
     public void startNewGame(String playerName, String characterClass) {
         this.player = new Player(playerName, characterClass);
         this.dungeon = new Dungeon(8, 8);  // Mappa 8x8 (puoi cambiare dimensione)
@@ -82,6 +126,12 @@ public class GameController {
         addGameMessage("📍 Ti trovi nella stanza: " + dungeon.getCurrentRoom().getName());
     }
 
+    /**
+     * Converte il nome della classe dall'inglese all'italiano per i messaggi di gioco.
+     *
+     * @param englishClass la classe in inglese (Warrior, Mage, Rogue)
+     * @return la classe tradotta in italiano (Guerriero, Mago, Ladro)
+     */
     private String getItalianClassName(String englishClass) {
         switch(englishClass) {
             case "Warrior": return "Guerriero";
@@ -91,11 +141,12 @@ public class GameController {
         }
     }
 
-    private void addStartingItems() {
-        player.addItem(new HealthPotion(4));
-    }
-
-    // Movimento
+    /**
+     * Sposta il giocatore nella direzione specificata.
+     * Verifica se il movimento è possibile e controlla gli eventi della nuova stanza.
+     *
+     * @param direction direzione del movimento (NORD, SUD, EST, OVEST)
+     */
     public void move(Direction direction) {
         if (inCombat.get()) {
             addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
@@ -111,6 +162,10 @@ public class GameController {
         }
     }
 
+    /**
+     * Aggiorna le informazioni della stanza corrente nell'interfaccia.
+     * Compone il messaggio con nome, descrizione e uscite disponibili.
+     */
     private void updateRoomInfo() {
         Room currentRoom = dungeon.getCurrentRoom();
         String info = "📍 " + currentRoom.getName() + "\n" +
@@ -119,6 +174,14 @@ public class GameController {
         roomDescription.set(info);
     }
 
+    /**
+     * Controlla gli eventi presenti nella stanza corrente.
+     * Gestisce in ordine di priorità:
+     * - Mercante - apre il dialog per acquistare pozioni
+     * - Tesori - raccoglie automaticamente oro e oggetti
+     * - Nemici - avvia il combattimento
+     * - Stanza vuota - mostra la descrizione
+     */
     private void checkRoomEvents() {
         Room currentRoom = dungeon.getCurrentRoom();
 
@@ -170,6 +233,10 @@ public class GameController {
         addGameMessage("🔍 Esplori la stanza... " + currentRoom.getDescription());
     }
 
+    /**
+     * Raccoglie automaticamente i tesori presenti nella stanza.
+     * Aggiunge gli oggetti all'inventario del giocatore e mostra i messaggi corrispondenti.
+     */
     private void collectTreasures() {
         Room currentRoom = dungeon.getCurrentRoom();
         var treasures = currentRoom.collectTreasures();
@@ -194,6 +261,12 @@ public class GameController {
         updatePlayerStats();
     }
 
+    /**
+     * Avvia un nuovo combattimento con il nemico specificato.
+     * Crea il sistema di combattimento, imposta il flag inCombat e mostra i messaggi iniziali.
+     *
+     * @param enemy il nemico con cui combattere
+     */
     private void startCombat(Enemy enemy) {
         System.out.println("=== startCombat ===");
         System.out.println("Nemico: " + enemy.getName());
@@ -205,6 +278,10 @@ public class GameController {
         addGameMessage("🛡 Nemico: " + enemy.getName() + " (HP: " + enemy.getHp() + "/" + enemy.getMaxHp() + ")");
     }
 
+    /**
+     * Esegue l'attacco del giocatore contro il nemico corrente.
+     * Calcola il danno, aggiorna gli HP del nemico e verifica la fine del combattimento.
+     */
     public void playerAttack() {
         System.out.println("=== playerAttack chiamato ===");
         System.out.println("currentCombat: " + currentCombat);
@@ -237,6 +314,10 @@ public class GameController {
         }
     }
 
+    /**
+     * Esegue il turno del nemico durante il combattimento.
+     * Calcola il danno e applica le ferite al giocatore.
+     */
     private void enemyTurn() {
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.enemyTurn();
@@ -249,6 +330,13 @@ public class GameController {
         }
     }
 
+    /**
+     * Utilizza un oggetto dall'inventario.
+     * Gestisce sia l'uso in combattimento che fuori combattimento.
+     * Per le pozioni, mostra la quantità di HP recuperati.
+     *
+     * @param item l'oggetto da utilizzare
+     */
     public void useItem(Item item) {
         if (currentCombat != null && currentCombat.isInCombat()) {
             int oldHp = player.getHp();
@@ -296,6 +384,11 @@ public class GameController {
         updatePlayerStats();
     }
 
+    /**
+     * Tenta la fuga dal combattimento.
+     * Successo: 50% di probabilità, termina il combattimento.
+     * Fallimento: subisci un attacco, il combattimento continua.
+     */
     public void flee() {
         if (currentCombat != null && currentCombat.isInCombat()) {
             CombatSystem.CombatResult result = currentCombat.flee();
@@ -320,6 +413,14 @@ public class GameController {
         }
     }
 
+    /**
+     * Termina il combattimento, gestendo vittoria o sconfitta.
+     * - Se il giocatore vince: assegna ricompense (XP, oro), rimuove il nemico dalla stanza
+     * - Se il giocatore perde: imposta il flag gameOver
+     * - Se viene sconfitto l'ultimo drago, attiva la vittoria del gioco
+     *
+     * @param playerWon true se il giocatore ha vinto, false se ha perso
+     */
     private void endCombat(boolean playerWon) {
         System.out.println("=== endCombat ===");
         System.out.println("playerWon: " + playerWon);
@@ -367,47 +468,35 @@ public class GameController {
         updatePlayerStats();
     }
 
-
+    /**
+     * Aggiorna il log del combattimento con lo stato attuale.
+     * Mostra gli HP di giocatore e nemico.
+     */
     private void updateCombatLog() {
         if (currentCombat != null) {
             combatLog.set(currentCombat.getCombatStatus());
         }
     }
 
+    /**
+     * Aggiorna le statistiche del giocatore nell'interfaccia.
+     * Forza l'aggiornamento del binding delle proprietà.
+     */
     private void updatePlayerStats() {
-        currentPlayer.set(player);  // Forza aggiornamento binding
+        currentPlayer.set(player);
     }
 
+    /**
+     * Aggiunge un messaggio al log di gioco con timestamp.
+     * I messaggi vengono mostrati in ordine cronologico inverso (i più recenti in alto).
+     *
+     * @param message il messaggio da aggiungere al log
+     */
     private void addGameMessage(String message) {
         String timestamp = java.time.LocalTime.now().toString().substring(0, 8);
         gameMessages.add(0, "[" + timestamp + "] " + message);
         if (gameMessages.size() > 50) {
             gameMessages.remove(50);
         }
-    }
-
-    // Metodi per la mappa
-    public Room getCurrentRoom() {
-        return dungeon.getCurrentRoom();
-    }
-
-    public Room getRoomAt(int x, int y) {
-        return dungeon.getRoomAt(x, y);
-    }
-
-    public int getDungeonWidth() {
-        return dungeon.getWidth();
-    }
-
-    public int getDungeonHeight() {
-        return dungeon.getHeight();
-    }
-
-    public boolean isPlayerAlive() {
-        return player != null && player.isAlive();
-    }
-
-    public CombatSystem getCurrentCombat() {
-        return currentCombat;
     }
 }

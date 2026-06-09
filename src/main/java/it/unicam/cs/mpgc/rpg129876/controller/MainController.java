@@ -35,6 +35,14 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.Separator;
 
+/**
+ * Controller principale dell'applicazione.
+ * Gestisce l'interfaccia utente, gli eventi dei bottoni e la logica di presentazione.
+ * Comunica con GameController per la logica di gioco.
+ *
+ * @author Filippo Mangialardo
+ * @version 1.0
+ */
 public class MainController {
 
     private GameController gameController;
@@ -86,12 +94,14 @@ public class MainController {
     @FXML private VBox legendBox;
 
     private Scene currentScene;
-
     private static final String SCORES_FILE = "scores.json";
     private Timeline gameStatusChecker;
     private boolean keysRegistered = false;
 
-
+    /**
+     * Inizializza il controller.
+     * Crea il GameController, imposta i listener e configura l'interfaccia iniziale.
+     */
     @FXML
     public void initialize() {
         gameController = new GameController();
@@ -110,12 +120,326 @@ public class MainController {
         addGameMessage("✨ Benvenuto in Dungeon Explorer RPG!");
     }
 
+    /**
+     * Avvia una nuova partita resettando completamente lo stato del gioco.
+     * Ferma il checker, resetta i binding, ricrea il controller e mostra la creazione personaggio.
+     */
+    @FXML
+    private void onNewGame() {
+        System.out.println("=== ON NEW GAME ===");
+
+        if (gameStatusChecker != null) {
+            gameStatusChecker.stop();
+            gameStatusChecker = null;
+        }
+
+        // Unbind proprietà
+        healthBar.progressProperty().unbind();
+        playerCombatHealthBar.progressProperty().unbind();
+        enemyHealthBar.progressProperty().unbind();
+        healthLabel.textProperty().unbind();
+
+        // Nascondi schermate
+        gameScreen.setVisible(false);
+        gameScreen.setManaged(false);
+        combatPanel.setVisible(false);
+        combatPanel.setManaged(false);
+
+        // Crea NUOVO controller
+        gameController = new GameController();
+        keysRegistered = false;
+
+        // RICHAMA IL BINDING DEI LISTENER
+        bindPlayerStats();
+        setupMessageListener();
+
+        // Pulisci UI
+        mapGrid.getChildren().clear();
+        inventoryList.getChildren().clear();
+        messageListView.getItems().clear();
+        roomDescriptionArea.clear();
+
+        // Resetta le barre
+        healthBar.setProgress(0);
+        playerCombatHealthBar.setProgress(0);
+        enemyHealthBar.setProgress(0);
+        healthLabel.setText("0/0");
+        playerCombatHealthLabel.setText("0/0");
+        enemyHealthLabel.setText("0/0");
+
+        // Mostra schermata iniziale
+        startScreen.setVisible(true);
+        startScreen.setManaged(true);
+
+        // Mostra il dialog di creazione
+        showCharacterCreation();
+    }
+
+    /**
+     * Avvia la creazione del personaggio quando si preme il bottone "Inizia Avventura".
+     * Nasconde la schermata iniziale e mostra il dialog di creazione.
+     */
+    @FXML
+    private void onStartGameFromButton() {
+        showCharacterCreation();
+    }
+
+    /**
+     * Sposta il giocatore verso Nord.
+     * Verifica che il giocatore non sia in combattimento e sia vivo.
+     */
+    @FXML
+    private void onMoveNorth() {
+        if (gameController == null || gameController.getPlayer() == null) return;
+        if (gameController.isInCombat()) {
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
+            return;
+        }
+        if (gameController.isPlayerAlive()) {
+            gameController.move(Direction.NORTH);
+            updateAfterMove();
+        }
+    }
+
+    /**
+     * Sposta il giocatore verso Sud.
+     * Verifica che il giocatore non sia in combattimento e sia vivo.
+     */
+    @FXML
+    private void onMoveSouth() {
+        if (gameController == null || gameController.getPlayer() == null) return;
+        if (gameController.isInCombat()) {
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
+            return;
+        }
+        if (gameController.isPlayerAlive()) {
+            gameController.move(Direction.SOUTH);
+            updateAfterMove();
+        }
+    }
+
+    /**
+     * Sposta il giocatore verso Est.
+     * Verifica che il giocatore non sia in combattimento e sia vivo.
+     */
+    @FXML
+    private void onMoveEast() {
+        if (gameController == null || gameController.getPlayer() == null) return;
+        if (gameController.isInCombat()) {
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
+            return;
+        }
+        if (gameController.isPlayerAlive()) {
+            gameController.move(Direction.EAST);
+            updateAfterMove();
+        }
+    }
+
+    /**
+     * Sposta il giocatore verso Ovest.
+     * Verifica che il giocatore non sia in combattimento e sia vivo.
+     */
+    @FXML
+    private void onMoveWest() {
+        if (gameController == null || gameController.getPlayer() == null) return;
+        if (gameController.isInCombat()) {
+            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
+            return;
+        }
+        if (gameController.isPlayerAlive()) {
+            gameController.move(Direction.WEST);
+            updateAfterMove();
+        }
+    }
+
+    /**
+     * Gestisce l'attacco del giocatore durante il combattimento.
+     * Calcola il danno inflitto e aggiorna l'interfaccia.
+     */
+    @FXML
+    private void onAttack() {
+        System.out.println("=== ON ATTACK CLICCATO ===");
+
+        if (gameController == null) return;
+        if (!gameController.isInCombat()) return;
+
+        // Salva stato prima dell'attacco
+        boolean wasEnemyAlive = gameController.getCurrentCombat() != null &&
+                gameController.getCurrentCombat().getEnemy().isAlive();
+        int oldEnemyHp = wasEnemyAlive ? gameController.getCurrentCombat().getEnemy().getHp() : 0;
+
+        gameController.playerAttack();
+
+        // Controlla se il nemico è morto
+        boolean isEnemyAlive = gameController.getCurrentCombat() != null &&
+                gameController.getCurrentCombat().getEnemy().isAlive();
+        int newEnemyHp = isEnemyAlive ? gameController.getCurrentCombat().getEnemy().getHp() : 0;
+
+        if (wasEnemyAlive && !isEnemyAlive) {
+            // Nemico sconfitto
+            addGameMessage("⚔ Vittoria! Nemico sconfitto!");
+            // Non mostrare messaggio nel pannello perché si chiuderà
+        } else {
+            // Messaggio casuale per l'attacco
+            String[] attackMessages = {
+                    "⚔ COLPO CRITICO!",
+                    "💥 ATTACCO POTENTE!",
+                    "⚔ BEL COLPO!",
+                    "💪 CONTINUA COSÌ!"
+            };
+            String randomMsg = attackMessages[(int)(Math.random() * attackMessages.length)];
+
+            // Calcola danno approssimativo
+            int damageDealt = oldEnemyHp - newEnemyHp;
+            if (damageDealt > 0) {
+                combatMessage.setText(randomMsg + " (" + damageDealt + " danni)");
+            } else {
+                combatMessage.setText(randomMsg);
+            }
+
+            // Suggerimento tattico in base al nemico
+            if (gameController.getCurrentCombat() != null) {
+                var enemy = gameController.getCurrentCombat().getEnemy();
+                if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
+                    combatMessage.setText(combatMessage.getText() + "\n⚠ ATTACCO NEMICO ALTO! USA POZIONI!");
+                }
+            }
+        }
+
+        // Controlla se il giocatore è a rischio
+        int newPlayerHp = gameController.getPlayer().getHp();
+        int maxPlayerHp = gameController.getPlayer().getMaxHp();
+
+        if (newPlayerHp < maxPlayerHp / 3 && newPlayerHp > 0) {
+            combatMessage.setText(combatMessage.getText() + "\n⚠ HP BASSO! USA UNA POZIONE! ⚠");
+        }
+
+        updateCombatUI();
+        updatePlayerUI(gameController.getPlayer());
+        updateMap();
+    }
+
+    /**
+     * Usa una pozione curativa.
+     * Controlla se il giocatore ha pozioni e se ha bisogno di cure.
+     * Funziona sia dentro che fuori dal combattimento.
+     */
+    @FXML
+    private void onUseItem() {
+        if (gameController.getPlayer() != null) {
+            for (Item item : gameController.getPlayer().getInventory()) {
+                if (item instanceof HealthPotion && ((HealthPotion) item).getQuantity() > 0) {
+                    int oldHp = gameController.getPlayer().getHp();
+                    int maxHp = gameController.getPlayer().getMaxHp();
+
+                    if (oldHp >= maxHp) {
+                        addGameMessage("❌ Sei già a piena vita!");
+                        combatMessage.setText("❌ SEI GIÀ A PIENA VITA!");
+                        return;
+                    }
+
+                    gameController.useItem(item);
+
+                    int newHp = gameController.getPlayer().getHp();
+                    int healed = newHp - oldHp;
+
+                    if (healed > 0) {
+                        addGameMessage("⚗ Usata una pozione! +" + healed + " HP");
+                        combatMessage.setText("⚗ POZIONE USATA! +" + healed + " HP");
+
+                        // Suggerimento se ancora a rischio
+                        if (newHp < maxHp / 3) {
+                            combatMessage.setText(combatMessage.getText() + "\n⚠ ANCORA A RISCHIO! USA UN'ALTRA POZIONE!");
+                        }
+                    }
+
+                    updateInventory();
+                    updatePlayerUI(gameController.getPlayer());
+                    if (gameController.isInCombat()) {
+                        updateCombatUI();
+                    }
+                    return;
+                }
+            }
+            addGameMessage("❌ Nessuna pozione nell'inventario!");
+            combatMessage.setText("❌ NESSUNA POZIONE DISPONIBILE!");
+        }
+    }
+
+    /**
+     * Tenta la fuga dal combattimento.
+     * La fuga ha il 50% di successo. Se fallisce, il giocatore subisce un attacco.
+     */
+    @FXML
+    private void onFlee() {
+        if (gameController == null) return;
+        if (gameController.getPlayer() == null) return;
+        if (!gameController.isInCombat()) return;
+
+        System.out.println("=== FUGGI ===");
+
+        // Salva lo stato prima della fuga
+        boolean wasAlive = gameController.isPlayerAlive();
+
+        gameController.flee();
+
+        // Aggiorna UI
+        updateCombatUI();
+        updatePlayerUI(gameController.getPlayer());
+        updateMap();
+
+        // Mostra messaggio appropriato
+        if (!gameController.isInCombat()) {
+            if (!gameController.isPlayerAlive()) {
+                combatMessage.setText("💀 SEI MORTO! GAME OVER! 💀");
+            } else {
+                combatMessage.setText("🏃 SEI RIUSCITO A FUGGIRE! 🏃");
+            }
+        } else {
+            combatMessage.setText("⚠ FUGA FALLITA! Subisci un attacco! ⚠");
+        }
+    }
+
+    @FXML
+    private void onExit() {
+        Platform.exit();
+    }
+
+    /**
+     * Mostra il dialog di aiuto con tutti i comandi del gioco.
+     * Spiega i controlli di movimento, combattimento e l'obiettivo.
+     */
+    @FXML
+    private void onHelp() {
+        showHelpDialog();
+    }
+
+    @FXML
+    private void onAbout() {
+        showAboutDialog();
+    }
+
+
+    @FXML
+    private void onShowLeaderboard() {
+        showLeaderboard();
+    }
+
+    /**
+     * Imposta la scena principale per i key bindings.
+     * Permette al controller di ricevere gli eventi da tastiera.
+     *
+     * @param scene la scena principale dell'applicazione
+     */
     public void setScene(Scene scene) {
         this.currentScene = scene;
         setupKeyBindings();
     }
 
-
+    /**
+     * Registra i key bindings per i controlli da tastiera.
+     * Supporta WASD e frecce per il movimento, Z/X/C per le azioni di combattimento.
+     */
     private void setupKeyBindings() {
         if (keysRegistered) return;
 
@@ -139,7 +463,14 @@ public class MainController {
         System.out.println("   FUGGI: C");
     }
 
-    // Handler unificato per tutti i tasti
+    /**
+     * Handler unificato per tutti gli eventi da tastiera.
+     * Gestisce:
+     * - Movimento: WASD e frecce (solo se non in combattimento)
+     * - Attacco: Z
+     * - Pozione: X
+     * - Fuga: C
+     */
     private final EventHandler<KeyEvent> keyEventHandler = event -> {
         if (!gameScreen.isVisible() || gameController.getPlayer() == null) return;
 
@@ -191,11 +522,14 @@ public class MainController {
         }
     };
 
-    @FXML
-    private void onStartGameFromButton() {
-        showCharacterCreation();
-    }
-
+    /**
+     * Collega le proprietà del GameController con gli elementi dell'interfaccia.
+     * Utilizza i listener JavaFX per aggiornare automaticamente la UI quando i dati cambiano.
+     * Gestisce:
+     * - Aggiornamento statistiche giocatore
+     * - Attivazione/disattivazione modalità combattimento
+     * - Aggiornamento descrizione stanza e mappa
+     */
     private void bindPlayerStats() {
         gameController.currentPlayerProperty().addListener((obs, old, newPlayer) -> {
             if (newPlayer != null) {
@@ -222,6 +556,12 @@ public class MainController {
         });
     }
 
+    /**
+     * Aggiorna tutti gli elementi dell'interfaccia relativi alle statistiche del giocatore.
+     * Include: nome, classe, salute, livello, esperienza, oro, attacco, difesa.
+     *
+     * @param player il giocatore di cui aggiornare le statistiche
+     */
     private void updatePlayerUI(Player player) {
         playerNameLabel.setText(player.getName());
         playerClassLabel.setText(player.getCharacterClass());
@@ -255,6 +595,11 @@ public class MainController {
         updateInventory();
     }
 
+    /**
+     * Aggiorna l'immagine del giocatore nella legenda quando cambia classe.
+     *
+     * @param characterClass la classe del giocatore (Warrior, Mage, Rogue)
+     */
     private void updateLegendPlayerImage(String characterClass) {
         // Cerca il primo HBox nella legendBox (dovrebbe essere quello del giocatore)
         if (legendBox.getChildren().size() > 2) {
@@ -272,6 +617,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Aggiorna l'interfaccia del pannello di combattimento.
+     * Mostra le barre della vita di giocatore e nemico, i suggerimenti strategici.
+     */
     private void updateCombatUI() {
         System.out.println("=== updateCombatUI ===");
 
@@ -315,6 +664,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Attiva la modalità combattimento, rendendo visibile il pannello di combattimento.
+     * Resetta il messaggio iniziale e carica l'immagine del nemico.
+     */
     private void enableCombatMode() {
         System.out.println("=== enableCombatMode ===");
 
@@ -340,6 +693,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Disattiva la modalità combattimento, nascondendo il pannello.
+     * Resetta tutti i messaggi e le immagini del nemico.
+     */
     private void disableCombatMode() {
         System.out.println("=== disableCombatMode ===");
 
@@ -376,6 +733,10 @@ public class MainController {
         System.out.println("Combat mode disabilitata");
     }
 
+    /**
+     * Aggiorna il pannello dell'inventario mostrando le pozioni disponibili.
+     * Visualizza l'immagine della pozione, il contatore e il bottone per usarle.
+     */
     private void updateInventory() {
         inventoryList.getChildren().clear();
         if (gameController.getPlayer() != null) {
@@ -453,6 +814,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Aggiorna la visualizzazione della mappa del dungeon.
+     * Ogni cella viene colorata in base al tipo di stanza (nemico, tesoro, esplorata, ecc.).
+     */
     private void updateMap() {
         if (gameController.getDungeon() == null) return;
 
@@ -584,7 +949,13 @@ public class MainController {
         }
     }
 
-    // Metodo per ottenere l'icona del giocatore in base alla classe
+    /**
+     * Restituisce l'emoji corrispondente alla classe del giocatore.
+     * Usata come fallback quando le immagini non sono disponibili.
+     *
+     * @param playerClass la classe del giocatore
+     * @return l'emoji corrispondente (⚔️ per Guerriero, 🔮 per Mago, 🗡️ per Ladro, ⭐ default)
+     */
     private String getPlayerIcon(String playerClass) {
         switch(playerClass.toLowerCase()) {
             case "warrior": return "⚔";
@@ -594,7 +965,13 @@ public class MainController {
         }
     }
 
-    // Metodo per ottenere l'icona del nemico
+    /**
+     * Restituisce l'emoji corrispondente alla classe del nemico.
+     * Usata come fallback quando le immagini non sono disponibili.
+     *
+     * @param enemyName la classe del nemico
+     * @return l'emoji corrispondente
+     */
     private String getEnemyIcon(String enemyName) {
         switch(enemyName.toLowerCase()) {
             case "goblin": return "👺";
@@ -606,6 +983,11 @@ public class MainController {
             default: return "👾";
         }
     }
+
+    /**
+     * Configura la ListView dei messaggi di gioco.
+     * Applica colori diversi in base al tipo di messaggio (VITTORIA = verde, GAME OVER = rosso, ecc.).
+     */
     private void setupMessageListener() {
         messageListView.setItems(gameController.getGameMessages());
         messageListView.setCellFactory(lv -> new ListCell<>() {
@@ -634,6 +1016,10 @@ public class MainController {
         // handled by GameController
     }
 
+    /**
+     * Mostra l'interfaccia di gioco dopo la creazione del personaggio.
+     * Inizializza i binding, carica le immagini e avvia i controlli.
+     */
     private void showGameUI() {
         System.out.println("=== SHOW GAME UI ===");
 
@@ -672,59 +1058,10 @@ public class MainController {
                     System.out.println("Focus impostato sulla mappa");});
     }
 
-    // Azioni movimento
-    @FXML
-    private void onMoveNorth() {
-        if (gameController == null || gameController.getPlayer() == null) return;
-        if (gameController.isInCombat()) {
-            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
-            return;
-        }
-        if (gameController.isPlayerAlive()) {
-            gameController.move(Direction.NORTH);
-            updateAfterMove();
-        }
-    }
-
-    @FXML
-    private void onMoveSouth() {
-        if (gameController == null || gameController.getPlayer() == null) return;
-        if (gameController.isInCombat()) {
-            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
-            return;
-        }
-        if (gameController.isPlayerAlive()) {
-            gameController.move(Direction.SOUTH);
-            updateAfterMove();
-        }
-    }
-
-    @FXML
-    private void onMoveEast() {
-        if (gameController == null || gameController.getPlayer() == null) return;
-        if (gameController.isInCombat()) {
-            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
-            return;
-        }
-        if (gameController.isPlayerAlive()) {
-            gameController.move(Direction.EAST);
-            updateAfterMove();
-        }
-    }
-
-    @FXML
-    private void onMoveWest() {
-        if (gameController == null || gameController.getPlayer() == null) return;
-        if (gameController.isInCombat()) {
-            addGameMessage("⚠ Non puoi muoverti durante il combattimento!");
-            return;
-        }
-        if (gameController.isPlayerAlive()) {
-            gameController.move(Direction.WEST);
-            updateAfterMove();
-        }
-    }
-
+    /**
+     * Verifica se nella stanza corrente è presente un mercante.
+     * Se presente, apre automaticamente il dialog del mercante.
+     */
     private void checkForMerchant() {
         Merchant merchant = gameController.getCurrentMerchant();
         if (merchant != null) {
@@ -733,6 +1070,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Mostra il dialog del mercante per acquistare pozioni.
+     * Permette di selezionare la quantità in base all'oro disponibile e allo spazio nell'inventario.
+     *
+     * @param merchant il mercante da cui acquistare
+     */
     private void showMerchantDialog(Merchant merchant) {
         if (gameController.getPlayer() == null) return;
 
@@ -854,6 +1197,10 @@ public class MainController {
         stage.showAndWait();
     }
 
+    /**
+     * Aggiorna l'interfaccia dopo ogni movimento del giocatore.
+     * Aggiorna mappa, inventario, statistiche e verifica la presenza del mercante.
+     */
     private void updateAfterMove() {
         forceUIUpdate();
         checkForMerchant();
@@ -868,69 +1215,10 @@ public class MainController {
         );
     }
 
-    @FXML
-    private void onAttack() {
-        System.out.println("=== ON ATTACK CLICCATO ===");
-
-        if (gameController == null) return;
-        if (!gameController.isInCombat()) return;
-
-        // Salva stato prima dell'attacco
-        boolean wasEnemyAlive = gameController.getCurrentCombat() != null &&
-                gameController.getCurrentCombat().getEnemy().isAlive();
-        int oldEnemyHp = wasEnemyAlive ? gameController.getCurrentCombat().getEnemy().getHp() : 0;
-
-        gameController.playerAttack();
-
-        // Controlla se il nemico è morto
-        boolean isEnemyAlive = gameController.getCurrentCombat() != null &&
-                gameController.getCurrentCombat().getEnemy().isAlive();
-        int newEnemyHp = isEnemyAlive ? gameController.getCurrentCombat().getEnemy().getHp() : 0;
-
-        if (wasEnemyAlive && !isEnemyAlive) {
-            // Nemico sconfitto
-            addGameMessage("⚔ Vittoria! Nemico sconfitto!");
-            // Non mostrare messaggio nel pannello perché si chiuderà
-        } else {
-            // Messaggio casuale per l'attacco
-            String[] attackMessages = {
-                    "⚔ COLPO CRITICO!",
-                    "💥 ATTACCO POTENTE!",
-                    "⚔ BEL COLPO!",
-                    "💪 CONTINUA COSÌ!"
-            };
-            String randomMsg = attackMessages[(int)(Math.random() * attackMessages.length)];
-
-            // Calcola danno approssimativo
-            int damageDealt = oldEnemyHp - newEnemyHp;
-            if (damageDealt > 0) {
-                combatMessage.setText(randomMsg + " (" + damageDealt + " danni)");
-            } else {
-                combatMessage.setText(randomMsg);
-            }
-
-            // Suggerimento tattico in base al nemico
-            if (gameController.getCurrentCombat() != null) {
-                var enemy = gameController.getCurrentCombat().getEnemy();
-                if (enemy.getAttack() > gameController.getPlayer().getDefense() + 10) {
-                    combatMessage.setText(combatMessage.getText() + "\n⚠ ATTACCO NEMICO ALTO! USA POZIONI!");
-                }
-            }
-        }
-
-        // Controlla se il giocatore è a rischio
-        int newPlayerHp = gameController.getPlayer().getHp();
-        int maxPlayerHp = gameController.getPlayer().getMaxHp();
-
-        if (newPlayerHp < maxPlayerHp / 3 && newPlayerHp > 0) {
-            combatMessage.setText(combatMessage.getText() + "\n⚠ HP BASSO! USA UNA POZIONE! ⚠");
-        }
-
-        updateCombatUI();
-        updatePlayerUI(gameController.getPlayer());
-        updateMap();
-    }
-
+    /**
+     * Forza un aggiornamento completo dell'interfaccia utente.
+     * Utile per sincronizzare la UI dopo azioni che modificano lo stato.
+     */
     private void forceUIUpdate() {
         Platform.runLater(() -> {
             if (gameController.getPlayer() != null) {
@@ -947,93 +1235,12 @@ public class MainController {
         });
     }
 
-    @FXML
-    private void onUseItem() {
-        if (gameController.getPlayer() != null) {
-            for (Item item : gameController.getPlayer().getInventory()) {
-                if (item instanceof HealthPotion && ((HealthPotion) item).getQuantity() > 0) {
-                    int oldHp = gameController.getPlayer().getHp();
-                    int maxHp = gameController.getPlayer().getMaxHp();
-
-                    if (oldHp >= maxHp) {
-                        addGameMessage("❌ Sei già a piena vita!");
-                        combatMessage.setText("❌ SEI GIÀ A PIENA VITA!");
-                        return;
-                    }
-
-                    gameController.useItem(item);
-
-                    int newHp = gameController.getPlayer().getHp();
-                    int healed = newHp - oldHp;
-
-                    if (healed > 0) {
-                        addGameMessage("⚗ Usata una pozione! +" + healed + " HP");
-                        combatMessage.setText("⚗ POZIONE USATA! +" + healed + " HP");
-
-                        // Suggerimento se ancora a rischio
-                        if (newHp < maxHp / 3) {
-                            combatMessage.setText(combatMessage.getText() + "\n⚠ ANCORA A RISCHIO! USA UN'ALTRA POZIONE!");
-                        }
-                    }
-
-                    updateInventory();
-                    updatePlayerUI(gameController.getPlayer());
-                    if (gameController.isInCombat()) {
-                        updateCombatUI();
-                    }
-                    return;
-                }
-            }
-            addGameMessage("❌ Nessuna pozione nell'inventario!");
-            combatMessage.setText("❌ NESSUNA POZIONE DISPONIBILE!");
-        }
-    }
-
-    @FXML
-    private void onFlee() {
-        if (gameController == null) return;
-        if (gameController.getPlayer() == null) return;
-        if (!gameController.isInCombat()) return;
-
-        System.out.println("=== FUGGI ===");
-
-        // Salva lo stato prima della fuga
-        boolean wasAlive = gameController.isPlayerAlive();
-
-        gameController.flee();
-
-        // Aggiorna UI
-        updateCombatUI();
-        updatePlayerUI(gameController.getPlayer());
-        updateMap();
-
-        // Mostra messaggio appropriato
-        if (!gameController.isInCombat()) {
-            if (!gameController.isPlayerAlive()) {
-                combatMessage.setText("💀 SEI MORTO! GAME OVER! 💀");
-            } else {
-                combatMessage.setText("🏃 SEI RIUSCITO A FUGGIRE! 🏃");
-            }
-        } else {
-            combatMessage.setText("⚠ FUGA FALLITA! Subisci un attacco! ⚠");
-        }
-    }
-
-    @FXML
-    private void onExit() {
-        Platform.exit();
-    }
-
-    @FXML
-    private void onHelp() {
-        showHelpDialog();
-    }
-
-    @FXML
-    private void onAbout() {
-        showAboutDialog();
-    }
-
+    /**
+     * Carica l'immagine del personaggio in base alla classe selezionata.
+     * Le immagini sono nella cartella src/main/resources/images/
+     *
+     * @param characterClass la classe del personaggio (Warrior, Mage, Rogue)
+     */
     private void loadPlayerImage(String characterClass) {
         Image img = ImageLoader.getPlayerImage(characterClass);
         if (img != null) {
@@ -1046,6 +1253,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Carica l'immagine del nemico
+     * Le immagini sono nella cartella src/main/resources/images/
+     *
+     * @param enemyName la classe del nemico
+     */
     private void loadEnemyImage(String enemyName) {
         Image img = ImageLoader.getEnemyImage(enemyName);
         if (img != null) {
@@ -1057,6 +1270,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Avvia il checker periodico dello stato del gioco.
+     * Controlla ogni 0.5 secondi se il gioco è stato vinto o perso.
+     */
     private void startGameStatusChecker() {
         if (gameStatusChecker != null) {
             gameStatusChecker.stop();
@@ -1073,6 +1290,11 @@ public class MainController {
         gameStatusChecker.play();
     }
 
+    /**
+     * Controlla lo stato corrente del gioco.
+     * Se il giocatore è morto, attiva il Game Over.
+     * Se il giocatore ha vinto, attiva la schermata di vittoria.
+     */
     private void checkGameStatus() {
         if (gameController == null) return;
 
@@ -1098,6 +1320,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Mostra la schermata di Game Over.
+     * Visualizza le statistiche finali e offre le opzioni "Nuova Partita" o "Esci".
+     */
     private void showGameOverScreen() {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1139,6 +1365,10 @@ public class MainController {
         });
     }
 
+    /**
+     * Mostra la schermata di Vittoria.
+     * Salva il punteggio, visualizza le statistiche finali e offre le opzioni "Nuova Partita" o "Esci".
+     */
     private void showVictoryScreen() {
         Platform.runLater(() -> {
             Player p = gameController.getPlayer();
@@ -1191,57 +1421,10 @@ public class MainController {
         });
     }
 
-    @FXML
-    private void onNewGame() {
-        System.out.println("=== ON NEW GAME ===");
-
-        if (gameStatusChecker != null) {
-            gameStatusChecker.stop();
-            gameStatusChecker = null;
-        }
-
-        // Unbind proprietà
-        healthBar.progressProperty().unbind();
-        playerCombatHealthBar.progressProperty().unbind();
-        enemyHealthBar.progressProperty().unbind();
-        healthLabel.textProperty().unbind();
-
-        // Nascondi schermate
-        gameScreen.setVisible(false);
-        gameScreen.setManaged(false);
-        combatPanel.setVisible(false);
-        combatPanel.setManaged(false);
-
-        // Crea NUOVO controller
-        gameController = new GameController();
-        keysRegistered = false;
-
-        // RICHAMA IL BINDING DEI LISTENER
-        bindPlayerStats();
-        setupMessageListener();
-
-        // Pulisci UI
-        mapGrid.getChildren().clear();
-        inventoryList.getChildren().clear();
-        messageListView.getItems().clear();
-        roomDescriptionArea.clear();
-
-        // Resetta le barre
-        healthBar.setProgress(0);
-        playerCombatHealthBar.setProgress(0);
-        enemyHealthBar.setProgress(0);
-        healthLabel.setText("0/0");
-        playerCombatHealthLabel.setText("0/0");
-        enemyHealthLabel.setText("0/0");
-
-        // Mostra schermata iniziale
-        startScreen.setVisible(true);
-        startScreen.setManaged(true);
-
-        // Mostra il dialog di creazione
-        showCharacterCreation();
-    }
-
+    /**
+     * Mostra il dialog per la creazione del personaggio.
+     * Permette di scegliere nome e classe (Guerriero, Mago, Ladro).
+     */
     public void showCharacterCreation() {
         System.out.println("=== SHOW CHARACTER CREATION ===");
 
@@ -1336,8 +1519,13 @@ public class MainController {
         stage.showAndWait();
     }
 
-    // Salvataggio su file JSON
-    private void saveScore(Score score) {
+    /**
+     * Salva il punteggio del giocatore nel file scores.json.
+     * Mantiene solo i top 10 punteggi in ordine decrescente.
+     *
+     * @param score il punteggio da salvare
+     */
+     private void saveScore(Score score) {
         try {
             List<Score> scores = loadScoresFromFile();
 
@@ -1363,6 +1551,11 @@ public class MainController {
         }
     }
 
+    /**
+     * Carica i punteggi dal file scores.json.
+     *
+     * @return lista dei punteggi salvati, vuota se il file non esiste o è corrotto
+     */
     private List<Score> loadScoresFromFile() {
         try {
             File file = new File("scores.json");
@@ -1378,6 +1571,10 @@ public class MainController {
         return new ArrayList<>();
     }
 
+    /**
+     * Mostra la classifica dei migliori punteggi in un Alert.
+     * Visualizza i top 10 giocatori con nome, classe, livello e punteggio.
+     */
     private void showLeaderboard() {
         List<Score> scores = loadScoresFromFile();
 
@@ -1418,11 +1615,10 @@ public class MainController {
         alert.showAndWait();
     }
 
-
-    @FXML private void onShowLeaderboard() {
-        showLeaderboard();
-    }
-
+    /**
+     * Crea la legenda con le immagini dei personaggi e nemici.
+     * Mostra anche l'ordine di difficoltà dei nemici dal più debole al più forte.
+     */
     private void setupLegend() {
         legendBox.getChildren().clear();
         legendBox.setStyle("-fx-padding: 5;");
@@ -1549,6 +1745,9 @@ public class MainController {
         legendBox.getChildren().add(potionBox);
     }
 
+    /**
+     * Mostra il dialog di aiuto con tutti i comandi del gioco.
+     */
     private void showHelpDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Comandi");
@@ -1586,7 +1785,9 @@ public class MainController {
         alert.showAndWait();
     }
 
-
+    /**
+     * Mostra il dialog informativo sul gioco (versione, matricola, corso).
+     */
     private void showAboutDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("ℹ️ Info");

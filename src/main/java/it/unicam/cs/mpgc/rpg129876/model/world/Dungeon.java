@@ -7,6 +7,13 @@ import it.unicam.cs.mpgc.rpg129876.model.items.HealthPotion;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.*;
 
+/**
+ * Genera e gestisce il dungeon di gioco.
+ * Crea una griglia di stanze, le collega tra loro e le popola con nemici e tesori.
+ *
+ * @author Filippo Mangialardo
+ * @version 1.0
+ */
 public class Dungeon {
 
     private final int width;
@@ -16,6 +23,14 @@ public class Dungeon {
     private final Random random;
     private int currentLevel;
 
+    /**
+     * Costruttore del dungeon.
+     * Crea una nuova mappa di dimensioni larghezza x altezza,
+     * genera le stanze, le collega tra loro e popola il dungeon con nemici, tesori e mercanti.
+     *
+     * @param width numero di colonne della mappa
+     * @param height numero di righe della mappa
+     */
     public Dungeon(int width, int height) {
         this.width = width;
         this.height = height;
@@ -33,6 +48,17 @@ public class Dungeon {
         System.out.println("isDoorRoom: " + door.isDoorRoom());
     }
 
+    public Room getCurrentRoom() { return currentRoom; }
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
+    public Room getRoomAt(int x, int y) { return map[y][x]; }
+
+    /**
+     * Genera l'intero dungeon.
+     * Crea tutte le stanze, le collega tra loro (griglia completa),
+     * imposta nomi e descrizioni, popola con nemici e tesori,
+     * e posiziona il giocatore nella stanza iniziale (angolo in alto a sinistra).
+     */
     private void generateDungeon() {
         // Crea tutte le stanze
         for (int y = 0; y < height; y++) {
@@ -72,6 +98,12 @@ public class Dungeon {
         bossRoom.setDragonCount(3); // Aggiungi questo campo
     }
 
+    /**
+     * Imposta nomi e descrizioni per tutte le stanze del dungeon.
+     * Utilizza due array predefiniti con nomi e descrizioni tematiche
+     * (Cripta, Caverna, Sala del Fuoco, Tempio di Ghiaccio, ecc.).
+     * I nomi vengono assegnati in modo ciclico in base alle coordinate (x+y).
+     */
     private void setupRooms() {
         String[] nomi = {
                 "🌿 Stanza della Foresta", "⚰ Cripta Antica", "💧 Caverna Umida",
@@ -99,6 +131,16 @@ public class Dungeon {
         }
     }
 
+    /**
+     * Popola il dungeon con nemici, tesori e mercanti.
+     *
+     * Probabilità:
+     * - Mercante: 5% per stanza (massimo 2 mercanti totali)
+     * - Nemico: 35% per stanza
+     * - Tesoro: 15% per stanza
+     *
+     * Le stanze iniziale (0,0) e finale (width-1, height-1) sono escluse.
+     */
     private void populateDungeon() {
         int merchantsAdded = 0;
 
@@ -129,6 +171,15 @@ public class Dungeon {
         }
     }
 
+    /**
+     * Genera un tesoro casuale per le stanze.
+     *
+     * Distribuzione:
+     * - 40% di probabilità: oro (quantità casuale tra 15 e 60)
+     * - 60% di probabilità: pozione curativa (1 pozione)
+     *
+     * @return un Item che rappresenta il tesoro (oro o pozione)
+     */
     private Item generateTreasure() {
         double randomValue = this.random.nextDouble();
         // 40% oro, 60% pozione
@@ -150,7 +201,18 @@ public class Dungeon {
         }
     }
 
-
+    /**
+     * Imposta l'area del boss (angolo in basso a destra).
+     *
+     * Crea:
+     * - Porta del Tesoro nella cella [width-1, height-1]
+     * - 3 Draghi nelle celle adiacenti:
+     *   - Sinistra della porta [width-2, height-1]
+     *   - Sopra la porta [width-1, height-2]
+     *   - Diagonale sopra-sinistra [width-2, height-2]
+     *
+     * Il giocatore deve sconfiggere tutti e 3 i draghi prima che la porta si apra.
+     */
     private void setupBossArea() {
         int bossX = width - 1;
         int bossY = height - 1;
@@ -201,7 +263,15 @@ public class Dungeon {
         }
     }
 
-    // Controlla se tutti i draghi intorno alla porta sono stati sconfitti
+    /**
+     * Verifica se tutti e 3 i draghi intorno alla porta sono stati sconfitti.
+     * Controlla le celle:
+     * - Sinistra della porta [width-2, height-1]
+     * - Sopra la porta [width-1, height-2]
+     * - Diagonale sopra-sinistra [width-2, height-2]
+     *
+     * @return true se tutti i draghi sono stati sconfitti, false altrimenti
+     */
     public boolean areAllDragonsDefeated() {
         int bossX = width - 1;
         int bossY = height - 1;
@@ -239,6 +309,11 @@ public class Dungeon {
         return true;
     }
 
+    /**
+     * Verifica se la stanza corrente è la stanza del boss (Porta del Tesoro).
+     *
+     * @return true se il giocatore si trova nella stanza della porta, false altrimenti
+     */
     public boolean isBossRoom() {
         Room current = getCurrentRoom();
         if (current.isDoorRoom()) {
@@ -253,7 +328,12 @@ public class Dungeon {
         return false;
     }
 
-    // Movimento
+    /**
+     * Sposta il giocatore nella direzione specificata se la stanza esiste.
+     *
+     * @param direction direzione del movimento
+     * @return true se il movimento è riuscito, false altrimenti
+     */
     public boolean move(Direction direction) {
         Room nextRoom = currentRoom.getExit(direction);
         if (nextRoom != null) {
@@ -265,9 +345,4 @@ public class Dungeon {
         }
         return false;
     }
-
-    public Room getCurrentRoom() { return currentRoom; }
-    public int getWidth() { return width; }
-    public int getHeight() { return height; }
-    public Room getRoomAt(int x, int y) { return map[y][x]; }
 }

@@ -5,6 +5,20 @@ import it.unicam.cs.mpgc.rpg129876.model.characters.Merchant;
 import it.unicam.cs.mpgc.rpg129876.model.items.Item;
 import java.util.*;
 
+/**
+ * Rappresenta una singola stanza del dungeon.
+ *
+ * Ogni stanza ha:
+ * - Coordinate (x, y) sulla griglia della mappa
+ * - Un nome e una descrizione (es. "Cripta Antica", "L'aria è fredda...")
+ * - Uscite nelle quattro direzioni (Nord, Sud, Est, Ovest)
+ * - Opzionalmente: nemici, tesori, mercanti
+ *
+ * Le stanze possono essere esplorate (visitate) e diventano visibili sulla mappa.
+ *
+ * @author Filippo Mangialardo
+ * @version 1.0
+ */
 public class Room {
 
     private final int x;
@@ -21,6 +35,14 @@ public class Room {
     private Merchant merchant;
     private boolean hasMerchant;
 
+    /**
+     * Costruisce una nuova stanza con le coordinate specificate.
+     * La stanza viene creata con nome e descrizione predefiniti,
+     * senza nemici, senza tesori e senza mercante.
+     *
+     * @param x coordinata orizzontale
+     * @param y coordinata verticale
+     */
     public Room(int x, int y) {
         this.x = x;
         this.y = y;
@@ -53,10 +75,8 @@ public class Room {
 
     public void setDoorRoom(boolean isDoor) { this.isDoorRoom = isDoor; }
     public boolean isDoorRoom() { return isDoorRoom; }
-
     public void setHasDragon(boolean has) { this.hasDragon = has; }
     public boolean hasDragon() { return hasDragon; }
-
     public void setDragonsDefeated(boolean defeated) {
     }
 
@@ -67,17 +87,37 @@ public class Room {
     public boolean hasMerchant() { return hasMerchant; }
     public Merchant getMerchant() { return merchant; }
 
+    /**
+     * Aggiunge un tesoro alla stanza.
+     * Aggiorna automaticamente la descrizione per segnalare la presenza del forziere.
+     *
+     * @param item il tesoro da aggiungere
+     */
     public void addTreasure(Item item) {
         treasures.add(item);
         description = "C'è un forziere qui dentro! Contiene: " + item.getName();
     }
 
+    /**
+     * Raccoglie tutti i tesori presenti nella stanza.
+     * I tesori vengono rimossi dalla stanza e restituiti come lista.
+     *
+     * @return lista dei tesori raccolti
+     */
     public List<Item> collectTreasures() {
         List<Item> collected = new ArrayList<>(treasures);
         treasures.clear();
         return collected;
     }
 
+    /**
+     * Imposta un'uscita nella direzione specificata.
+     * La connessione è bidirezionale: se stanza A punta a B,
+     * automaticamente B punta ad A nella direzione opposta.
+     *
+     * @param direction direzione in cui si trova l'uscita
+     * @param room stanza di destinazione
+     */
     public void setExit(Direction direction, Room room) {
         exits.put(direction, room);
         if (room != null) {
@@ -85,10 +125,21 @@ public class Room {
         }
     }
 
+    /**
+     * Restituisce la stanza raggiungibile nella direzione specificata.
+     *
+     * @param direction direzione in cui muoversi
+     * @return stanza adiacente, o null se non esiste uscita
+     */
     public Room getExit(Direction direction) {
         return exits.get(direction);
     }
 
+    /**
+     * Restituisce una stringa descrittiva delle uscite disponibili.
+     *
+     * @return elenco delle direzioni, o "Nessuna uscita"
+     */
     public String getExitsDescription() {
         if (exits.isEmpty()) return "Nessuna uscita";
         return String.join(", ", exits.keySet().stream()
@@ -96,11 +147,21 @@ public class Room {
                 .toArray(String[]::new));
     }
 
+    /**
+     * Segna la stanza come visitata ed esplorata.
+     * Viene chiamato quando il giocatore entra nella stanza per la prima volta.
+     */
     public void enter() {
         visited = true;
         explored = true;
     }
 
+    /**
+     * Restituisce una rappresentazione testuale completa della stanza.
+     * Formato: "[x,y] Nome - Descrizione\nUscite: dir1, dir2, ..."
+     *
+     * @return stringa con coordinate, nome, descrizione e uscite
+     */
     @Override
     public String toString() {
         return String.format("[%d,%d] %s - %s\nUscite: %s",
