@@ -177,10 +177,11 @@ public class GameController {
     /**
      * Controlla gli eventi presenti nella stanza corrente.
      * Gestisce in ordine di priorità:
-     * - Mercante - apre il dialog per acquistare pozioni
-     * - Tesori - raccoglie automaticamente oro e oggetti
-     * - Nemici - avvia il combattimento
-     * - Stanza vuota - mostra la descrizione
+     * - Drago (priorità massima - non deve essere oscurato dal mercante)
+     * - Nemici normali
+     * - Mercante
+     * - Tesori
+     * - Stanza vuota
      */
     private void checkRoomEvents() {
         Room currentRoom = dungeon.getCurrentRoom();
@@ -188,6 +189,8 @@ public class GameController {
         System.out.println("=== checkRoomEvents ===");
         System.out.println("Stanza: " + currentRoom.getName());
         System.out.println("Has enemy: " + currentRoom.hasEnemy());
+        System.out.println("Has dragon: " + currentRoom.hasDragon());
+        System.out.println("Has merchant: " + currentRoom.hasMerchant());
         System.out.println("Is door room: " + currentRoom.isDoorRoom());
 
         // Se è la stanza della porta e tutti i draghi sono sconfitti -> VITTORIA
@@ -198,35 +201,30 @@ public class GameController {
             return;
         }
 
-        // Controlla se c'è un mercante
-        if (currentRoom.hasMerchant()) {
-            setCurrentMerchant(currentRoom.getMerchant());
-            addGameMessage("🏪 Entri in un negozio! " + currentRoom.getMerchant().getName() + " ti aspetta.");
+        // PRIORITÀ 1: Drago (più importante del mercante!)
+        if (currentRoom.hasDragon() && currentRoom.hasEnemy() && currentRoom.getEnemy().isAlive()) {
+            System.out.println("DRAGO TROVATO! Avvio combattimento con: " + currentRoom.getEnemy().getName());
+            startCombat(currentRoom.getEnemy());
             return;
         }
 
-        // Controlla se ci sono tesori
-        if (currentRoom.hasTreasures()) {
-            collectTreasures();
-            // Dopo aver raccolto tesori, controlla se c'è anche un nemico
-            if (currentRoom.hasEnemy()) {
-                System.out.println("Tesoro raccolto, ora inizia combattimento con: " + currentRoom.getEnemy().getName());
-                startCombat(currentRoom.getEnemy());
-            }
-            return;
-        }
-
-        // CONTROLLA NEMICO
+        // PRIORITÀ 2: Altri nemici
         if (currentRoom.hasEnemy()) {
             System.out.println("NEMICO TROVATO! Avvio combattimento con: " + currentRoom.getEnemy().getName());
             startCombat(currentRoom.getEnemy());
             return;
         }
 
-        // Controlla se è la stanza del boss (solo se non ci sono nemici)
-        if (dungeon.isBossRoom()) {
-            addGameMessage("👑 Sei entrato nella sala del trono... La porta si apre!");
-            // Vittoria già gestita sopra
+        // PRIORITÀ 3: Mercante (solo se non ci sono nemici)
+        if (currentRoom.hasMerchant()) {
+            setCurrentMerchant(currentRoom.getMerchant());
+            addGameMessage("🏪 Entri in un negozio! " + currentRoom.getMerchant().getName() + " ti aspetta.");
+            return;
+        }
+
+        // PRIORITÀ 4: Tesori
+        if (currentRoom.hasTreasures()) {
+            collectTreasures();
             return;
         }
 
@@ -235,7 +233,7 @@ public class GameController {
 
     /**
      * Raccoglie automaticamente i tesori presenti nella stanza.
-     * Aggiunge gli oggetti all'inventario del giocatore e mostra i messaggi corrispondenti.
+     * L'oro e le pozioni vengono aggiunti all'inventario.
      */
     private void collectTreasures() {
         Room currentRoom = dungeon.getCurrentRoom();
@@ -246,18 +244,18 @@ public class GameController {
         }
 
         for (Item item : treasures) {
-            player.addItem(item);
-            addGameMessage("💰 Trovi un tesoro! Ottieni: " + item.getIcon() + " " + item.getName());
-
-            // Se è oro, aggiungi direttamente al contatore
-            if (item.getName().contains("Gold") || item.getIcon().equals("💰")) {
-                int goldAmount = 30;  // Oro trovato
+            if (item instanceof HealthPotion) {
+                player.addItem(item);
+                addGameMessage("🧪 Trovi una pozione curativa!");
+            } else {
+                // È oro
+                String name = item.getName();
+                int goldAmount = Integer.parseInt(name.replaceAll("[^0-9]", ""));
                 player.addGold(goldAmount);
-                addGameMessage("💰 +" + goldAmount + " monete d'oro!");
+                addGameMessage("💰 Trovi " + goldAmount + " monete d'oro!");
             }
         }
 
-        // Aggiorna la UI
         updatePlayerStats();
     }
 

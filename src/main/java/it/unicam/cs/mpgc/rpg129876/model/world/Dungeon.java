@@ -139,6 +139,7 @@ public class Dungeon {
      * - Nemico: 35% per stanza
      * - Tesoro: 15% per stanza
      *
+     * IMPORTANTE: draghi e mercanti non possono stare nella stessa stanza.
      * Le stanze iniziale (0,0) e finale (width-1, height-1) sono escluse.
      */
     private void populateDungeon() {
@@ -147,10 +148,16 @@ public class Dungeon {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Room room = map[y][x];
-                if ((x == 0 && y == 0) || (x == width-1 && y == height-1)) continue;
+                // Salta la stanza iniziale e la stanza del boss
+                if ((x == 0 && y == 0) || (x == width-1 && y == height-1)) {
+                    continue;
+                }
 
-                // Mercanti (2 max) - probabilità 5%
-                if (merchantsAdded < 2 && random.nextDouble() < 0.05) {
+                // Verifica se la stanza ha già un drago (dallo setupBossArea)
+                boolean hasDragon = room.hasDragon();
+
+                // Aggiungi mercante (solo se la stanza NON ha già un drago)
+                if (!hasDragon && merchantsAdded < 2 && random.nextDouble() < 0.05) {
                     room.setMerchant(new Merchant("🏪 Mercante"));
                     room.setName("🏪 Negozio");
                     room.setDescription("Un mercante vende pozioni curative!");
@@ -158,17 +165,19 @@ public class Dungeon {
                     continue;
                 }
 
-                // Nemici - probabilità 35%
-                if (random.nextDouble() < 0.35) {
+                // Aggiungi nemico (solo se la stanza NON ha già un drago)
+                if (!hasDragon && random.nextDouble() < 0.35) {
                     room.setEnemy(Enemy.randomEnemy());
                 }
 
-                // TESORI - probabilità 15%
+                // Aggiungi tesoro (anche nelle stanze con drago va bene)
                 if (random.nextDouble() < 0.15) {
                     room.addTreasure(generateTreasure());
                 }
             }
         }
+
+        System.out.println("✅ Mercanti aggiunti: " + merchantsAdded);
     }
 
     /**

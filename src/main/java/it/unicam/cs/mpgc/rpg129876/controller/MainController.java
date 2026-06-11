@@ -902,22 +902,7 @@ public class MainController {
                     }
                     cell.setStyle("-fx-background-color: #2a5a5a; -fx-font-size: 18px; -fx-cursor: hand;");
                 }
-                // TESORO
-                else if (room.isExplored() && room.hasTreasures()) {
-                    // Prova a caricare l'immagine del tesoro
-                    Image treasureImg = ImageLoader.getGoldImage();
-                    if (treasureImg != null) {
-                        ImageView treasureView = new ImageView(treasureImg);
-                        treasureView.setFitWidth(35);
-                        treasureView.setFitHeight(35);
-                        cell.setGraphic(treasureView);
-                        cell.setText("");
-                    } else {
-                        cell.setText("💰");
-                    }
-                    cell.setStyle("-fx-background-color: #2a4a2a; -fx-cursor: hand; -fx-background-radius: 8;");
-                }
-                // ESPLORATA VUOTA
+                // TESORI - NON VISIBILI (trattati come stanze esplorate vuote)
                 else if (room.isExplored()) {
                     cell.setText("⬜");
                     cell.setStyle("-fx-background-color: #2a2a3a; -fx-font-size: 20px; -fx-cursor: hand; -fx-background-radius: 8;");

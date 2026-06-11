@@ -31,9 +31,9 @@ public class Room {
     private final List<Item> treasures;
     private final Map<Direction, Room> exits;
     private boolean isDoorRoom;
-    private boolean hasDragon;
     private Merchant merchant;
     private boolean hasMerchant;
+    private boolean hasDragon;
 
     /**
      * Costruisce una nuova stanza con le coordinate specificate.
@@ -76,7 +76,6 @@ public class Room {
     public void setDoorRoom(boolean isDoor) { this.isDoorRoom = isDoor; }
     public boolean isDoorRoom() { return isDoorRoom; }
     public void setHasDragon(boolean has) { this.hasDragon = has; }
-    public boolean hasDragon() { return hasDragon; }
     public void setDragonsDefeated(boolean defeated) {
     }
 
@@ -108,6 +107,15 @@ public class Room {
         List<Item> collected = new ArrayList<>(treasures);
         treasures.clear();
         return collected;
+    }
+
+    /**
+     * Verifica se nella stanza è presente un drago.
+     *
+     * @return true se la stanza contiene un drago vivo
+     */
+    public boolean hasDragon() {
+        return hasDragon && enemy != null && enemy.isAlive();
     }
 
     /**
