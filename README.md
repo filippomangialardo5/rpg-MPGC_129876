@@ -6,10 +6,10 @@ la porta del tesoro sconfiggendo i 3 draghi che la custodiscono.
 
 Sviluppato in Java con interfaccia grafica JavaFX e sistema di build Gradle.
 
-Autore: Filippo Mangialardo
-Matricola: 129876
-Progetto sviluppato per l'esame di Metodologie di Programmazione
-A.A. 2025/26 - Università di Camerino
+**Autore:** Filippo Mangialardo  
+**Matricola:** 129876  
+**Corso:** Metodologie di Programmazione - A.A. 2025/26  
+**Università:** Università di Camerino
 ---
 
 ## 🎮 Caratteristiche principali
